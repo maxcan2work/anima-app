@@ -105,7 +105,12 @@ button {
   overflow: hidden;
   opacity: var(--sidebar-label-opacity);
   transform: translateX(var(--sidebar-label-shift));
-  transition: opacity 160ms ease, transform 220ms ease;
+  transition: opacity 120ms ease 120ms, transform 220ms ease;
+}
+
+.sidebar-collapsed .brand-row > div {
+  visibility: hidden;
+  transition: none;
 }
 
 .eyebrow {
@@ -175,7 +180,7 @@ h1 {
   max-width: 220px;
   opacity: 1;
   transform: translateX(0);
-  transition: max-width 220ms ease, opacity 160ms ease, transform 220ms ease;
+  transition: max-width 220ms ease, opacity 120ms ease 120ms, transform 220ms ease;
 }
 
 .profile-link strong {
@@ -241,10 +246,15 @@ h1 {
 .sidebar-collapsed .profile-link span,
 .sidebar-collapsed .auth-copy,
 .sidebar-collapsed .discord-button {
+  position: absolute;
+  inset: auto;
   max-width: 0;
+  overflow: hidden;
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
   transform: translateX(-8px);
+  transition: none;
 }
 
 .auth-panel img,
@@ -338,7 +348,7 @@ h1 {
   opacity: var(--sidebar-label-opacity);
   overflow: hidden;
   transform: translateX(var(--sidebar-label-shift));
-  transition: opacity 160ms ease, transform 220ms ease, max-width 220ms ease;
+  transition: opacity 120ms ease 120ms, transform 220ms ease, max-width 220ms ease;
 }
 
 .nav-copy > span,
@@ -355,13 +365,17 @@ h1 {
 .sidebar-collapsed .side-nav button {
   grid-template-columns: 34px;
   justify-items: center;
-  height: 64px;
   width: 56px;
   padding: 10px;
 }
 
 .sidebar-collapsed .nav-copy {
+  position: absolute;
+  inset: auto;
+  overflow: hidden;
+  visibility: hidden;
   pointer-events: none;
+  transition: none;
 }
 
 .side-nav button.active {
