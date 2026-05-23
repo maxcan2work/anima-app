@@ -286,7 +286,6 @@ export function App() {
             <p className="eyebrow">Anima</p>
             <h1>Просмотр</h1>
           </div>
-          <span className="counter">{library.length}</span>
         </div>
 
         <AuthPanel
