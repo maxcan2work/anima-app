@@ -144,6 +144,7 @@ h1 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+  width: 100%;
   margin-top: auto;
   padding: 0;
   border: 0;
@@ -273,6 +274,13 @@ h1 {
   object-fit: cover;
 }
 
+.auth-icon-button img {
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
 .avatar-fallback {
   display: grid;
   place-items: center;
@@ -291,10 +299,36 @@ h1 {
 }
 
 .discord-button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  min-height: 56px;
+  max-width: none;
+  min-height: 50px;
+  padding: 0 14px;
   background: #5865f2;
   color: white;
+}
+
+.discord-button img {
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  color: white;
+  object-fit: contain;
+}
+
+.discord-button span {
+  min-width: 0;
+  margin-top: 0;
+  overflow: hidden;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .text-button {

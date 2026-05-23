@@ -3,10 +3,10 @@ import Hls from 'hls.js';
 import { io, type Socket } from 'socket.io-client';
 import copyIcon from './assets/copy.svg';
 import crownIcon from './assets/crown.svg';
+import discordIcon from './assets/discord.svg';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import kickIcon from './assets/kick.svg';
 import leaveRoomIcon from './assets/leave-room.svg';
-import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
 import nekoIcon from './assets/neko.svg';
 import randomDiceIcon from './assets/random-dice.svg';
@@ -780,7 +780,7 @@ function AuthPanel({
       return (
         <div className="auth-panel collapsed-auth">
           <button className="auth-icon-button" onClick={onLogin} data-tooltip="Войти через Discord" type="button">
-            <img src={loginIcon} alt="" aria-hidden="true" />
+            <img src={discordIcon} alt="" aria-hidden="true" />
           </button>
         </div>
       );
@@ -788,7 +788,10 @@ function AuthPanel({
 
     return (
       <div className="auth-panel">
-        <button className="discord-button" onClick={onLogin}>Войти через Discord</button>
+        <button className="discord-button" onClick={onLogin}>
+          <img src={discordIcon} alt="" aria-hidden="true" />
+          <span>Войти через Discord</span>
+        </button>
       </div>
     );
   }
