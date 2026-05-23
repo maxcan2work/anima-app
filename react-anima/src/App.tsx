@@ -15,6 +15,7 @@ import profileNoteIcon from './assets/profile-note.svg';
 import randomDiceIcon from './assets/random-dice.svg';
 import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
+import settingsIcon from './assets/settings.svg';
 import trashIcon from './assets/trash.svg';
 import watchPartyIcon from './assets/watch-party.svg';
 import {
@@ -50,7 +51,7 @@ type WatchState = {
 };
 
 type PlayerProvider = PlayerProviderResult['provider'];
-type AppView = 'watch' | 'profile' | 'random' | 'watchParty';
+type AppView = 'watch' | 'profile' | 'random' | 'settings' | 'watchParty';
 type WatchPartyParticipant = {
   id: string;
   name: string;
@@ -675,15 +676,31 @@ export function App() {
           />
         </nav>
 
-        <AuthPanel
-          user={user}
-          authStatus={authStatus}
-          collapsed={sidebarCollapsed}
-          onLogin={loginWithDiscord}
-          onProfile={() => {
-            requestRoute('/profile', 'profile');
-          }}
-        />
+        <div className="sidebar-footer">
+          <button
+            className={view === 'settings' ? 'sidebar-action active' : 'sidebar-action'}
+            type="button"
+            data-tooltip={sidebarCollapsed ? 'Настройки' : undefined}
+            onClick={() => requestRoute('/settings', 'settings')}
+          >
+            <span className="nav-icon" aria-hidden="true">
+              <img src={settingsIcon} alt="" />
+            </span>
+            <span className="nav-copy">
+              <span>Настройки</span>
+              <small>Скоро</small>
+            </span>
+          </button>
+          <AuthPanel
+            user={user}
+            authStatus={authStatus}
+            collapsed={sidebarCollapsed}
+            onLogin={loginWithDiscord}
+            onProfile={() => {
+              requestRoute('/profile', 'profile');
+            }}
+          />
+        </div>
       </aside>
 
       <section className="watch-area">
@@ -715,6 +732,8 @@ export function App() {
             onCreateRoomConsumed={consumeWatchPartyCreate}
             onToast={setToast}
           />
+        ) : displayedView === 'settings' ? (
+          <SettingsPage />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
             browseResults={browseResults}
@@ -1715,6 +1734,33 @@ function ProfilePage({
   );
 }
 
+function SettingsPage() {
+  return (
+    <section className="settings-page">
+      <header className="settings-hero">
+        <span className="settings-icon" aria-hidden="true">
+          <img src={settingsIcon} alt="" />
+        </span>
+        <div>
+          <p className="eyebrow">Anima</p>
+          <h2>Настройки</h2>
+          <p>Здесь будут параметры приложения и импорт просмотренного из Shikimori.</p>
+        </div>
+      </header>
+
+      <section className="settings-panel">
+        <div>
+          <h3>Импорт из Shikimori</h3>
+          <p>Позже добавим подключение аккаунта и перенос дневника просмотра в профиль Anima.</p>
+        </div>
+        <button type="button" disabled>
+          Скоро
+        </button>
+      </section>
+    </section>
+  );
+}
+
 function AnimeHero({
   anime,
   state,
@@ -2125,6 +2171,7 @@ function getRouteAnimeId(pathname: string) {
 function getViewFromPath(pathname: string): AppView {
   if (pathname === '/profile') return 'profile';
   if (pathname === '/random') return 'random';
+  if (pathname === '/settings') return 'settings';
   if (pathname === '/watch-party' || pathname.startsWith('/watch-party/')) return 'watchParty';
   return 'watch';
 }
