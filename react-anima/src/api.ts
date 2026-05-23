@@ -13,6 +13,17 @@ export type ServerWatchEntry = {
   status: 'PLANNED' | 'WATCHING' | 'COMPLETED' | 'DROPPED';
   currentEpisode: number;
   score: number | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  review: string | null;
+  updatedAt: string;
+  anime?: {
+    id: string;
+    title: string;
+    originalTitle: string | null;
+    episodes: number;
+    posterUrl: string | null;
+  };
 };
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -52,7 +63,16 @@ export async function getMyAnimeList() {
   return apiFetch<{ list: ServerWatchEntry[] }>('/me/anime');
 }
 
-export async function saveAnimeProgress(animeId: string, payload: { status: string; currentEpisode: number }) {
+export type SaveAnimeProgressPayload = {
+  status: string;
+  currentEpisode: number;
+  score?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  review?: string | null;
+};
+
+export async function saveAnimeProgress(animeId: string, payload: SaveAnimeProgressPayload) {
   return apiFetch<{ entry: ServerWatchEntry }>(`/me/anime/${animeId}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
