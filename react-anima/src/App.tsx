@@ -14,6 +14,7 @@ import {
   logout,
   saveRandomHistoryEntry,
   saveAnimeProgress,
+  searchCatalog,
   type CatalogSearchResult,
   type CurrentUser,
   type PlayerProviderResult,
@@ -53,6 +54,10 @@ export function App() {
   const [browseHasNext, setBrowseHasNext] = useState(true);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
+  const [catalogSearchQuery, setCatalogSearchQuery] = useState('');
+  const [catalogSearchResults, setCatalogSearchResults] = useState<CatalogSearchResult[]>([]);
+  const [catalogSearchLoading, setCatalogSearchLoading] = useState(false);
+  const [catalogSearchStatus, setCatalogSearchStatus] = useState('');
   const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);
   const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
   const [randomLoading, setRandomLoading] = useState(false);
@@ -183,6 +188,45 @@ export function App() {
       ignore = true;
     };
   }, [browsePage]);
+
+  useEffect(() => {
+    const query = catalogSearchQuery.trim();
+
+    if (query.length < 2) {
+      setCatalogSearchResults([]);
+      setCatalogSearchLoading(false);
+      setCatalogSearchStatus('');
+      return;
+    }
+
+    let ignore = false;
+    setCatalogSearchLoading(true);
+    setCatalogSearchStatus('Ищем в Shikimori...');
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await searchCatalog(query);
+        if (ignore) return;
+
+        setCatalogSearchResults(response.results);
+        setCatalogSearchStatus(response.results.length ? '' : 'Ничего не найдено.');
+      } catch {
+        if (!ignore) {
+          setCatalogSearchResults([]);
+          setCatalogSearchStatus('Не удалось выполнить поиск.');
+        }
+      } finally {
+        if (!ignore) {
+          setCatalogSearchLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [catalogSearchQuery]);
 
   useEffect(() => {
     let ignore = false;
@@ -386,6 +430,11 @@ export function App() {
             browseHasNext={browseHasNext}
             browseLoading={browseLoading}
             browseStatus={browseStatus}
+            searchQuery={catalogSearchQuery}
+            searchResults={catalogSearchResults}
+            searchLoading={catalogSearchLoading}
+            searchStatus={catalogSearchStatus}
+            onSearchChange={setCatalogSearchQuery}
             onPageChange={setBrowsePage}
           />
         ) : !selected ? (
@@ -464,6 +513,11 @@ function WatchHome({
   browseHasNext,
   browseLoading,
   browseStatus,
+  searchQuery,
+  searchResults,
+  searchLoading,
+  searchStatus,
+  onSearchChange,
   onPageChange,
 }: {
   browseResults: CatalogSearchResult[];
@@ -471,11 +525,20 @@ function WatchHome({
   browseHasNext: boolean;
   browseLoading: boolean;
   browseStatus: string;
+  searchQuery: string;
+  searchResults: CatalogSearchResult[];
+  searchLoading: boolean;
+  searchStatus: string;
+  onSearchChange: (query: string) => void;
   onPageChange: (page: number) => void;
 }) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isSearching = searchQuery.trim().length >= 2;
+  const visibleResults = isSearching ? searchResults : browseResults;
+  const status = isSearching ? searchStatus : browseStatus;
 
   useEffect(() => {
+    if (isSearching) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -493,7 +556,7 @@ function WatchHome({
     return () => {
       observer.disconnect();
     };
-  }, [browseHasNext, browseLoading, browsePage, onPageChange]);
+  }, [browseHasNext, browseLoading, browsePage, isSearching, onPageChange]);
 
   return (
     <section className="watch-home">
@@ -502,12 +565,20 @@ function WatchHome({
           <p className="eyebrow">Shikimori</p>
           <h2>Каталог аниме</h2>
         </div>
+        <label className="catalog-search" aria-label="Найти аниме">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Найти аниме"
+          />
+        </label>
       </header>
 
-      {browseStatus ? <p className="catalog-status">{browseStatus}</p> : null}
+      {status ? <p className="catalog-status">{status}</p> : null}
 
       <div className="browse-grid">
-        {browseResults.map((result) => (
+        {visibleResults.map((result) => (
           <a key={`${result.provider}-${result.providerId}`} className="browse-card" href={animeRouteFromCatalog(result)}>
             {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
             <div>
@@ -521,9 +592,13 @@ function WatchHome({
         ))}
       </div>
 
-      <div ref={sentinelRef} className="scroll-sentinel">
-        {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
-      </div>
+      {isSearching ? (
+        searchLoading ? <div className="scroll-sentinel">Ищем...</div> : null
+      ) : (
+        <div ref={sentinelRef} className="scroll-sentinel">
+          {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
+        </div>
+      )}
 
     </section>
   );

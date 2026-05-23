@@ -244,6 +244,30 @@ h1 {
   margin-bottom: 0;
 }
 
+.catalog-search {
+  display: grid;
+  gap: 8px;
+  width: min(360px, 100%);
+  color: #bfb8ad;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.catalog-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fffaf2;
+  outline: none;
+}
+
+.catalog-search input:focus {
+  border-color: rgba(242, 192, 99, 0.65);
+}
+
 .browse-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
