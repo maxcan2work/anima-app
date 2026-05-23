@@ -10,6 +10,9 @@ type PlayerProviderResult = {
   episodeCount: number | null;
   requestedEpisode: number;
   status: 'available' | 'unknown';
+  streamUrl: string | null;
+  streamType: 'hls' | null;
+  quality: 'fhd' | 'hd' | 'sd' | null;
   note: string;
 };
 
@@ -27,9 +30,20 @@ type AniLibriaTitle = {
     };
   };
   player?: {
+    host?: string;
     episodes?: Record<string, unknown> | unknown[];
     episodes_count?: number;
     last_episode?: number;
+    list?: Record<
+      string,
+      {
+        hls?: {
+          fhd?: string | null;
+          hd?: string | null;
+          sd?: string | null;
+        };
+      }
+    >;
   };
 };
 
@@ -89,6 +103,7 @@ function mapAniLibriaTitle(title: AniLibriaTitle, episodeNumber: number): Player
   if (!providerTitleId) return [];
 
   const episodeCount = getEpisodeCount(title);
+  const stream = getEpisodeStream(title, episodeNumber);
 
   return [
     {
@@ -100,10 +115,29 @@ function mapAniLibriaTitle(title: AniLibriaTitle, episodeNumber: number): Player
       watchUrl: code ? `https://anilibria.top/release/${code}.html` : `https://anilibria.top/release/id${providerTitleId}.html`,
       episodeCount,
       requestedEpisode: episodeNumber,
-      status: episodeCount == null || episodeNumber <= episodeCount ? 'available' : 'unknown',
+      status: stream.url || episodeCount == null || episodeNumber <= episodeCount ? 'available' : 'unknown',
+      streamUrl: stream.url,
+      streamType: stream.url ? 'hls' : null,
+      quality: stream.quality,
       note: 'AniLibria/AniLiberty: русская озвучка, доступность серий зависит от релиза провайдера.',
     },
   ];
+}
+
+function getEpisodeStream(title: AniLibriaTitle, episodeNumber: number) {
+  const episode = title.player?.list?.[String(episodeNumber)];
+  const hls = episode?.hls;
+  const quality: 'fhd' | 'hd' | 'sd' | null = hls?.fhd ? 'fhd' : hls?.hd ? 'hd' : hls?.sd ? 'sd' : null;
+  const path = quality ? hls?.[quality] : null;
+
+  if (!path) {
+    return { url: null, quality: null };
+  }
+
+  const host = title.player?.host ?? 'cache.libria.fun';
+  const url = path.startsWith('http') ? path : `https://${host}${path}`;
+
+  return { url, quality };
 }
 
 function getEpisodeCount(title: AniLibriaTitle) {

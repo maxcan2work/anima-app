@@ -36,6 +36,9 @@ export type PlayerProviderResult = {
   episodeCount: number | null;
   requestedEpisode: number;
   status: 'available' | 'unknown';
+  streamUrl: string | null;
+  streamType: 'hls' | null;
+  quality: 'fhd' | 'hd' | 'sd' | null;
   note: string;
 };
 
