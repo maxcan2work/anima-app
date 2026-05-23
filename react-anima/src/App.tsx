@@ -34,6 +34,7 @@ type WatchState = {
 };
 
 const STORAGE_KEY = 'anima.watchState.v1';
+const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
 
 function loadWatchState(): Record<string, WatchState> {
   try {
@@ -46,6 +47,14 @@ function loadWatchState(): Record<string, WatchState> {
 
 function saveWatchState(value: Record<string, WatchState>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+}
+
+function loadSidebarCollapsed() {
+  return localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
+}
+
+function saveSidebarCollapsed(value: boolean) {
+  localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
 }
 
 export function App() {
@@ -71,7 +80,7 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile' | 'random'>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
   const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
@@ -88,6 +97,15 @@ export function App() {
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);
+
+  useEffect(() => {
+    saveSidebarCollapsed(sidebarCollapsed);
+  }, [sidebarCollapsed]);
+
+  function openCatalogAnime(result: CatalogSearchResult) {
+    navigateTo(animeRouteFromCatalog(result), setCurrentPath);
+    setView('watch');
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -441,6 +459,7 @@ export function App() {
             history={randomHistory}
             loading={randomLoading}
             status={randomStatus}
+            onOpenAnime={openCatalogAnime}
             onRandomize={handleRandomAnime}
           />
         ) : view === 'watch' && !routeAnimeId ? (
@@ -455,6 +474,7 @@ export function App() {
             searchLoading={catalogSearchLoading}
             searchStatus={catalogSearchStatus}
             onSearchChange={setCatalogSearchQuery}
+            onOpenAnime={openCatalogAnime}
             onPageChange={setBrowsePage}
           />
         ) : !selected ? (
@@ -587,6 +607,7 @@ function WatchHome({
   searchLoading,
   searchStatus,
   onSearchChange,
+  onOpenAnime,
   onPageChange,
 }: {
   browseResults: CatalogSearchResult[];
@@ -599,6 +620,7 @@ function WatchHome({
   searchLoading: boolean;
   searchStatus: string;
   onSearchChange: (query: string) => void;
+  onOpenAnime: (result: CatalogSearchResult) => void;
   onPageChange: (page: number) => void;
 }) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -651,7 +673,12 @@ function WatchHome({
       ) : (
         <div className="browse-grid">
           {visibleResults.map((result) => (
-            <a key={`${result.provider}-${result.providerId}`} className="browse-card" href={animeRouteFromCatalog(result)}>
+            <button
+              key={`${result.provider}-${result.providerId}`}
+              className="browse-card"
+              onClick={() => onOpenAnime(result)}
+              type="button"
+            >
               {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
               <div>
                 <strong>{result.title}</strong>
@@ -660,7 +687,7 @@ function WatchHome({
                   {result.episodes} сер. · {result.score ?? 'без оценки'}
                 </small>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       )}
@@ -692,12 +719,14 @@ function RandomAnimePage({
   history,
   loading,
   status,
+  onOpenAnime,
   onRandomize,
 }: {
   randomAnime: CatalogSearchResult | null;
   history: CatalogSearchResult[];
   loading: boolean;
   status: string;
+  onOpenAnime: (result: CatalogSearchResult) => void;
   onRandomize: () => void;
 }) {
   return (
@@ -709,7 +738,7 @@ function RandomAnimePage({
         <p>Жми кнопку снизу, а Anima достанет случайный тайтл из каталога Shikimori.</p>
 
         {randomAnime ? (
-          <a className="random-card" href={animeRouteFromCatalog(randomAnime)}>
+          <button className="random-card" onClick={() => onOpenAnime(randomAnime)} type="button">
             {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : null}
             <div>
               <strong>{randomAnime.title}</strong>
@@ -718,7 +747,7 @@ function RandomAnimePage({
                 {randomAnime.episodes} сер. · {randomAnime.score ?? 'без оценки'}
               </small>
             </div>
-          </a>
+          </button>
         ) : null}
 
         {status ? <p className="catalog-status">{status}</p> : null}
@@ -734,13 +763,18 @@ function RandomAnimePage({
           <p className="muted-copy">Здесь появятся последние варианты.</p>
         ) : (
           history.map((item) => (
-            <a key={`${item.provider}-${item.providerId}`} href={animeRouteFromCatalog(item)} className="random-history-row">
+            <button
+              key={`${item.provider}-${item.providerId}`}
+              className="random-history-row"
+              onClick={() => onOpenAnime(item)}
+              type="button"
+            >
               {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className="poster-fallback" />}
               <span>
                 <strong>{item.title}</strong>
                 <small>{item.score ?? 'без оценки'}</small>
               </span>
-            </a>
+            </button>
           ))
         )}
       </aside>

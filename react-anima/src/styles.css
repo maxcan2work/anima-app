@@ -473,13 +473,16 @@ h1 {
   display: grid;
   gap: 10px;
   align-content: start;
+  width: 100%;
   min-height: 100%;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
+  font: inherit;
   text-decoration: none;
+  text-align: left;
 }
 
 .browse-card:hover {
@@ -562,6 +565,7 @@ h1 {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: inherit;
+  font: inherit;
   text-align: left;
   text-decoration: none;
 }
@@ -631,7 +635,9 @@ h1 {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
+  font: inherit;
   text-decoration: none;
+  text-align: left;
 }
 
 .random-history-row img,
