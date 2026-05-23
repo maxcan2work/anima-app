@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import randomDiceIcon from './assets/random-dice.svg';
 import {
   browseCatalog,
   getAnimeById,
@@ -544,7 +545,7 @@ function RandomAnimePage({
   return (
     <section className="random-page">
       <div className="random-stage">
-        <div className="random-dice" aria-hidden="true">◇</div>
+        <img className="random-dice" src={randomDiceIcon} alt="" aria-hidden="true" />
         <p className="eyebrow">Рандомайзер</p>
         <h2>Не знаешь, что посмотреть?</h2>
         <p>Жми кнопку снизу, а Anima достанет случайный тайтл из каталога Shikimori.</p>

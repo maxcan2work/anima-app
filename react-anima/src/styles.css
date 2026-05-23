@@ -321,21 +321,13 @@ h1 {
 }
 
 .random-dice {
-  display: grid;
-  place-items: center;
   width: 82px;
   height: 82px;
+  object-fit: contain;
+  padding: 14px;
   border: 1px solid rgba(242, 192, 99, 0.45);
   border-radius: 8px;
   background: rgba(242, 192, 99, 0.12);
-  color: #f2c063;
-  font-size: 46px;
-  font-weight: 900;
-  transform: rotate(45deg);
-}
-
-.random-dice::first-letter {
-  transform: rotate(-45deg);
 }
 
 .random-card {
