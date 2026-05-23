@@ -13,7 +13,14 @@ type PlayerProviderResult = {
   streamUrl: string | null;
   streamType: 'hls' | null;
   quality: 'fhd' | 'hd' | 'sd' | null;
+  episodes: PlayerEpisode[];
   note: string;
+};
+
+type PlayerEpisode = {
+  number: number;
+  title: string | null;
+  duration: string | null;
 };
 
 type AniLibertyRelease = {
@@ -41,6 +48,9 @@ type AniLibertyRelease = {
 
 type AniLibertyEpisode = {
   ordinal?: number;
+  name?: string | null;
+  title?: string | null;
+  duration?: string | number | null;
   hls_1080?: string | null;
   hls_720?: string | null;
   hls_480?: string | null;
@@ -197,6 +207,7 @@ function mapAniLibertyRelease(release: AniLibertyRelease, episodeNumber: number)
 
   const episodeCount = release.episodes_total ?? release.episodes?.length ?? null;
   const stream = getEpisodeStream(release, episodeNumber);
+  const episodes = mapAniLibertyEpisodes(release.episodes ?? []);
 
   return [
     {
@@ -216,9 +227,53 @@ function mapAniLibertyRelease(release: AniLibertyRelease, episodeNumber: number)
       streamUrl: stream.url,
       streamType: stream.url ? 'hls' : null,
       quality: stream.quality,
+      episodes,
       note: 'AniLiberty: русская озвучка, доступность серий зависит от релиза провайдера.',
     },
   ];
+}
+
+function mapAniLibertyEpisodes(episodes: AniLibertyEpisode[]): PlayerEpisode[] {
+  return episodes
+    .map((episode) => {
+      const number = Number(episode.ordinal);
+      if (!Number.isFinite(number) || number < 1) return null;
+
+      return {
+        number: Math.trunc(number),
+        title: cleanEpisodeTitle(episode.title ?? episode.name),
+        duration: formatEpisodeDuration(episode.duration),
+      };
+    })
+    .filter((episode): episode is PlayerEpisode => episode !== null)
+    .sort((left, right) => left.number - right.number);
+}
+
+function cleanEpisodeTitle(value: string | null | undefined) {
+  const title = value?.trim();
+  if (!title || isGenericEpisodeTitle(title)) return null;
+  return title;
+}
+
+function isGenericEpisodeTitle(value: string) {
+  return /^(episode|эпизод|серия)\s*\d+$/i.test(value.trim());
+}
+
+function formatEpisodeDuration(value: string | number | null | undefined) {
+  if (value == null || value === '') return null;
+
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value <= 0) return null;
+    const totalSeconds = value > 360 ? Math.round(value) : Math.round(value * 60);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d+$/.test(trimmed)) return formatEpisodeDuration(Number(trimmed));
+  return trimmed;
 }
 
 function getEpisodeStream(release: AniLibertyRelease, episodeNumber: number) {

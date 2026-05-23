@@ -39,7 +39,14 @@ export type PlayerProviderResult = {
   streamUrl: string | null;
   streamType: 'hls' | null;
   quality: 'fhd' | 'hd' | 'sd' | null;
+  episodes: PlayerEpisode[];
   note: string;
+};
+
+export type PlayerEpisode = {
+  number: number;
+  title: string | null;
+  duration: string | null;
 };
 
 export type ServerAnime = {

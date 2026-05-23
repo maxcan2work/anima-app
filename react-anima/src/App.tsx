@@ -860,6 +860,7 @@ function AnimeHero({
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('Ищем плееры провайдеров...');
+  const [playersLoading, setPlayersLoading] = useState(false);
   const [episodePage, setEpisodePage] = useState(0);
   const playablePlayers = players.filter((player) => player.streamUrl);
   const selectedPlayer = playablePlayers[0] ?? players[0];
@@ -869,6 +870,9 @@ function AnimeHero({
     const end = Math.min(anime.episodes, start + EPISODES_PER_PAGE - 1);
     return Array.from({ length: end - start + 1 }, (_, index) => start + index);
   }, [anime.episodes, episodePage]);
+  const providerEpisodesByNumber = useMemo(() => {
+    return new Map(selectedPlayer?.episodes.map((episode) => [episode.number, episode]) ?? []);
+  }, [selectedPlayer?.episodes]);
 
   useEffect(() => {
     setEpisodePage(Math.min(episodePages - 1, Math.floor((state.episode - 1) / EPISODES_PER_PAGE)));
@@ -878,6 +882,8 @@ function AnimeHero({
     let ignore = false;
 
     async function loadPlayers() {
+      setPlayersLoading(true);
+      setPlayers([]);
       setPlayersStatus('Ищем плееры провайдеров...');
       try {
         const response = await getEpisodePlayers(anime.id, state.episode);
@@ -885,10 +891,12 @@ function AnimeHero({
 
         setPlayers(response.providers);
         setPlayersStatus(response.providers.length ? '' : 'Провайдеры пока не нашли этот тайтл.');
+        setPlayersLoading(false);
       } catch {
         if (!ignore) {
           setPlayers([]);
           setPlayersStatus('Не удалось загрузить провайдеров.');
+          setPlayersLoading(false);
         }
       }
     }
@@ -947,6 +955,24 @@ function AnimeHero({
             >
               <img src={episodeArrowIcon} alt="" aria-hidden="true" />
             </button>
+
+            <div className="episode-list">
+              {visibleEpisodes.map((episode) => {
+                const providerEpisode = providerEpisodesByNumber.get(episode);
+                return (
+                  <button
+                    key={episode}
+                    className={episode === state.episode ? 'current' : ''}
+                    type="button"
+                    onClick={() => onStateChange({ episode, status: 'watching' })}
+                  >
+                    <span className="episode-list-number">{episode}</span>
+                    <span className="episode-list-title">{providerEpisode?.title ?? 'Название не указано'}</span>
+                    <span className="episode-list-duration">{providerEpisode?.duration ?? (playersLoading ? 'загрузка' : '--')}</span>
+                  </button>
+                );
+              })}
+            </div>
           </section>
         </section>
 
