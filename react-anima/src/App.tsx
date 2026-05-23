@@ -998,6 +998,9 @@ function WatchPartyPage({
   const [animeResults, setAnimeResults] = useState<CatalogSearchResult[]>([]);
   const [animeSearchStatus, setAnimeSearchStatus] = useState('');
   const [animeSearchLoading, setAnimeSearchLoading] = useState(false);
+  const [partyCatalogResults, setPartyCatalogResults] = useState<CatalogSearchResult[]>([]);
+  const [partyCatalogStatus, setPartyCatalogStatus] = useState('');
+  const [partyCatalogLoading, setPartyCatalogLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const socketRef = useRef<Socket | null>(null);
   const ownParticipant = participants.find((participant) => participant.id === ownParticipantId);
@@ -1092,6 +1095,39 @@ function WatchPartyPage({
     };
   }, [animeQuery, code, isHost]);
 
+  useEffect(() => {
+    if (!code || !isHost || selectedAnime) return;
+
+    let ignore = false;
+    setPartyCatalogLoading(true);
+    setPartyCatalogStatus('');
+
+    async function loadPartyCatalog() {
+      try {
+        const response = await browseCatalog(1, 'popularity');
+        if (ignore) return;
+
+        setPartyCatalogResults(response.results);
+        setPartyCatalogStatus(response.results.length ? '' : 'Каталог пока пуст.');
+      } catch {
+        if (!ignore) {
+          setPartyCatalogResults([]);
+          setPartyCatalogStatus('Не удалось загрузить каталог.');
+        }
+      } finally {
+        if (!ignore) {
+          setPartyCatalogLoading(false);
+        }
+      }
+    }
+
+    loadPartyCatalog();
+
+    return () => {
+      ignore = true;
+    };
+  }, [code, isHost, selectedAnime]);
+
   function handleCreateRoom() {
     onCreateRoom(createWatchPartyCode());
   }
@@ -1143,76 +1179,71 @@ function WatchPartyPage({
               mode="watchParty"
               sidebarExtra={
                 <WatchPartyParticipants
+                  code={code}
                   participants={participants}
                   connectionStatus={connectionStatus}
                   onLeaveRoom={onLeaveRoom}
                 />
               }
             />
-          ) : (
-            <div className="watch-party-stage">
-              <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
-              <p className="eyebrow">Совместный просмотр</p>
-              <h2>Комната {code}</h2>
-              {isHost ? (
-                <div className="party-anime-picker">
+          ) : isHost ? (
+            <div className="watch-party-catalog">
+              <header className="browse-header">
+                <div>
+                  <p className="eyebrow">Совместный просмотр</p>
+                  <h2>Выбери аниме</h2>
+                </div>
+                <label className="catalog-search" aria-label="Найти аниме">
                   <input
                     type="search"
                     value={animeQuery}
                     onChange={(event) => setAnimeQuery(event.target.value)}
                     placeholder="Найти аниме"
                   />
-                  {animeSearchLoading ? <SearchLoader /> : null}
-                  {animeSearchStatus ? <p className="catalog-status">{animeSearchStatus}</p> : null}
-                  {animeResults.length > 0 ? (
-                    <div className="party-anime-results">
-                      {animeResults.map((result) => (
-                        <button
-                          key={`${result.provider}-${result.providerId}`}
-                          type="button"
-                          onClick={() => handleSelectAnime(result)}
-                        >
-                          {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
-                          <span>
-                            <strong>{result.title}</strong>
-                            <small>{result.originalTitle}</small>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+                </label>
+              </header>
+              {animeSearchLoading || partyCatalogLoading ? <SearchLoader /> : null}
+              {animeSearchStatus || partyCatalogStatus ? (
+                <p className="catalog-status">{animeSearchStatus || partyCatalogStatus}</p>
+              ) : null}
+              {!animeSearchLoading && !partyCatalogLoading ? (
+                <div className="browse-grid">
+                  {(animeQuery.trim().length >= 2 ? animeResults : partyCatalogResults).map((result) => (
+                    <button
+                      key={`${result.provider}-${result.providerId}`}
+                      type="button"
+                      className="browse-card"
+                      onClick={() => handleSelectAnime(result)}
+                    >
+                      {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
+                      <div>
+                        <strong>{result.title}</strong>
+                        <small>{result.originalTitle}</small>
+                        <small>
+                          {result.episodes} сер. · {result.score ?? 'без оценки'}
+                        </small>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <p>Ждём, пока хост выберет аниме для просмотра.</p>
-              )}
-              <div className="watch-party-code">
-                <span>{code}</span>
-                <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
-                  Скопировать код
-                </button>
-              </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="watch-party-stage">
+              <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+              <p className="eyebrow">Совместный просмотр</p>
+              <h2>Комната {code}</h2>
+              <p>Ждём, пока хост выберет аниме для просмотра.</p>
             </div>
           )}
 
           {!selectedAnime ? <aside className="watch-party-panel">
-            <h3>Участники</h3>
-            {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
-            {participants.map((participant) => (
-              <div className="party-member" key={participant.id}>
-                {participant.avatarUrl ? (
-                  <img src={participant.avatarUrl} alt="" />
-                ) : (
-                  <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
-                )}
-                <span>
-                  <strong>{participant.name}</strong>
-                  <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
-                </span>
-              </div>
-            ))}
-            <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
-              Выйти из комнаты
-            </button>
+            <WatchPartyParticipants
+              code={code}
+              participants={participants}
+              connectionStatus={connectionStatus}
+              onLeaveRoom={onLeaveRoom}
+            />
           </aside> : null}
         </div>
       </section>
@@ -1249,10 +1280,12 @@ function WatchPartyPage({
 }
 
 function WatchPartyParticipants({
+  code,
   participants,
   connectionStatus,
   onLeaveRoom,
 }: {
+  code: string;
   participants: WatchPartyParticipant[];
   connectionStatus: string;
   onLeaveRoom: () => void;
@@ -1274,6 +1307,12 @@ function WatchPartyParticipants({
           </span>
         </div>
       ))}
+      <div className="watch-party-code compact">
+        <span>{code}</span>
+        <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
+          Скопировать
+        </button>
+      </div>
       <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
         Выйти из комнаты
       </button>
