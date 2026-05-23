@@ -471,6 +471,42 @@ h1 {
   padding: 28px;
 }
 
+.screen-transition {
+  min-width: 0;
+}
+
+.screen-transition.leaving {
+  animation: screen-fade-left 120ms ease-in both;
+}
+
+.screen-transition.entering {
+  animation: screen-fade-right 180ms ease-out both;
+}
+
+@keyframes screen-fade-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+}
+
+@keyframes screen-fade-right {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .empty-catalog {
   display: grid;
   align-content: start;

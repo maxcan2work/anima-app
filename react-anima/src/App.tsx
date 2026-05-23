@@ -103,9 +103,17 @@ export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
   const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
   const scrollByPathRef = useRef<Record<string, number>>({});
+  const [screenAnimation, setScreenAnimation] = useState<'idle' | 'leaving' | 'entering'>('idle');
+  const screenKey = `${view}:${currentPath}`;
+  const [displayedScreenKey, setDisplayedScreenKey] = useState(screenKey);
+  const displayedScreenDivider = displayedScreenKey.indexOf(':');
+  const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as 'watch' | 'profile' | 'random';
+  const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
+  const displayedRouteAnimeId = getRouteAnimeId(displayedPath);
   const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
+  const displayedSelected = displayedRouteAnimeId ? library.find((anime) => anime.id === displayedRouteAnimeId) ?? selected : selected;
 
   useEffect(() => {
     function handlePopState() {
@@ -132,14 +140,33 @@ export function App() {
   }, [sidebarCollapsed]);
 
   useEffect(() => {
+    if (displayedScreenKey === screenKey) return;
+
+    setScreenAnimation('leaving');
+    const enterTimer = window.setTimeout(() => {
+      setDisplayedScreenKey(screenKey);
+      setScreenAnimation('entering');
+    }, 120);
+    const idleTimer = window.setTimeout(() => setScreenAnimation('idle'), 300);
+
+    return () => {
+      window.clearTimeout(enterTimer);
+      window.clearTimeout(idleTimer);
+    };
+  }, [displayedScreenKey, screenKey]);
+
+  useEffect(() => {
     if (currentPath.startsWith('/anime')) {
       lastWatchPathRef.current = currentPath;
     }
 
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollByPathRef.current[currentPath] ?? 0 });
-    });
   }, [currentPath]);
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollByPathRef.current[displayedPath] ?? 0 });
+    });
+  }, [displayedPath]);
 
   function openCatalogAnime(result: CatalogSearchResult) {
     navigateToRemembered(animeRouteFromCatalog(result), setCurrentPath, scrollByPathRef);
@@ -530,7 +557,8 @@ export function App() {
       </aside>
 
       <section className="watch-area">
-        {view === 'random' ? (
+        <div className={`screen-transition ${screenAnimation}`}>
+        {displayedView === 'random' ? (
           <RandomAnimePage
             randomAnime={randomAnime}
             history={randomHistory}
@@ -543,7 +571,7 @@ export function App() {
             onClearHistory={handleClearRandomHistory}
             onDeleteHistoryEntry={handleDeleteRandomHistoryEntry}
           />
-        ) : view === 'watch' && !routeAnimeId ? (
+        ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
             browseResults={browseResults}
             browsePage={browsePage}
@@ -558,13 +586,13 @@ export function App() {
             onOpenAnime={openCatalogAnime}
             onPageChange={setBrowsePage}
           />
-        ) : !selected ? (
+        ) : !displayedSelected ? (
           <EmptyCatalog />
-        ) : view === 'watch' ? (
+        ) : displayedView === 'watch' ? (
           <AnimeHero
-            anime={selected}
-            state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
-            onStateChange={(patch) => updateState(selected.id, patch)}
+            anime={displayedSelected}
+            state={watchState[displayedSelected.id] ?? { episode: 1, status: 'planned' }}
+            onStateChange={(patch) => updateState(displayedSelected.id, patch)}
           />
         ) : (
           <ProfilePage
@@ -574,6 +602,7 @@ export function App() {
             onLogin={loginWithDiscord}
           />
         )}
+        </div>
       </section>
     </main>
   );
