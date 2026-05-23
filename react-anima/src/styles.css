@@ -43,6 +43,7 @@ button {
 .library-panel {
   position: sticky;
   top: 0;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -359,7 +360,7 @@ h1 {
   position: absolute;
   left: calc(100% + 12px);
   top: 50%;
-  z-index: 20;
+  z-index: 200;
   min-width: max-content;
   padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -422,6 +423,8 @@ h1 {
 }
 
 .watch-area {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   padding: 28px;
 }
