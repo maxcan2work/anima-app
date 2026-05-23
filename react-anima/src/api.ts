@@ -27,7 +27,7 @@ export type ServerWatchEntry = {
 };
 
 export type PlayerProviderResult = {
-  provider: 'anilibria';
+  provider: 'anilibria' | 'kodik';
   providerTitleId: string;
   title: string;
   originalTitle: string | null;
@@ -37,7 +37,8 @@ export type PlayerProviderResult = {
   requestedEpisode: number;
   status: 'available' | 'unknown';
   streamUrl: string | null;
-  streamType: 'hls' | null;
+  streamType: 'hls' | 'iframe' | null;
+  embedUrl: string | null;
   quality: 'fhd' | 'hd' | 'sd' | null;
   note: string;
 };

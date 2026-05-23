@@ -35,9 +35,15 @@ type WatchState = {
   status: 'planned' | 'watching' | 'completed' | 'dropped';
 };
 
+type PlayerProvider = PlayerProviderResult['provider'];
+
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
 const EPISODES_PER_PAGE = 15;
+const PLAYER_PROVIDER_OPTIONS: Array<{ value: PlayerProvider; label: string }> = [
+  { value: 'anilibria', label: 'AniLiberty' },
+  { value: 'kodik', label: 'Kodik' },
+];
 const WATCH_STATUS_OPTIONS: Array<{ value: WatchState['status']; label: string }> = [
   { value: 'planned', label: 'В планах' },
   { value: 'watching', label: 'Смотрю' },
@@ -866,9 +872,11 @@ function AnimeHero({
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
+  const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('anilibria');
   const [episodePage, setEpisodePage] = useState(0);
-  const playablePlayers = players.filter((player) => player.streamUrl);
-  const selectedPlayer = playablePlayers[0] ?? players[0];
+  const playablePlayers = players.filter(isPlayablePlayer);
+  const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
+  const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? players[0];
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -911,8 +919,8 @@ function AnimeHero({
     <>
       <div className="player-layout">
         <section className="player">
-          {selectedPlayer?.streamUrl ? <HlsPlayer anime={anime} player={selectedPlayer} /> : null}
-          <div className={selectedPlayer?.streamUrl ? 'video-frame hidden-frame' : 'video-frame'}>
+          {selectedPlayer && isPlayablePlayer(selectedPlayer) ? <VideoPlayer anime={anime} player={selectedPlayer} /> : null}
+          <div className={selectedPlayer && isPlayablePlayer(selectedPlayer) ? 'video-frame hidden-frame' : 'video-frame'}>
             <img src={anime.backdrop} alt="" />
             <div className="play-overlay">
               <button aria-label="Запустить эпизод">▶</button>
@@ -978,6 +986,7 @@ function AnimeHero({
           </div>
 
           <div className="watch-tools">
+            <PlayerProviderSelect players={players} value={selectedProviderName} onChange={setSelectedProviderName} />
             <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
           </div>
           <WatchSources anime={anime} />
@@ -985,6 +994,35 @@ function AnimeHero({
       </div>
 
     </>
+  );
+}
+
+function PlayerProviderSelect({
+  players,
+  value,
+  onChange,
+}: {
+  players: PlayerProviderResult[];
+  value: PlayerProvider;
+  onChange: (value: PlayerProvider) => void;
+}) {
+  return (
+    <div className="provider-select" aria-label="Плеер">
+      {PLAYER_PROVIDER_OPTIONS.map((option) => {
+        const available = players.some((player) => player.provider === option.value && isPlayablePlayer(player));
+        return (
+          <button
+            key={option.value}
+            className={option.value === value ? 'selected' : ''}
+            type="button"
+            disabled={!available}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -1058,6 +1096,26 @@ function WatchStatusSelect({
   );
 }
 
+function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProviderResult }) {
+  if (player.streamType === 'iframe' && player.embedUrl) {
+    return (
+      <div className="video-frame">
+        <iframe
+          src={player.embedUrl}
+          title={player.title}
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
+        <div className="player-badge">
+          {player.title} · Kodik
+        </div>
+      </div>
+    );
+  }
+
+  return <HlsPlayer anime={anime} player={player} />;
+}
+
 function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProviderResult }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -1089,6 +1147,10 @@ function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvide
       </div>
     </div>
   );
+}
+
+function isPlayablePlayer(player: PlayerProviderResult) {
+  return Boolean(player.streamUrl || player.embedUrl);
 }
 
 function WatchSources({ anime }: { anime: AnimeTitle }) {

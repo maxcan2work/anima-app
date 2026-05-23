@@ -1,7 +1,7 @@
 import { prisma } from './db.js';
 
 type PlayerProviderResult = {
-  provider: 'anilibria';
+  provider: 'anilibria' | 'kodik';
   providerTitleId: string;
   title: string;
   originalTitle: string | null;
@@ -11,7 +11,8 @@ type PlayerProviderResult = {
   requestedEpisode: number;
   status: 'available' | 'unknown';
   streamUrl: string | null;
-  streamType: 'hls' | null;
+  streamType: 'hls' | 'iframe' | null;
+  embedUrl: string | null;
   quality: 'fhd' | 'hd' | 'sd' | null;
   note: string;
 };
@@ -46,8 +47,26 @@ type AniLibertyEpisode = {
   hls_480?: string | null;
 };
 
+type KodikSearchResponse = {
+  results?: KodikRelease[];
+};
+
+type KodikRelease = {
+  id?: string;
+  title?: string;
+  title_orig?: string | null;
+  link?: string | null;
+  translation?: {
+    title?: string | null;
+  } | null;
+  episodes_count?: number | null;
+  last_episode?: number | null;
+  seasons?: Record<string, { episodes?: Record<string, string | null> | null } | null> | null;
+};
+
 const ANILIBERTY_BASE_URL = 'https://anilibria.top';
 const ANILIBERTY_API_URL = `${ANILIBERTY_BASE_URL}/api/v1`;
+const KODIK_API_URL = 'https://kodikapi.com';
 
 export async function findPlayerProviders(animeId: string, episodeNumber: number) {
   const anime = await prisma.anime.findUnique({
@@ -90,11 +109,12 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
       anilibriaResults = await searchAniLiberty(uniqueStrings([anime.originalTitle, anime.title]), episodeNumber);
     }
   }
+  const kodikResults = await searchKodik(anime, episodeNumber);
 
   return {
     anime,
     episodeNumber,
-    providers: anilibriaResults,
+    providers: [...anilibriaResults, ...kodikResults],
   };
 }
 
@@ -215,10 +235,100 @@ function mapAniLibertyRelease(release: AniLibertyRelease, episodeNumber: number)
       status: stream.url || episodeCount == null || episodeNumber <= episodeCount ? 'available' : 'unknown',
       streamUrl: stream.url,
       streamType: stream.url ? 'hls' : null,
+      embedUrl: null,
       quality: stream.quality,
       note: 'AniLiberty: русская озвучка, доступность серий зависит от релиза провайдера.',
     },
   ];
+}
+
+async function searchKodik(anime: { title: string; originalTitle: string | null; shikimoriId: number | null }, episodeNumber: number) {
+  const token = process.env.KODIK_TOKEN?.trim();
+  if (!token) return [];
+
+  const searches = uniqueStrings([anime.shikimoriId ? String(anime.shikimoriId) : null, anime.originalTitle, anime.title]);
+  const resultsById = new Map<string, KodikRelease>();
+
+  for (const query of searches) {
+    const releases = await fetchKodikSearch(token, anime.shikimoriId ? { shikimoriId: anime.shikimoriId } : { title: query });
+    releases.forEach((release, index) => {
+      const id = release.id ?? release.link ?? `${query}-${index}`;
+      if (!resultsById.has(id)) {
+        resultsById.set(id, release);
+      }
+    });
+    if (resultsById.size > 0 && anime.shikimoriId) break;
+  }
+
+  return [...resultsById.values()].slice(0, 5).map((release) => mapKodikRelease(release, episodeNumber)).filter(Boolean);
+}
+
+async function fetchKodikSearch(token: string, query: { shikimoriId?: number; title?: string }): Promise<KodikRelease[]> {
+  const url = new URL(`${KODIK_API_URL}/search`);
+  url.searchParams.set('token', token);
+  url.searchParams.set('with_episodes', 'true');
+  url.searchParams.set('limit', '8');
+  url.searchParams.set('types', 'anime,anime-serial');
+
+  if (query.shikimoriId) {
+    url.searchParams.set('shikimori_id', String(query.shikimoriId));
+  } else if (query.title) {
+    url.searchParams.set('title', query.title);
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'AnimaAggregator/0.1',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    const payload = (await response.json()) as KodikSearchResponse;
+    return payload.results ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function mapKodikRelease(release: KodikRelease, episodeNumber: number): PlayerProviderResult | null {
+  const embedUrl = buildKodikUrl(getKodikEpisodeLink(release, episodeNumber) ?? release.link);
+  if (!embedUrl) return null;
+
+  return {
+    provider: 'kodik',
+    providerTitleId: release.id ?? embedUrl,
+    title: release.title ?? release.title_orig ?? 'Kodik',
+    originalTitle: release.title_orig ?? null,
+    posterUrl: null,
+    watchUrl: embedUrl,
+    episodeCount: release.episodes_count ?? release.last_episode ?? null,
+    requestedEpisode: episodeNumber,
+    status: 'available',
+    streamUrl: null,
+    streamType: 'iframe',
+    embedUrl,
+    quality: null,
+    note: release.translation?.title ? `Kodik: ${release.translation.title}` : 'Kodik',
+  };
+}
+
+function getKodikEpisodeLink(release: KodikRelease, episodeNumber: number) {
+  const seasons = Object.values(release.seasons ?? {});
+  for (const season of seasons) {
+    const link = season?.episodes?.[String(episodeNumber)];
+    if (link) return link;
+  }
+  return null;
+}
+
+function buildKodikUrl(value: string | null | undefined) {
+  if (!value) return null;
+  if (value.startsWith('//')) return `https:${value}`;
+  if (value.startsWith('http')) return value;
+  return `https://${value}`;
 }
 
 function getEpisodeStream(release: AniLibertyRelease, episodeNumber: number) {
