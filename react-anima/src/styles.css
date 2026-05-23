@@ -211,6 +211,34 @@ h1 {
   font-size: 13px;
 }
 
+.search-loader {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  margin: -10px 0 0;
+}
+
+.search-loader svg {
+  width: 34px;
+  height: 34px;
+  animation: search-spin 0.9s linear infinite;
+}
+
+.search-loader circle {
+  fill: none;
+  stroke: #f2c063;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 80 40;
+  opacity: 0.9;
+}
+
+@keyframes search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .watch-area {
   min-width: 0;
   padding: 28px;

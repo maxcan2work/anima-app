@@ -201,7 +201,7 @@ export function App() {
 
     let ignore = false;
     setCatalogSearchLoading(true);
-    setCatalogSearchStatus('Ищем в Shikimori...');
+    setCatalogSearchStatus('');
 
     const timeoutId = window.setTimeout(async () => {
       try {
@@ -575,7 +575,7 @@ function WatchHome({
         </label>
       </header>
 
-      {status ? <p className="catalog-status">{status}</p> : null}
+      {searchLoading && isSearching ? <SearchLoader /> : status ? <p className="catalog-status">{status}</p> : null}
 
       <div className="browse-grid">
         {visibleResults.map((result) => (
@@ -593,7 +593,7 @@ function WatchHome({
       </div>
 
       {isSearching ? (
-        searchLoading ? <div className="scroll-sentinel">Ищем...</div> : null
+        null
       ) : (
         <div ref={sentinelRef} className="scroll-sentinel">
           {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
@@ -601,6 +601,16 @@ function WatchHome({
       )}
 
     </section>
+  );
+}
+
+function SearchLoader() {
+  return (
+    <div className="search-loader" aria-label="Загрузка результатов">
+      <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
+        <circle cx="24" cy="24" r="18" />
+      </svg>
+    </div>
   );
 }
 
