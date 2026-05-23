@@ -11,7 +11,6 @@ import {
   loginWithDiscord,
   logout,
   saveAnimeProgress,
-  searchCatalog,
   type CatalogSearchResult,
   type CurrentUser,
   type PlayerProviderResult,
@@ -41,18 +40,15 @@ function saveWatchState(value: Record<string, WatchState>) {
 }
 
 export function App() {
-  const [query, setQuery] = useState('');
   const [library, setLibrary] = useState<AnimeTitle[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
-  const [catalogResults, setCatalogResults] = useState<CatalogSearchResult[]>([]);
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
   const [browsePage, setBrowsePage] = useState(1);
   const [browseHasNext, setBrowseHasNext] = useState(true);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
-  const [catalogStatus, setCatalogStatus] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
@@ -74,7 +70,7 @@ export function App() {
         setSelectedId((current) => current || loaded[0]?.id || '');
       } catch {
         if (!ignore) {
-          setCatalogStatus('Не удалось загрузить локальный каталог.');
+          console.warn('Failed to load local catalog');
         }
       }
     }
@@ -113,7 +109,7 @@ export function App() {
           setView('watch');
         } catch {
           if (!ignore) {
-            setCatalogStatus('Не удалось открыть тайтл.');
+            console.warn('Failed to open anime route');
           }
         }
       }
@@ -200,38 +196,7 @@ export function App() {
     };
   }, []);
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return library;
-
-    return library.filter((anime) => {
-      return [anime.title, anime.originalTitle, anime.genres.join(' '), anime.studio]
-        .join(' ')
-        .toLowerCase()
-        .includes(needle);
-    });
-  }, [library, query]);
-
-  async function handleCatalogSearch() {
-    const needle = query.trim();
-    if (needle.length < 2) {
-      setCatalogStatus('Введите минимум 2 символа.');
-      return;
-    }
-
-    setCatalogStatus('Ищем в Shikimori...');
-    try {
-      const response = await searchCatalog(needle);
-      setCatalogResults(response.results);
-      setCatalogStatus(response.results.length ? '' : 'Во внешнем каталоге ничего не найдено.');
-    } catch {
-      setCatalogResults([]);
-      setCatalogStatus('Не удалось выполнить поиск.');
-    }
-  }
-
   async function handleImportCatalogAnime(result: CatalogSearchResult) {
-    setCatalogStatus('Добавляем в каталог...');
     try {
       const response = await importCatalogAnime(result.provider, result.providerId);
       const anime = mapServerAnime(response.anime);
@@ -239,9 +204,8 @@ export function App() {
       setSelectedId(anime.id);
       setView('watch');
       pushAnimeRoute(anime.id);
-      setCatalogStatus('Тайтл добавлен в каталог.');
     } catch {
-      setCatalogStatus('Не удалось добавить тайтл.');
+      console.warn('Failed to import catalog anime');
     }
   }
 
@@ -331,56 +295,25 @@ export function App() {
           syncStatus={syncStatus}
           onLogin={loginWithDiscord}
           onLogout={handleLogout}
+          onProfile={() => setView('profile')}
         />
 
-        <nav className="view-tabs" aria-label="Разделы">
-          <button className={view === 'watch' ? 'active' : ''} onClick={() => setView('watch')}>Просмотр</button>
-          <button className={view === 'profile' ? 'active' : ''} onClick={() => setView('profile')}>Профиль</button>
+        <nav className="side-nav" aria-label="Разделы">
+          <button
+            className={view === 'watch' && !routeAnimeId ? 'active' : ''}
+            onClick={() => {
+              window.history.pushState(null, '', '/');
+              setView('watch');
+            }}
+          >
+            <span>Просмотр</span>
+            <small>Каталог Shikimori</small>
+          </button>
+          <button disabled>
+            <span>Угадай опенинг</span>
+            <small>Скоро</small>
+          </button>
         </nav>
-
-        <label className="search-field">
-          <span>Поиск</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Название, жанр, студия"
-          />
-        </label>
-
-        <button className="catalog-search-button" onClick={handleCatalogSearch}>Искать в Shikimori</button>
-        {catalogStatus ? <p className="catalog-status">{catalogStatus}</p> : null}
-
-        <div className="title-list">
-          {filtered.map((anime) => (
-            <AnimeListItem
-              key={anime.id}
-              anime={anime}
-              active={anime.id === selected?.id}
-              progress={watchState[anime.id]}
-              onSelect={() => setSelectedId(anime.id)}
-            />
-          ))}
-        </div>
-
-        {catalogResults.length > 0 ? (
-          <div className="catalog-results">
-            <h3>Shikimori</h3>
-            {catalogResults.map((result) => (
-              <a key={`${result.provider}-${result.providerId}`} className="catalog-result" href={animeRouteFromCatalog(result)}>
-                {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
-                <span>
-                  <strong>{result.title}</strong>
-                  <small>
-                    {result.originalTitle} · {result.episodes} сер.
-                  </small>
-                  <small>
-                    MAL {result.malId ?? '-'} · {result.score ?? 'без оценки'}
-                  </small>
-                </span>
-              </a>
-            ))}
-          </div>
-        ) : null}
       </aside>
 
       <section className="watch-area">
@@ -394,7 +327,7 @@ export function App() {
             onPageChange={setBrowsePage}
           />
         ) : !selected ? (
-          <EmptyCatalog onSearch={handleCatalogSearch} />
+          <EmptyCatalog />
         ) : view === 'watch' ? (
           <AnimeHero
             anime={selected}
@@ -428,12 +361,14 @@ function AuthPanel({
   syncStatus,
   onLogin,
   onLogout,
+  onProfile,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
   syncStatus: string;
   onLogin: () => void;
   onLogout: () => void;
+  onProfile: () => void;
 }) {
   if (authStatus === 'loading') {
     return <div className="auth-panel muted">Проверяем сессию...</div>;
@@ -453,23 +388,24 @@ function AuthPanel({
 
   return (
     <div className="auth-panel signed-in">
-      {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
-      <div>
-        <strong>{user.displayName}</strong>
-        <span>{syncStatus || 'Прогресс синхронизируется'}</span>
-      </div>
+      <button className="profile-link" onClick={onProfile}>
+        {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
+        <span>
+          <strong>{user.displayName}</strong>
+          <small>{syncStatus || 'Профиль и дневник'}</small>
+        </span>
+      </button>
       <button className="text-button" onClick={onLogout}>Выйти</button>
     </div>
   );
 }
 
-function EmptyCatalog({ onSearch }: { onSearch: () => void }) {
+function EmptyCatalog() {
   return (
     <section className="empty-catalog">
       <p className="eyebrow">Shikimori</p>
       <h2>Каталог пуст</h2>
       <p>Найди аниме через Shikimori и добавь его в Anima, чтобы вести просмотр, дневник и искать плееры AniLibria.</p>
-      <button className="catalog-search-button" onClick={onSearch}>Искать по запросу</button>
     </section>
   );
 }
@@ -710,31 +646,6 @@ function ProfilePage({
         </form>
       </div>
     </section>
-  );
-}
-
-function AnimeListItem({
-  anime,
-  active,
-  progress,
-  onSelect,
-}: {
-  anime: AnimeTitle;
-  active: boolean;
-  progress?: WatchState;
-  onSelect: () => void;
-}) {
-  return (
-    <button className={`anime-row ${active ? 'active' : ''}`} onClick={onSelect}>
-      <img src={anime.poster} alt="" />
-      <span>
-        <strong>{anime.title}</strong>
-        <small>
-          {anime.year} · {anime.genres.slice(0, 2).join(', ')}
-        </small>
-      </span>
-      {progress ? <em>{progress.episode}/{anime.episodes}</em> : null}
-    </button>
   );
 }
 
