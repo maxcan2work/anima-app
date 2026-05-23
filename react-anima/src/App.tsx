@@ -1419,26 +1419,39 @@ function WatchPartyPage({
   return (
     <section className="watch-party-page">
       <div className="watch-party-entry">
-        <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
-        <p className="eyebrow">Совместный просмотр</p>
-        <h2>Собери комнату для просмотра</h2>
-        <p>Создай лобби или подключись по коду. Позже здесь появится список активных комнат аккаунта.</p>
+        <header className="watch-party-entry-header">
+          <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+          <h2>Совместный просмотр</h2>
+        </header>
 
-        <div className="watch-party-actions">
-          <button className="random-button" type="button" onClick={handleCreateRoom}>
-            Создать комнату
-          </button>
-          <form className="watch-party-join" onSubmit={handleJoinRoom}>
-            <input
-              value={joinCode}
-              onChange={(event) => setJoinCode(event.target.value)}
-              placeholder="Код комнаты"
-              maxLength={12}
-            />
-            <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)}>
-              Подключиться
+        <div className="watch-party-entry-options">
+          <section className="watch-party-entry-option">
+            <h3>Создать комнату</h3>
+            <p>Собери друзей в одной комнате, выбери аниме и управляй сериями как хост.</p>
+            <button className="random-button" type="button" onClick={handleCreateRoom}>
+              Создать комнату
             </button>
-          </form>
+          </section>
+
+          <div className="watch-party-divider" aria-hidden="true">
+            <span>или</span>
+          </div>
+
+          <section className="watch-party-entry-option">
+            <h3>Войти по коду</h3>
+            <p>Вставь код комнаты, который отправил хост, и подключайся к совместному просмотру.</p>
+            <form className="watch-party-join" onSubmit={handleJoinRoom}>
+              <input
+                value={joinCode}
+                onChange={(event) => setJoinCode(event.target.value)}
+                placeholder="Код комнаты"
+                maxLength={12}
+              />
+              <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)}>
+                Подключиться
+              </button>
+            </form>
+          </section>
         </div>
       </div>
     </section>
