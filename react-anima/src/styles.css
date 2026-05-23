@@ -359,11 +359,6 @@ h1 {
   font-weight: 900;
 }
 
-.browse-counter {
-  color: #cfc7ba;
-  font-size: 13px;
-}
-
 .browse-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -404,12 +399,6 @@ h1 {
   min-height: 52px;
   color: #aaa196;
   font-size: 13px;
-}
-
-.selected-watch-block {
-  display: grid;
-  gap: 14px;
-  padding-top: 6px;
 }
 
 .player-layout {

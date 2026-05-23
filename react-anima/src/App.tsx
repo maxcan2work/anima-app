@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
   browseCatalog,
@@ -348,7 +348,6 @@ export function App() {
       <section className="watch-area">
         {view === 'watch' ? (
           <WatchHome
-            selected={selected}
             browseResults={browseResults}
             browsePage={browsePage}
             browseHasNext={browseHasNext}
@@ -356,15 +355,6 @@ export function App() {
             browseStatus={browseStatus}
             onPageChange={setBrowsePage}
             onImport={handleImportCatalogAnime}
-            renderSelected={() =>
-              selected ? (
-                <AnimeHero
-                  anime={selected}
-                  state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
-                  onStateChange={(patch) => updateState(selected.id, patch)}
-                />
-              ) : null
-            }
           />
         ) : !selected ? (
           <EmptyCatalog onSearch={handleCatalogSearch} />
@@ -442,7 +432,6 @@ function EmptyCatalog({ onSearch }: { onSearch: () => void }) {
 }
 
 function WatchHome({
-  selected,
   browseResults,
   browsePage,
   browseHasNext,
@@ -450,9 +439,7 @@ function WatchHome({
   browseStatus,
   onPageChange,
   onImport,
-  renderSelected,
 }: {
-  selected: AnimeTitle | null;
   browseResults: CatalogSearchResult[];
   browsePage: number;
   browseHasNext: boolean;
@@ -460,7 +447,6 @@ function WatchHome({
   browseStatus: string;
   onPageChange: (page: number) => void;
   onImport: (result: CatalogSearchResult) => void;
-  renderSelected: () => ReactNode;
 }) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -491,7 +477,6 @@ function WatchHome({
           <p className="eyebrow">Shikimori</p>
           <h2>Каталог аниме</h2>
         </div>
-        <span className="browse-counter">Страница {browsePage}</span>
       </header>
 
       {browseStatus ? <p className="catalog-status">{browseStatus}</p> : null}
@@ -516,14 +501,6 @@ function WatchHome({
         {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
       </div>
 
-      {selected ? (
-        <div className="selected-watch-block">
-          <header className="section-heading">
-            <h3>Выбранный тайтл</h3>
-          </header>
-          {renderSelected()}
-        </div>
-      ) : null}
     </section>
   );
 }
