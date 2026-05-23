@@ -52,7 +52,7 @@ export function App() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
-  const [view, setView] = useState<'watch' | 'profile'>('watch');
+  const [view, setView] = useState<'watch' | 'profile'>(() => (window.location.pathname === '/profile' ? 'profile' : 'watch'));
   const routeAnimeId = getRouteAnimeId();
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
@@ -292,7 +292,10 @@ export function App() {
           user={user}
           authStatus={authStatus}
           onLogin={loginWithDiscord}
-          onProfile={() => setView('profile')}
+          onProfile={() => {
+            window.history.pushState(null, '', '/profile');
+            setView('profile');
+          }}
         />
 
         <nav className="side-nav" aria-label="Разделы">
@@ -342,6 +345,7 @@ export function App() {
             onLogin={loginWithDiscord}
             onSelectAnime={(id) => {
               setSelectedId(id);
+              pushAnimeRoute(id);
               setView('watch');
             }}
             onSave={handleDiarySave}
