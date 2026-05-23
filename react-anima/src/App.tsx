@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import Hls from 'hls.js';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import loginIcon from './assets/login.svg';
@@ -101,14 +101,23 @@ export function App() {
   const [view, setView] = useState<'watch' | 'profile' | 'random'>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
+  const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
+  const scrollByPathRef = useRef<Record<string, number>>({});
   const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
 
   useEffect(() => {
     function handlePopState() {
-      setCurrentPath(window.location.pathname);
-      setView(getViewFromPath(window.location.pathname));
+      setCurrentPath((current) => {
+        scrollByPathRef.current[current] = window.scrollY;
+        return window.location.pathname;
+      });
+      const nextView = getViewFromPath(window.location.pathname);
+      if (nextView === 'watch') {
+        lastWatchPathRef.current = window.location.pathname;
+      }
+      setView(nextView);
     }
 
     window.addEventListener('popstate', handlePopState);
@@ -122,8 +131,18 @@ export function App() {
     saveSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed]);
 
+  useEffect(() => {
+    if (currentPath.startsWith('/anime')) {
+      lastWatchPathRef.current = currentPath;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollByPathRef.current[currentPath] ?? 0 });
+    });
+  }, [currentPath]);
+
   function openCatalogAnime(result: CatalogSearchResult) {
-    navigateTo(animeRouteFromCatalog(result), setCurrentPath);
+    navigateToRemembered(animeRouteFromCatalog(result), setCurrentPath, scrollByPathRef);
     setView('watch');
   }
 
@@ -317,7 +336,7 @@ export function App() {
       setLibrary((current) => mergeAnimeLibrary(current, [anime]));
       setSelectedId(anime.id);
       setView('watch');
-      pushAnimeRoute(anime.id, setCurrentPath);
+      pushAnimeRoute(anime.id, setCurrentPath, scrollByPathRef);
     } catch {
       console.warn('Failed to import catalog anime');
     }
@@ -472,7 +491,8 @@ export function App() {
             description="Список аниме"
             collapsed={sidebarCollapsed}
             onClick={() => {
-              navigateTo('/anime', setCurrentPath);
+              const nextPath = view === 'watch' && routeAnimeId ? '/anime' : lastWatchPathRef.current;
+              navigateToRemembered(nextPath, setCurrentPath, scrollByPathRef);
               setView('watch');
             }}
           />
@@ -483,7 +503,7 @@ export function App() {
             description="Подборка наугад"
             collapsed={sidebarCollapsed}
             onClick={() => {
-              navigateTo('/random', setCurrentPath);
+              navigateToRemembered('/random', setCurrentPath, scrollByPathRef);
               setView('random');
             }}
           />
@@ -503,7 +523,7 @@ export function App() {
           collapsed={sidebarCollapsed}
           onLogin={loginWithDiscord}
           onProfile={() => {
-            navigateTo('/profile', setCurrentPath);
+            navigateToRemembered('/profile', setCurrentPath, scrollByPathRef);
             setView('profile');
           }}
         />
@@ -1285,16 +1305,27 @@ function animeRouteFromCatalog(result: CatalogSearchResult) {
   return `/anime/shikimori-${result.providerId}`;
 }
 
-function navigateTo(path: string, setCurrentPath: (path: string) => void) {
-  if (window.location.pathname !== path) {
-    window.history.pushState(null, '', path);
-  }
-  setCurrentPath(path);
+function navigateToRemembered(
+  path: string,
+  setCurrentPath: (path: string | ((current: string) => string)) => void,
+  scrollByPathRef: MutableRefObject<Record<string, number>>,
+) {
+  setCurrentPath((current) => {
+    scrollByPathRef.current[current] = window.scrollY;
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+    return path;
+  });
 }
 
-function pushAnimeRoute(animeId: string, setCurrentPath: (path: string) => void) {
+function pushAnimeRoute(
+  animeId: string,
+  setCurrentPath: (path: string | ((current: string) => string)) => void,
+  scrollByPathRef: MutableRefObject<Record<string, number>>,
+) {
   const path = `/anime/${encodeURIComponent(animeId)}`;
-  navigateTo(path, setCurrentPath);
+  navigateToRemembered(path, setCurrentPath, scrollByPathRef);
 }
 
 function mapServerAnime(anime: ServerAnime): AnimeTitle {
