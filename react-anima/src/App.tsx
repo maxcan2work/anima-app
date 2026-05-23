@@ -49,10 +49,14 @@ export function App() {
   const [browseHasNext, setBrowseHasNext] = useState(true);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
+  const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);
+  const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
+  const [randomLoading, setRandomLoading] = useState(false);
+  const [randomStatus, setRandomStatus] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
-  const [view, setView] = useState<'watch' | 'profile'>(() => (window.location.pathname === '/profile' ? 'profile' : 'watch'));
+  const [view, setView] = useState<'watch' | 'profile' | 'random'>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const routeAnimeId = getRouteAnimeId(currentPath);
 
@@ -61,7 +65,7 @@ export function App() {
   useEffect(() => {
     function handlePopState() {
       setCurrentPath(window.location.pathname);
-      setView(window.location.pathname === '/profile' ? 'profile' : 'watch');
+      setView(getViewFromPath(window.location.pathname));
     }
 
     window.addEventListener('popstate', handlePopState);
@@ -223,6 +227,34 @@ export function App() {
     }
   }
 
+  async function handleRandomAnime() {
+    setRandomLoading(true);
+    setRandomStatus('');
+
+    try {
+      const page = Math.floor(Math.random() * 20) + 1;
+      const response = await browseCatalog(page, 'ranked_random');
+      const candidates = response.results.filter((item) => item.posterUrl);
+      const pool = candidates.length > 0 ? candidates : response.results;
+      const next = pool[Math.floor(Math.random() * pool.length)];
+
+      if (!next) {
+        setRandomStatus('Shikimori не вернул тайтлы для рандома.');
+        return;
+      }
+
+      setRandomAnime(next);
+      setRandomHistory((current) => {
+        const withoutDuplicate = current.filter((item) => item.providerId !== next.providerId);
+        return [next, ...withoutDuplicate].slice(0, 10);
+      });
+    } catch {
+      setRandomStatus('Не удалось получить случайное аниме.');
+    } finally {
+      setRandomLoading(false);
+    }
+  }
+
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
       const anime = library.find((item) => item.id === id);
@@ -298,6 +330,16 @@ export function App() {
             <span>Просмотр</span>
             <small>Каталог Shikimori</small>
           </button>
+          <button
+            className={view === 'random' ? 'active' : ''}
+            onClick={() => {
+              navigateTo('/random', setCurrentPath);
+              setView('random');
+            }}
+          >
+            <span>Случайное аниме</span>
+            <small>Подборка наугад</small>
+          </button>
           <button disabled>
             <span>Угадай опенинг</span>
             <small>Скоро</small>
@@ -306,7 +348,15 @@ export function App() {
       </aside>
 
       <section className="watch-area">
-        {view === 'watch' && !routeAnimeId ? (
+        {view === 'random' ? (
+          <RandomAnimePage
+            randomAnime={randomAnime}
+            history={randomHistory}
+            loading={randomLoading}
+            status={randomStatus}
+            onRandomize={handleRandomAnime}
+          />
+        ) : view === 'watch' && !routeAnimeId ? (
           <WatchHome
             browseResults={browseResults}
             browsePage={browsePage}
@@ -452,6 +502,67 @@ function WatchHome({
         {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
       </div>
 
+    </section>
+  );
+}
+
+function RandomAnimePage({
+  randomAnime,
+  history,
+  loading,
+  status,
+  onRandomize,
+}: {
+  randomAnime: CatalogSearchResult | null;
+  history: CatalogSearchResult[];
+  loading: boolean;
+  status: string;
+  onRandomize: () => void;
+}) {
+  return (
+    <section className="random-page">
+      <div className="random-stage">
+        <div className="random-dice" aria-hidden="true">◇</div>
+        <p className="eyebrow">Рандомайзер</p>
+        <h2>Не знаешь, что посмотреть?</h2>
+        <p>Жми кнопку снизу, а Anima достанет случайный тайтл из каталога Shikimori.</p>
+
+        {randomAnime ? (
+          <a className="random-card" href={animeRouteFromCatalog(randomAnime)}>
+            {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : null}
+            <div>
+              <strong>{randomAnime.title}</strong>
+              <small>{randomAnime.originalTitle}</small>
+              <small>
+                {randomAnime.episodes} сер. · {randomAnime.score ?? 'без оценки'}
+              </small>
+            </div>
+          </a>
+        ) : null}
+
+        {status ? <p className="catalog-status">{status}</p> : null}
+
+        <button className="random-button" onClick={onRandomize} disabled={loading}>
+          {loading ? 'Рандомим...' : randomAnime ? 'Перерандомить' : 'Срандомить'}
+        </button>
+      </div>
+
+      <aside className="random-history" aria-label="История случайных аниме">
+        <h3>История</h3>
+        {history.length === 0 ? (
+          <p className="muted-copy">Здесь появятся последние варианты.</p>
+        ) : (
+          history.map((item) => (
+            <a key={`${item.provider}-${item.providerId}`} href={animeRouteFromCatalog(item)} className="random-history-row">
+              {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className="poster-fallback" />}
+              <span>
+                <strong>{item.title}</strong>
+                <small>{item.score ?? 'без оценки'}</small>
+              </span>
+            </a>
+          ))
+        )}
+      </aside>
     </section>
   );
 }
@@ -798,6 +909,12 @@ function getRouteAnimeId(pathname: string) {
   if (pathname === '/anime') return '';
   const match = pathname.match(/^\/anime\/([^/]+)$/);
   return match?.[1] ? decodeURIComponent(match[1]) : '';
+}
+
+function getViewFromPath(pathname: string): 'watch' | 'profile' | 'random' {
+  if (pathname === '/profile') return 'profile';
+  if (pathname === '/random') return 'random';
+  return 'watch';
 }
 
 function parseShikimoriRouteId(animeId: string) {
