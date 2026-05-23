@@ -1009,6 +1009,7 @@ function AnimeHero({
   const playablePlayers = players.filter(isPlayablePlayer);
   const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
   const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? players[0];
+  const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -1138,7 +1139,7 @@ function AnimeHero({
           </div>
 
           <div className="watch-tools">
-            <PlayerProviderSelect players={players} value={selectedProviderName} onChange={setSelectedProviderName} />
+            <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
             <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
           </div>
           <WatchSources anime={anime} />
