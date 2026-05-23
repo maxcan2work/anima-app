@@ -115,6 +115,7 @@ export function App() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
+  const [toast, setToast] = useState('');
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
   const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -157,6 +158,13 @@ export function App() {
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    if (!toast) return;
+
+    const timer = window.setTimeout(() => setToast(''), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     if (displayedScreenKey === screenKey) return;
@@ -636,6 +644,7 @@ export function App() {
             onCreateRoom={(code) => openWatchParty(`/watch-party/${code}`)}
             onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
             onLeaveRoom={leaveWatchParty}
+            onToast={setToast}
           />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
@@ -670,6 +679,7 @@ export function App() {
         )}
         </div>
       </section>
+      {toast ? <div className="app-toast">{toast}</div> : null}
     </main>
   );
 }
@@ -984,12 +994,14 @@ function WatchPartyPage({
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
+  onToast,
 }: {
   code: string;
   user: CurrentUser | null;
   onCreateRoom: (code: string) => void;
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
+  onToast: (message: string) => void;
 }) {
   const [joinCode, setJoinCode] = useState(code);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
@@ -1185,6 +1197,7 @@ function WatchPartyPage({
                   participants={participants}
                   connectionStatus={connectionStatus}
                   onLeaveRoom={onLeaveRoom}
+                  onToast={onToast}
                 />
               }
             />
@@ -1245,6 +1258,7 @@ function WatchPartyPage({
               participants={participants}
               connectionStatus={connectionStatus}
               onLeaveRoom={onLeaveRoom}
+              onToast={onToast}
             />
           </aside> : null}
         </div>
@@ -1286,12 +1300,19 @@ function WatchPartyParticipants({
   participants,
   connectionStatus,
   onLeaveRoom,
+  onToast,
 }: {
   code: string;
   participants: WatchPartyParticipant[];
   connectionStatus: string;
   onLeaveRoom: () => void;
+  onToast: (message: string) => void;
 }) {
+  async function handleCopyCode() {
+    await navigator.clipboard?.writeText(code);
+    onToast('Код скопирован');
+  }
+
   return (
     <>
       <h3>Участники</h3>
@@ -1310,7 +1331,7 @@ function WatchPartyParticipants({
         </div>
       ))}
       <div className="watch-party-actions-row">
-        <button className="watch-party-code compact" type="button" onClick={() => navigator.clipboard?.writeText(code)}>
+        <button className="watch-party-code compact" type="button" onClick={handleCopyCode}>
           <span>{code}</span>
           <img src={copyIcon} alt="" aria-hidden="true" />
         </button>
