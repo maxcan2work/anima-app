@@ -1023,12 +1023,11 @@ function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvide
 function WatchSources({ anime }: { anime: AnimeTitle }) {
   return (
     <div className="sources-block">
-      <h3>Источники просмотра</h3>
+      <h3>Источники</h3>
       {anime.watchSources.map((source) => (
         <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className="source-link">
           <span>
             <strong>{source.name}</strong>
-            <small>{source.note}</small>
           </span>
           <em>{source.subtitles.join(', ')}</em>
         </a>
