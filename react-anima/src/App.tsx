@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import episodeArrowIcon from './assets/episode-arrow.svg';
 import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
 import nekoIcon from './assets/neko.svg';
@@ -36,6 +37,7 @@ type WatchState = {
 
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
+const EPISODES_PER_PAGE = 15;
 
 function loadWatchState(): Record<string, WatchState> {
   try {
@@ -858,8 +860,19 @@ function AnimeHero({
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('Ищем плееры провайдеров...');
+  const [episodePage, setEpisodePage] = useState(0);
   const playablePlayers = players.filter((player) => player.streamUrl);
   const selectedPlayer = playablePlayers[0] ?? players[0];
+  const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
+  const visibleEpisodes = useMemo(() => {
+    const start = episodePage * EPISODES_PER_PAGE + 1;
+    const end = Math.min(anime.episodes, start + EPISODES_PER_PAGE - 1);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [anime.episodes, episodePage]);
+
+  useEffect(() => {
+    setEpisodePage(Math.min(episodePages - 1, Math.floor((state.episode - 1) / EPISODES_PER_PAGE)));
+  }, [anime.id, episodePages, state.episode]);
 
   useEffect(() => {
     let ignore = false;
@@ -903,6 +916,38 @@ function AnimeHero({
           </div>
 
           {!selectedPlayer?.streamUrl && playersStatus ? <p className="player-status">{playersStatus}</p> : null}
+
+          <section className="episodes" aria-label="Серии">
+            <button
+              className="episode-scroll"
+              type="button"
+              onClick={() => setEpisodePage((page) => Math.max(0, page - 1))}
+              disabled={episodePage === 0}
+              aria-label="Предыдущие серии"
+            >
+              <img src={episodeArrowIcon} alt="" aria-hidden="true" />
+            </button>
+            <div className="episode-grid">
+              {visibleEpisodes.map((episode) => (
+                <button
+                  key={episode}
+                  className={episode === state.episode ? 'current' : ''}
+                  onClick={() => onStateChange({ episode, status: 'watching' })}
+                >
+                  {episode}
+                </button>
+              ))}
+            </div>
+            <button
+              className="episode-scroll"
+              type="button"
+              onClick={() => setEpisodePage((page) => Math.min(episodePages - 1, page + 1))}
+              disabled={episodePage >= episodePages - 1}
+              aria-label="Следующие серии"
+            >
+              <img src={episodeArrowIcon} alt="" aria-hidden="true" />
+            </button>
+          </section>
         </section>
 
         <aside className="details-panel">
@@ -936,20 +981,6 @@ function AnimeHero({
         </aside>
       </div>
 
-      <section className="episodes">
-        <h3>Серии</h3>
-        <div className="episode-grid">
-          {Array.from({ length: anime.episodes }, (_, index) => index + 1).map((episode) => (
-            <button
-              key={episode}
-              className={episode === state.episode ? 'current' : ''}
-              onClick={() => onStateChange({ episode, status: 'watching' })}
-            >
-              {episode}
-            </button>
-          ))}
-        </div>
-      </section>
     </>
   );
 }
