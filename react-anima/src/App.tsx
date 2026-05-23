@@ -199,9 +199,18 @@ export function App() {
     });
   }, [displayedPath]);
 
-  function openCatalogAnime(result: CatalogSearchResult) {
-    navigateToRemembered(animeRouteFromCatalog(result), setCurrentPath, scrollByPathRef);
+  function requestAnimeRoute(path: string) {
+    if (view === 'watchParty' && watchPartyCode) {
+      setWatchPartyLeaveTarget(path);
+      return;
+    }
+
+    navigateToRemembered(path, setCurrentPath, scrollByPathRef);
     setView('watch');
+  }
+
+  function openCatalogAnime(result: CatalogSearchResult) {
+    requestAnimeRoute(animeRouteFromCatalog(result));
   }
 
   const openWatchParty = useCallback((path: string) => {
@@ -232,8 +241,7 @@ export function App() {
       return;
     }
 
-    navigateToRemembered(nextPath, setCurrentPath, scrollByPathRef);
-    setView('watch');
+    requestAnimeRoute(nextPath);
   }
 
   function closeWatchPartyLeaveModal() {
@@ -462,8 +470,7 @@ export function App() {
       const anime = mapServerAnime(response.anime);
       setLibrary((current) => mergeAnimeLibrary(current, [anime]));
       setSelectedId(anime.id);
-      setView('watch');
-      pushAnimeRoute(animeRouteSlug(anime), setCurrentPath, scrollByPathRef);
+      requestAnimeRoute(`/anime/${encodeURIComponent(animeRouteSlug(anime))}`);
     } catch {
       console.warn('Failed to import catalog anime');
     }
@@ -2055,15 +2062,6 @@ function navigateToRemembered(
     }
     return path;
   });
-}
-
-function pushAnimeRoute(
-  animeId: string,
-  setCurrentPath: (path: string | ((current: string) => string)) => void,
-  scrollByPathRef: MutableRefObject<Record<string, number>>,
-) {
-  const path = `/anime/${encodeURIComponent(animeId)}`;
-  navigateToRemembered(path, setCurrentPath, scrollByPathRef);
 }
 
 function mapServerAnime(anime: ServerAnime): AnimeTitle {
