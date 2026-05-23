@@ -6,7 +6,7 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
-import { importShikimoriAnime, searchCatalog } from './catalogProviders.js';
+import { browseCatalog, importShikimoriAnime, searchCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
 
 const app = express();
@@ -81,6 +81,19 @@ app.get('/catalog/search', async (request, response, next) => {
     const query = String(request.query.q ?? '');
     const results = await searchCatalog(query);
     response.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/catalog/browse', async (request, response, next) => {
+  try {
+    const page = Number(request.query.page ?? 1);
+    const limit = Number(request.query.limit ?? 18);
+    const order = String(request.query.order ?? 'popularity');
+    const result = await browseCatalog(page, limit, order);
+
+    response.json(result);
   } catch (error) {
     next(error);
   }

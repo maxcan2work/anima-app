@@ -116,6 +116,16 @@ export async function searchCatalog(query: string) {
   return apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?q=${encodeURIComponent(query)}`);
 }
 
+export async function browseCatalog(page: number, order = 'popularity') {
+  return apiFetch<{
+    page: number;
+    limit: number;
+    order: string;
+    hasNextPage: boolean;
+    results: CatalogSearchResult[];
+  }>(`/catalog/browse?page=${page}&limit=18&order=${encodeURIComponent(order)}`);
+}
+
 export async function importCatalogAnime(provider: CatalogSearchResult['provider'], providerId: number) {
   return apiFetch<{ anime: ServerAnime }>('/catalog/import', {
     method: 'POST',

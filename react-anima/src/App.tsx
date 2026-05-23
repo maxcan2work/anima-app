@@ -1,6 +1,7 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
+  browseCatalog,
   getCurrentUser,
   getAnimeCatalog,
   getEpisodePlayers,
@@ -45,6 +46,10 @@ export function App() {
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
   const [catalogResults, setCatalogResults] = useState<CatalogSearchResult[]>([]);
+  const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
+  const [browsePage, setBrowsePage] = useState(1);
+  const [browseHasNext, setBrowseHasNext] = useState(true);
+  const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
   const [catalogStatus, setCatalogStatus] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
@@ -77,6 +82,33 @@ export function App() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadBrowse() {
+      setBrowseStatus('Загружаем каталог Shikimori...');
+      try {
+        const response = await browseCatalog(browsePage);
+        if (ignore) return;
+
+        setBrowseResults(response.results);
+        setBrowseHasNext(response.hasNextPage);
+        setBrowseStatus('');
+      } catch {
+        if (!ignore) {
+          setBrowseResults([]);
+          setBrowseStatus('Не удалось загрузить каталог Shikimori.');
+        }
+      }
+    }
+
+    loadBrowse();
+
+    return () => {
+      ignore = true;
+    };
+  }, [browsePage]);
 
   useEffect(() => {
     let ignore = false;
@@ -300,14 +332,27 @@ export function App() {
       </aside>
 
       <section className="watch-area">
-        {!selected ? (
-          <EmptyCatalog onSearch={handleCatalogSearch} />
-        ) : view === 'watch' ? (
-          <AnimeHero
-            anime={selected}
-            state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
-            onStateChange={(patch) => updateState(selected.id, patch)}
+        {view === 'watch' ? (
+          <WatchHome
+            selected={selected}
+            browseResults={browseResults}
+            browsePage={browsePage}
+            browseHasNext={browseHasNext}
+            browseStatus={browseStatus}
+            onPageChange={setBrowsePage}
+            onImport={handleImportCatalogAnime}
+            renderSelected={() =>
+              selected ? (
+                <AnimeHero
+                  anime={selected}
+                  state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
+                  onStateChange={(patch) => updateState(selected.id, patch)}
+                />
+              ) : null
+            }
           />
+        ) : !selected ? (
+          <EmptyCatalog onSearch={handleCatalogSearch} />
         ) : (
           <ProfilePage
             user={user}
@@ -377,6 +422,69 @@ function EmptyCatalog({ onSearch }: { onSearch: () => void }) {
       <h2>Каталог пуст</h2>
       <p>Найди аниме через Shikimori и добавь его в Anima, чтобы вести просмотр, дневник и искать плееры AniLibria.</p>
       <button className="catalog-search-button" onClick={onSearch}>Искать по запросу</button>
+    </section>
+  );
+}
+
+function WatchHome({
+  selected,
+  browseResults,
+  browsePage,
+  browseHasNext,
+  browseStatus,
+  onPageChange,
+  onImport,
+  renderSelected,
+}: {
+  selected: AnimeTitle | null;
+  browseResults: CatalogSearchResult[];
+  browsePage: number;
+  browseHasNext: boolean;
+  browseStatus: string;
+  onPageChange: (page: number) => void;
+  onImport: (result: CatalogSearchResult) => void;
+  renderSelected: () => ReactNode;
+}) {
+  return (
+    <section className="watch-home">
+      <header className="browse-header">
+        <div>
+          <p className="eyebrow">Shikimori</p>
+          <h2>Каталог аниме</h2>
+        </div>
+        <div className="browse-pager">
+          <button disabled={browsePage <= 1} onClick={() => onPageChange(browsePage - 1)}>Назад</button>
+          <span>Страница {browsePage}</span>
+          <button disabled={!browseHasNext} onClick={() => onPageChange(browsePage + 1)}>Дальше</button>
+        </div>
+      </header>
+
+      {browseStatus ? <p className="catalog-status">{browseStatus}</p> : null}
+
+      <div className="browse-grid">
+        {browseResults.map((result) => (
+          <article key={`${result.provider}-${result.providerId}`} className="browse-card">
+            {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
+            <div>
+              <strong>{result.title}</strong>
+              <small>{result.originalTitle}</small>
+              <small>
+                {result.episodes} сер. · {result.score ?? 'без оценки'}
+              </small>
+            </div>
+            <button onClick={() => onImport(result)}>Добавить</button>
+          </article>
+        ))}
+      </div>
+
+      {selected ? (
+        <div className="selected-watch-block">
+          <header className="section-heading">
+            <h3>Выбранный тайтл</h3>
+          </header>
+          {renderSelected()}
+        </div>
+      ) : null}
     </section>
   );
 }

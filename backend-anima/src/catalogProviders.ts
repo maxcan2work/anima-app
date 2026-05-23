@@ -62,6 +62,38 @@ export async function searchCatalog(query: string) {
   return payload.map(mapShikimoriAnime);
 }
 
+export async function browseCatalog(page: number, limit: number, order: string) {
+  const safePage = Math.max(Math.trunc(page), 1);
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 30);
+  const safeOrder = ['popularity', 'ranked', 'ranked_random', 'aired_on'].includes(order) ? order : 'popularity';
+
+  const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
+  url.searchParams.set('page', String(safePage));
+  url.searchParams.set('limit', String(safeLimit));
+  url.searchParams.set('order', safeOrder);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AnimaCatalog/0.1',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shikimori browse failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as ShikimoriAnime[];
+
+  return {
+    page: safePage,
+    limit: safeLimit,
+    order: safeOrder,
+    hasNextPage: payload.length === safeLimit,
+    results: payload.map(mapShikimoriAnime),
+  };
+}
+
 export async function importShikimoriAnime(providerId: number) {
   const url = new URL(`/api/animes/${providerId}`, SHIKIMORI_BASE_URL);
   const response = await fetch(url, {
