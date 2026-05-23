@@ -1641,11 +1641,11 @@ function AnimeHero({
         if (ignore) return;
 
         setPlayers(response.providers);
-        setPlayersStatus(response.providers.length ? '' : 'Провайдеры пока не нашли этот тайтл.');
+        setPlayersStatus(response.providers.length ? '' : 'Видео с данным тайтлом не найдено');
       } catch {
         if (!ignore) {
           setPlayers([]);
-          setPlayersStatus('Не удалось загрузить провайдеров.');
+          setPlayersStatus('Не удалось загрузить плеер.');
         }
       }
     }
@@ -1699,12 +1699,9 @@ function AnimeHero({
             <VideoPlayer anime={anime} player={selectedPlayer} />
           ) : (
             <div className="video-frame">
-              <PlayerLoader />
+              {playersStatus ? <PlayerMessage message={playersStatus} /> : <PlayerLoader />}
             </div>
           )}
-          {(!selectedPlayer || !isPlayablePlayer(selectedPlayer)) && playersStatus ? (
-            <p className="player-status">{playersStatus}</p>
-          ) : null}
 
           {mode === 'default' ? episodeControls : null}
         </section>
@@ -1885,6 +1882,14 @@ function PlayerLoader() {
   return (
     <div className="player-loader" aria-label="Loading player">
       <span />
+    </div>
+  );
+}
+
+function PlayerMessage({ message }: { message: string }) {
+  return (
+    <div className="player-message" role="status">
+      <p>{message}</p>
     </div>
   );
 }
