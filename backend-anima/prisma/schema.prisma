@@ -60,6 +60,22 @@ model Anime {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   userEntries   UserAnime[]
+  providerMatches ProviderMatch[]
+}
+
+model ProviderMatch {
+  id              String   @id @default(cuid())
+  animeId         String
+  provider        String
+  providerTitleId String
+  title           String?
+  confidence      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  anime           Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, provider])
+  @@index([provider, providerTitleId])
 }
 
 model UserAnime {

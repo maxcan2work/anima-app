@@ -52,17 +52,27 @@ type AniLibriaSearchResponse = {
 };
 
 export async function findPlayerProviders(animeId: string, episodeNumber: number) {
-  const anime = await prisma.anime.findUnique({ where: { id: animeId } });
+  const anime = await prisma.anime.findUnique({
+    where: { id: animeId },
+    include: { providerMatches: true },
+  });
   if (!anime) return null;
 
-  const queries = uniqueStrings([anime.originalTitle, anime.title]);
-  const anilibriaResults = await searchAniLibria(queries, episodeNumber);
+  const anilibriaMatch = anime.providerMatches.find((match) => match.provider === 'anilibria');
+  const anilibriaResults = anilibriaMatch
+    ? await fetchAniLibriaByCode(anilibriaMatch.providerTitleId, episodeNumber)
+    : await searchAniLibria(uniqueStrings([anime.originalTitle, anime.title]), episodeNumber);
 
   return {
     anime,
     episodeNumber,
     providers: anilibriaResults,
   };
+}
+
+export async function findAniLibriaMatch(title: string, originalTitle: string | null) {
+  const results = await searchAniLibria(uniqueStrings([originalTitle, title]), 1);
+  return results[0] ?? null;
 }
 
 async function searchAniLibria(queries: string[], episodeNumber: number): Promise<PlayerProviderResult[]> {
@@ -91,6 +101,26 @@ async function fetchAniLibria(query: string, episodeNumber: number): Promise<Pla
 
     const payload = (await response.json()) as AniLibriaSearchResponse;
     return (payload.list ?? []).flatMap((title) => mapAniLibriaTitle(title, episodeNumber));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAniLibriaByCode(code: string, episodeNumber: number): Promise<PlayerProviderResult[]> {
+  const url = new URL('https://api.anilibria.tv/v3/title');
+  url.searchParams.set('code', code);
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'AnimaAggregator/0.1',
+      },
+    });
+
+    if (!response.ok) return [];
+
+    return mapAniLibriaTitle((await response.json()) as AniLibriaTitle, episodeNumber);
   } catch {
     return [];
   }

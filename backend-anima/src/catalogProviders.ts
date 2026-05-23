@@ -1,4 +1,5 @@
 import { prisma } from './db.js';
+import { findAniLibriaMatch } from './playerProviders.js';
 
 const SHIKIMORI_BASE_URL = 'https://shikimori.io';
 
@@ -76,7 +77,7 @@ export async function importShikimoriAnime(providerId: number) {
 
   const anime = mapShikimoriAnime((await response.json()) as ShikimoriAnime);
 
-  return prisma.anime.upsert({
+  const savedAnime = await prisma.anime.upsert({
     where: { id: `shikimori-${anime.providerId}` },
     update: {
       title: anime.title,
@@ -106,6 +107,32 @@ export async function importShikimoriAnime(providerId: number) {
       airedOn: anime.airedOn,
     },
   });
+
+  const match = await findAniLibriaMatch(savedAnime.title, savedAnime.originalTitle);
+  if (match) {
+    await prisma.providerMatch.upsert({
+      where: {
+        animeId_provider: {
+          animeId: savedAnime.id,
+          provider: 'anilibria',
+        },
+      },
+      update: {
+        providerTitleId: match.providerTitleId,
+        title: match.title,
+        confidence: 'auto',
+      },
+      create: {
+        animeId: savedAnime.id,
+        provider: 'anilibria',
+        providerTitleId: match.providerTitleId,
+        title: match.title,
+        confidence: 'auto',
+      },
+    });
+  }
+
+  return savedAnime;
 }
 
 function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {

@@ -16,7 +16,7 @@ import {
   type ServerAnime,
   type ServerWatchEntry,
 } from './api';
-import { ANIME_LIBRARY, type AnimeTitle } from './data';
+import { type AnimeTitle } from './data';
 
 type WatchState = {
   episode: number;
@@ -40,8 +40,8 @@ function saveWatchState(value: Record<string, WatchState>) {
 
 export function App() {
   const [query, setQuery] = useState('');
-  const [library, setLibrary] = useState<AnimeTitle[]>(ANIME_LIBRARY);
-  const [selectedId, setSelectedId] = useState(ANIME_LIBRARY[0].id);
+  const [library, setLibrary] = useState<AnimeTitle[]>([]);
+  const [selectedId, setSelectedId] = useState('');
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
   const [catalogResults, setCatalogResults] = useState<CatalogSearchResult[]>([]);
@@ -51,7 +51,7 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile'>('watch');
 
-  const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? ANIME_LIBRARY[0];
+  const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
 
   useEffect(() => {
     let ignore = false;
@@ -61,7 +61,9 @@ export function App() {
         const response = await getAnimeCatalog();
         if (ignore) return;
 
-        setLibrary(mergeAnimeLibrary(ANIME_LIBRARY, response.anime.map(mapServerAnime)));
+        const loaded = mergeAnimeLibrary([], response.anime.map(mapServerAnime));
+        setLibrary(loaded);
+        setSelectedId((current) => current || loaded[0]?.id || '');
       } catch {
         if (!ignore) {
           setCatalogStatus('Не удалось загрузить локальный каталог.');
@@ -162,6 +164,7 @@ export function App() {
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
       const anime = library.find((item) => item.id === id);
+      if (!anime) return current;
       const previous = current[id] ?? { episode: 1, status: 'planned' };
       const nextEpisode = Math.min(Math.max(patch.episode ?? previous.episode, 1), anime?.episodes ?? 1);
       const nextEntry = {
@@ -268,7 +271,7 @@ export function App() {
             <AnimeListItem
               key={anime.id}
               anime={anime}
-              active={anime.id === selected.id}
+              active={anime.id === selected?.id}
               progress={watchState[anime.id]}
               onSelect={() => setSelectedId(anime.id)}
             />
@@ -297,7 +300,9 @@ export function App() {
       </aside>
 
       <section className="watch-area">
-        {view === 'watch' ? (
+        {!selected ? (
+          <EmptyCatalog onSearch={handleCatalogSearch} />
+        ) : view === 'watch' ? (
           <AnimeHero
             anime={selected}
             state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
@@ -362,6 +367,17 @@ function AuthPanel({
       </div>
       <button className="text-button" onClick={onLogout}>Выйти</button>
     </div>
+  );
+}
+
+function EmptyCatalog({ onSearch }: { onSearch: () => void }) {
+  return (
+    <section className="empty-catalog">
+      <p className="eyebrow">Shikimori</p>
+      <h2>Каталог пуст</h2>
+      <p>Найди аниме через Shikimori и добавь его в Anima, чтобы вести просмотр, дневник и искать плееры AniLibria.</p>
+      <button className="catalog-search-button" onClick={onSearch}>Искать по запросу</button>
+    </section>
   );
 }
 

@@ -318,6 +318,22 @@ h1 {
   padding: 28px;
 }
 
+.empty-catalog {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  max-width: 560px;
+}
+
+.empty-catalog p:not(.eyebrow) {
+  color: #cfc7ba;
+  line-height: 1.6;
+}
+
+.empty-catalog .catalog-search-button {
+  max-width: 220px;
+}
+
 .player-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 370px;
