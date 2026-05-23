@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
 import nekoIcon from './assets/neko.svg';
 import randomDiceIcon from './assets/random-dice.svg';
@@ -407,17 +408,6 @@ export function App() {
           </button>
         </div>
 
-        <AuthPanel
-          user={user}
-          authStatus={authStatus}
-          collapsed={sidebarCollapsed}
-          onLogin={loginWithDiscord}
-          onProfile={() => {
-            navigateTo('/profile', setCurrentPath);
-            setView('profile');
-          }}
-        />
-
         <nav className="side-nav" aria-label="Разделы">
           <SideNavButton
             active={view === 'watch'}
@@ -450,6 +440,17 @@ export function App() {
             onClick={() => undefined}
           />
         </nav>
+
+        <AuthPanel
+          user={user}
+          authStatus={authStatus}
+          collapsed={sidebarCollapsed}
+          onLogin={loginWithDiscord}
+          onProfile={() => {
+            navigateTo('/profile', setCurrentPath);
+            setView('profile');
+          }}
+        />
       </aside>
 
       <section className="watch-area">
@@ -520,7 +521,7 @@ function AuthPanel({
       return (
         <div className="auth-panel collapsed-auth">
           <button className="auth-icon-button" onClick={onLogin} data-tooltip="Войти через Discord" type="button">
-            D
+            <img src={loginIcon} alt="" aria-hidden="true" />
           </button>
         </div>
       );
@@ -528,10 +529,6 @@ function AuthPanel({
 
     return (
       <div className="auth-panel">
-        <div className="auth-copy">
-          <strong>Гостевой режим</strong>
-          <span>Прогресс хранится только в этом браузере</span>
-        </div>
         <button className="discord-button" onClick={onLogin}>Войти через Discord</button>
       </div>
     );
