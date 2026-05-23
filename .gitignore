@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+
+*.log
+
+backend-anima/prisma/dev.db
+backend-anima/prisma/dev.db-journal
