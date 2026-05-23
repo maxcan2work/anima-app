@@ -113,7 +113,7 @@ export function App() {
   const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
-  const displayedSelected = displayedRouteAnimeId ? library.find((anime) => anime.id === displayedRouteAnimeId) ?? selected : selected;
+  const displayedSelected = displayedRouteAnimeId ? findAnimeByRoute(library, displayedRouteAnimeId) ?? selected : selected;
 
   useEffect(() => {
     function handlePopState() {
@@ -203,6 +203,13 @@ export function App() {
     let ignore = false;
 
     async function loadRouteAnime() {
+      const localAnime = findAnimeByRoute(library, routeAnimeId);
+      if (localAnime) {
+        setSelectedId(localAnime.id);
+        setView('watch');
+        return;
+      }
+
       try {
         const response = await getAnimeById(routeAnimeId);
         if (ignore) return;
@@ -213,10 +220,15 @@ export function App() {
         setView('watch');
       } catch {
         const shikimoriId = parseShikimoriRouteId(routeAnimeId);
-        if (!shikimoriId) return;
+        const catalogMatch = shikimoriId
+          ? null
+          : findCatalogResultByRoute([...catalogSearchResults, ...browseResults, ...randomHistory], routeAnimeId) ??
+            (await findCatalogResultBySearch(routeAnimeId));
+        const providerId = shikimoriId ?? catalogMatch?.providerId;
+        if (!providerId) return;
 
         try {
-          const response = await importCatalogAnime('shikimori', shikimoriId);
+          const response = await importCatalogAnime('shikimori', providerId);
           if (ignore) return;
 
           const anime = mapServerAnime(response.anime);
@@ -236,7 +248,7 @@ export function App() {
     return () => {
       ignore = true;
     };
-  }, [routeAnimeId]);
+  }, [browseResults, catalogSearchResults, library, randomHistory, routeAnimeId]);
 
   useEffect(() => {
     let ignore = false;
@@ -363,7 +375,7 @@ export function App() {
       setLibrary((current) => mergeAnimeLibrary(current, [anime]));
       setSelectedId(anime.id);
       setView('watch');
-      pushAnimeRoute(anime.id, setCurrentPath, scrollByPathRef);
+      pushAnimeRoute(animeRouteSlug(anime), setCurrentPath, scrollByPathRef);
     } catch {
       console.warn('Failed to import catalog anime');
     }
@@ -1373,7 +1385,42 @@ function parseShikimoriRouteId(animeId: string) {
 }
 
 function animeRouteFromCatalog(result: CatalogSearchResult) {
-  return `/anime/shikimori-${result.providerId}`;
+  return `/anime/${catalogRouteSlug(result)}`;
+}
+
+function animeRouteSlug(anime: AnimeTitle) {
+  return slugifyAnimeTitle(anime.originalTitle || anime.title || anime.id);
+}
+
+function catalogRouteSlug(result: CatalogSearchResult) {
+  return slugifyAnimeTitle(result.originalTitle || result.title || `${result.provider}-${result.providerId}`);
+}
+
+function findAnimeByRoute(library: AnimeTitle[], routeId: string) {
+  return library.find((anime) => anime.id === routeId || animeRouteSlug(anime) === routeId) ?? null;
+}
+
+function findCatalogResultByRoute(results: CatalogSearchResult[], routeId: string) {
+  return results.find((result) => catalogRouteSlug(result) === routeId) ?? null;
+}
+
+async function findCatalogResultBySearch(routeId: string) {
+  const query = routeId.replace(/-/g, ' ');
+  try {
+    const response = await searchCatalog(query);
+    return findCatalogResultByRoute(response.results, routeId) ?? response.results[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function slugifyAnimeTitle(title: string) {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function navigateToRemembered(
