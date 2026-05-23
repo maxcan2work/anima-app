@@ -300,7 +300,7 @@ export function App() {
 
         <nav className="side-nav" aria-label="Разделы">
           <button
-            className={view === 'watch' && !routeAnimeId ? 'active' : ''}
+            className={view === 'watch' ? 'active' : ''}
             onClick={() => {
               window.history.pushState(null, '', '/anime');
               setView('watch');
