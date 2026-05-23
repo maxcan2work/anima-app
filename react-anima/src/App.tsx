@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import musicNoteIcon from './assets/music-note.svg';
+import nekoIcon from './assets/neko.svg';
 import randomDiceIcon from './assets/random-dice.svg';
+import sidebarExpandIcon from './assets/sidebar-expand.svg';
+import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
 import {
   browseCatalog,
   getAnimeById,
@@ -381,7 +385,7 @@ export function App() {
             aria-label={sidebarCollapsed ? 'Развернуть сайдбар' : 'Свернуть сайдбар'}
             data-tooltip={sidebarCollapsed ? 'Развернуть' : 'Свернуть'}
           >
-            {sidebarCollapsed ? '›' : '‹'}
+            <img src={sidebarCollapsed ? sidebarExpandIcon : sidebarShrinkIcon} alt="" aria-hidden="true" />
           </button>
         </div>
 
@@ -399,7 +403,7 @@ export function App() {
         <nav className="side-nav" aria-label="Разделы">
           <SideNavButton
             active={view === 'watch'}
-            icon="A"
+            icon={nekoIcon}
             title="Просмотр"
             description="Каталог Shikimori"
             collapsed={sidebarCollapsed}
@@ -410,7 +414,7 @@ export function App() {
           />
           <SideNavButton
             active={view === 'random'}
-            icon="?"
+            icon={randomDiceIcon}
             title="Случайное аниме"
             description="Подборка наугад"
             collapsed={sidebarCollapsed}
@@ -421,7 +425,7 @@ export function App() {
           />
           <SideNavButton
             disabled
-            icon="♪"
+            icon={musicNoteIcon}
             title="Угадай опенинг"
             description="Скоро"
             collapsed={sidebarCollapsed}
@@ -551,7 +555,9 @@ function SideNavButton({
       aria-label={title}
       data-tooltip={collapsed ? title : undefined}
     >
-      <span className="nav-icon" aria-hidden="true">{icon}</span>
+      <span className="nav-icon" aria-hidden="true">
+        <img src={icon} alt="" />
+      </span>
       <span className="nav-copy">
         <span>{title}</span>
         <small>{description}</small>

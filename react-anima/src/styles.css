@@ -82,6 +82,11 @@ button {
   font-weight: 900;
 }
 
+.sidebar-toggle img {
+  width: 20px;
+  height: 20px;
+}
+
 .sidebar-collapsed .brand-row .eyebrow {
   display: none;
 }
@@ -262,6 +267,12 @@ h1 {
   color: #f2c063;
   font-size: 16px;
   font-weight: 900;
+}
+
+.nav-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .nav-copy {
