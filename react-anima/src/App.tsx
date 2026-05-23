@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
   browseCatalog,
@@ -267,31 +267,6 @@ export function App() {
     setWatchState(loadWatchState());
   }
 
-  async function handleDiarySave(animeId: string, entry: DiaryFormState) {
-    const anime = library.find((item) => item.id === animeId);
-    const currentEpisode = Math.min(Math.max(Number(entry.currentEpisode) || 1, 1), anime?.episodes ?? 1);
-
-    setSyncStatus('Сохраняем дневник...');
-    const response = await saveAnimeProgress(animeId, {
-      status: entry.status,
-      currentEpisode,
-      score: entry.score ? Number(entry.score) : null,
-      startedAt: entry.startedAt || null,
-      completedAt: entry.completedAt || null,
-      review: entry.review || null,
-    });
-
-    setDiaryEntries((entries) => upsertDiaryEntry(entries, response.entry));
-    setWatchState((current) => ({
-      ...current,
-      [animeId]: {
-        episode: response.entry.currentEpisode,
-        status: fromServerStatus(response.entry.status),
-      },
-    }));
-    setSyncStatus('Дневник сохранен');
-  }
-
   return (
     <main className="app-shell">
       <aside className="library-panel" aria-label="Каталог аниме">
@@ -352,17 +327,8 @@ export function App() {
           <ProfilePage
             user={user}
             authStatus={authStatus}
-            library={library}
             entries={diaryEntries}
-            selectedAnime={selected}
-            watchState={watchState}
             onLogin={loginWithDiscord}
-            onSelectAnime={(id) => {
-              setSelectedId(id);
-              pushAnimeRoute(id, setCurrentPath);
-              setView('watch');
-            }}
-            onSave={handleDiarySave}
           />
         )}
       </section>
@@ -490,57 +456,20 @@ function WatchHome({
   );
 }
 
-type DiaryFormState = {
-  status: WatchState['status'];
-  currentEpisode: number;
-  score: string;
-  startedAt: string;
-  completedAt: string;
-  review: string;
-};
-
 function ProfilePage({
   user,
   authStatus,
   entries,
-  library,
-  selectedAnime,
-  watchState,
   onLogin,
-  onSelectAnime,
-  onSave,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
-  library: AnimeTitle[];
   entries: ServerWatchEntry[];
-  selectedAnime: AnimeTitle;
-  watchState: Record<string, WatchState>;
   onLogin: () => void;
-  onSelectAnime: (id: string) => void;
-  onSave: (animeId: string, entry: DiaryFormState) => Promise<void>;
 }) {
-  const [editingId, setEditingId] = useState(selectedAnime.id);
-  const editingAnime = library.find((anime) => anime.id === editingId) ?? selectedAnime;
-  const editingEntry = entries.find((entry) => entry.animeId === editingAnime.id);
-  const currentState = watchState[editingAnime.id] ?? { episode: 1, status: 'planned' };
-  const [form, setForm] = useState<DiaryFormState>(() => createDiaryForm(editingEntry, currentState));
   const watchedCount = entries.filter((entry) => entry.status === 'COMPLETED').length;
   const watchingCount = entries.filter((entry) => entry.status === 'WATCHING').length;
   const reviewedCount = entries.filter((entry) => entry.review).length;
-
-  useEffect(() => {
-    setEditingId(selectedAnime.id);
-  }, [selectedAnime.id]);
-
-  useEffect(() => {
-    setForm(createDiaryForm(editingEntry, currentState));
-  }, [editingAnime.id, editingEntry, currentState.episode, currentState.status]);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    await onSave(editingAnime.id, form);
-  }
 
   if (authStatus === 'loading') {
     return <section className="profile-page empty-state">Загружаем профиль...</section>;
@@ -572,88 +501,25 @@ function ProfilePage({
         <span>Рецензии<strong>{reviewedCount}</strong></span>
       </div>
 
-      <div className="diary-layout">
-        <section className="diary-list">
+      <section className="diary-list">
           <h3>Дневник</h3>
           {entries.length === 0 ? (
             <p className="muted-copy">Пока нет записей. Выбери тайтл и сохрани первую запись.</p>
           ) : (
             entries.map((entry) => (
-              <button key={entry.id} className={entry.animeId === editingAnime.id ? 'diary-row active' : 'diary-row'} onClick={() => setEditingId(entry.animeId)}>
-                <img src={entry.anime?.posterUrl ?? library.find((anime) => anime.id === entry.animeId)?.poster} alt="" />
+              <article key={entry.id} className="diary-row">
+                {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className="poster-fallback" />}
                 <span>
                   <strong>{entry.anime?.title ?? entry.animeId}</strong>
                   <small>{statusLabel(fromServerStatus(entry.status))} · серия {entry.currentEpisode}</small>
+                  {entry.review ? <small className="diary-review">{entry.review}</small> : null}
                 </span>
                 {entry.score ? <em>{entry.score}/10</em> : null}
-              </button>
+              </article>
             ))
           )}
         </section>
 
-        <form className="diary-editor" onSubmit={submit}>
-          <div className="editor-title">
-            <img src={editingAnime.poster} alt="" />
-            <div>
-              <p className="eyebrow">Запись дневника</p>
-              <h3>{editingAnime.title}</h3>
-              <button type="button" className="text-button" onClick={() => onSelectAnime(editingAnime.id)}>Открыть просмотр</button>
-            </div>
-          </div>
-
-          <div className="form-grid">
-            <label>
-              Статус
-              <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as WatchState['status'] })}>
-                <option value="planned">В планах</option>
-                <option value="watching">Смотрю</option>
-                <option value="completed">Просмотрено</option>
-                <option value="dropped">Брошено</option>
-              </select>
-            </label>
-            <label>
-              Серия
-              <input
-                type="number"
-                min="1"
-                max={editingAnime.episodes}
-                value={form.currentEpisode}
-                onChange={(event) => setForm({ ...form, currentEpisode: Number(event.target.value) })}
-              />
-            </label>
-            <label>
-              Оценка
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={form.score}
-                onChange={(event) => setForm({ ...form, score: event.target.value })}
-                placeholder="1-10"
-              />
-            </label>
-            <label>
-              Начал
-              <input type="date" value={form.startedAt} onChange={(event) => setForm({ ...form, startedAt: event.target.value })} />
-            </label>
-            <label>
-              Закончил
-              <input type="date" value={form.completedAt} onChange={(event) => setForm({ ...form, completedAt: event.target.value })} />
-            </label>
-          </div>
-
-          <label className="review-field">
-            Рецензия
-            <textarea
-              value={form.review}
-              onChange={(event) => setForm({ ...form, review: event.target.value })}
-              placeholder="Что понравилось, что не сработало, стоит ли советовать"
-            />
-          </label>
-
-          <button className="save-button" type="submit">Сохранить запись</button>
-        </form>
-      </div>
     </section>
   );
 }
@@ -900,22 +766,6 @@ function fromServerStatus(status: string): WatchState['status'] {
     default:
       return 'planned';
   }
-}
-
-function createDiaryForm(entry: ServerWatchEntry | undefined, fallback: WatchState): DiaryFormState {
-  return {
-    status: entry ? fromServerStatus(entry.status) : fallback.status,
-    currentEpisode: entry?.currentEpisode ?? fallback.episode,
-    score: entry?.score ? String(entry.score) : '',
-    startedAt: toDateInput(entry?.startedAt),
-    completedAt: toDateInput(entry?.completedAt),
-    review: entry?.review ?? '',
-  };
-}
-
-function toDateInput(value: string | null | undefined) {
-  if (!value) return '';
-  return value.slice(0, 10);
 }
 
 function statusLabel(status: WatchState['status']) {

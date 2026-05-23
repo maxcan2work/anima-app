@@ -716,6 +716,13 @@ h2 {
   text-align: left;
 }
 
+.diary-row .poster-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .diary-row.active {
   border-color: rgba(242, 192, 99, 0.65);
   background: rgba(242, 192, 99, 0.12);
@@ -736,6 +743,12 @@ h2 {
 .diary-row small {
   margin-top: 4px;
   color: #aba399;
+}
+
+.diary-row .diary-review {
+  max-width: 720px;
+  color: #d9d0c5;
+  line-height: 1.45;
 }
 
 .diary-row em {
