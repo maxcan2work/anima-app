@@ -9,6 +9,9 @@ import kickIcon from './assets/kick.svg';
 import leaveRoomIcon from './assets/leave-room.svg';
 import musicNoteIcon from './assets/music-note.svg';
 import nekoIcon from './assets/neko.svg';
+import profileCheckIcon from './assets/profile-check.svg';
+import profileEyeIcon from './assets/profile-eye.svg';
+import profileNoteIcon from './assets/profile-note.svg';
 import randomDiceIcon from './assets/random-dice.svg';
 import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
@@ -741,6 +744,7 @@ export function App() {
             authStatus={authStatus}
             entries={diaryEntries}
             onLogin={loginWithDiscord}
+            onLogout={handleLogout}
           />
         )}
         </div>
@@ -1595,15 +1599,23 @@ function ProfilePage({
   authStatus,
   entries,
   onLogin,
+  onLogout,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
   entries: ServerWatchEntry[];
   onLogin: () => void;
+  onLogout: () => void;
 }) {
-  const watchedCount = entries.filter((entry) => entry.status === 'COMPLETED').length;
-  const watchingCount = entries.filter((entry) => entry.status === 'WATCHING').length;
-  const reviewedCount = entries.filter((entry) => entry.review).length;
+  const profileFilters: Array<{ status: WatchState['status']; label: string; count: number; icon: string }> = [
+    { status: 'watching', label: 'Смотрю', count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
+    { status: 'completed', label: 'Просмотрено', count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
+    { status: 'dropped', label: 'Брошено', count: entries.filter((entry) => entry.status === 'DROPPED').length, icon: trashIcon },
+    { status: 'planned', label: 'В планах', count: entries.filter((entry) => entry.status === 'PLANNED').length, icon: profileNoteIcon },
+  ];
+  const [selectedStatus, setSelectedStatus] = useState<WatchState['status']>('watching');
+  const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
+  const filteredEntries = entries.filter((entry) => fromServerStatus(entry.status) === selectedStatus);
 
   if (authStatus === 'loading') {
     return <section className="profile-page empty-state">Загружаем профиль...</section>;
@@ -1621,26 +1633,14 @@ function ProfilePage({
 
   return (
     <section className="profile-page">
-      <header className="profile-header">
-        {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback large">{user.displayName[0]}</div>}
-        <div>
-          <p className="eyebrow">Профиль</p>
-          <h2>{user.displayName}</h2>
-        </div>
-      </header>
-
-      <div className="profile-stats">
-        <span>Смотрю<strong>{watchingCount}</strong></span>
-        <span>Просмотрено<strong>{watchedCount}</strong></span>
-        <span>Рецензии<strong>{reviewedCount}</strong></span>
-      </div>
-
       <section className="diary-list">
-          <h3>Дневник</h3>
+          <h3>{selectedFilter.label}</h3>
           {entries.length === 0 ? (
             <p className="muted-copy">Пока нет записей. Выбери тайтл и сохрани первую запись.</p>
+          ) : filteredEntries.length === 0 ? (
+            <p className="muted-copy">В этом разделе пока нет аниме.</p>
           ) : (
-            entries.map((entry) => (
+            filteredEntries.map((entry) => (
               <article key={entry.id} className="diary-row">
                 {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className="poster-fallback" />}
                 <span>
@@ -1654,6 +1654,36 @@ function ProfilePage({
           )}
         </section>
 
+      <aside className="profile-sidebar">
+        <header className="profile-header">
+          <div className="profile-avatar-frame">
+            {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback large">{user.displayName[0]}</div>}
+            <h2>{user.displayName}</h2>
+          </div>
+        </header>
+
+        <section className="profile-sidebar-section" aria-labelledby="profile-watch-section">
+          <h3 id="profile-watch-section">Просмотр</h3>
+          <div className="profile-stats" aria-label="Фильтр дневника">
+            {profileFilters.map((filter) => (
+              <button
+                key={filter.status}
+                className={filter.status === selectedStatus ? 'active' : ''}
+                type="button"
+                onClick={() => setSelectedStatus(filter.status)}
+              >
+                <img className="profile-stat-icon" src={filter.icon} alt="" aria-hidden="true" />
+                <span>{filter.label}</span>
+                <strong>{filter.count}</strong>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <button className="profile-logout" type="button" onClick={onLogout}>
+          Выйти
+        </button>
+      </aside>
     </section>
   );
 }
