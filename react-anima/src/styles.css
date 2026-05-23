@@ -709,19 +709,6 @@ h1 {
   background: #060706;
 }
 
-.player-badge {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  max-width: calc(100% - 28px);
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.72);
-  color: #fffaf2;
-  font-size: 13px;
-  font-weight: 800;
-}
-
 .play-overlay {
   position: absolute;
   inset: 0;

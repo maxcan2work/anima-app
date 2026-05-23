@@ -872,7 +872,7 @@ function AnimeHero({
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
-  const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('anilibria');
+  const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const playablePlayers = players.filter(isPlayablePlayer);
   const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
@@ -1106,9 +1106,6 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
         />
-        <div className="player-badge">
-          {player.title} · Kodik
-        </div>
       </div>
     );
   }
@@ -1142,9 +1139,6 @@ function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvide
   return (
     <div className="video-frame">
       <video ref={videoRef} controls poster={anime.backdrop} />
-      <div className="player-badge">
-        {player.title} · {qualityLabel(player.quality)}
-      </div>
     </div>
   );
 }
@@ -1191,19 +1185,6 @@ function statusLabel(status: WatchState['status']) {
       return 'Брошено';
     default:
       return 'В планах';
-  }
-}
-
-function qualityLabel(quality: PlayerProviderResult['quality']) {
-  switch (quality) {
-    case 'fhd':
-      return '1080p HLS';
-    case 'hd':
-      return '720p HLS';
-    case 'sd':
-      return '480p HLS';
-    default:
-      return 'HLS';
   }
 }
 
