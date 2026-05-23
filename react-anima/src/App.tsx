@@ -1100,7 +1100,6 @@ function WatchSources({ anime }: { anime: AnimeTitle }) {
           <span>
             <strong>{source.name}</strong>
           </span>
-          <em>{source.subtitles.join(', ')}</em>
         </a>
       ))}
     </div>

@@ -953,7 +953,7 @@ h2 {
 }
 
 .episode-scroll:last-child img {
-  transform: rotate(90deg);
+  transform: rotate(180deg);
 }
 
 .profile-page {
