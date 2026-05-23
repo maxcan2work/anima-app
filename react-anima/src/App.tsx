@@ -647,9 +647,8 @@ function AnimeHero({
   const progress = Math.round((state.episode / anime.episodes) * 100);
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('Ищем плееры провайдеров...');
-  const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const playablePlayers = players.filter((player) => player.streamUrl);
-  const selectedPlayer = players.find((player) => player.providerTitleId === selectedPlayerId) ?? playablePlayers[0] ?? players[0];
+  const selectedPlayer = playablePlayers[0] ?? players[0];
 
   useEffect(() => {
     let ignore = false;
@@ -661,7 +660,6 @@ function AnimeHero({
         if (ignore) return;
 
         setPlayers(response.providers);
-        setSelectedPlayerId(response.providers.find((player) => player.streamUrl)?.providerTitleId ?? response.providers[0]?.providerTitleId ?? '');
         setPlayersStatus(response.providers.length ? '' : 'Провайдеры пока не нашли этот тайтл.');
       } catch {
         if (!ignore) {
@@ -707,12 +705,7 @@ function AnimeHero({
             </label>
             <button onClick={() => onStateChange({ episode: state.episode + 1 })}>Дальше</button>
           </div>
-          <ProviderPlayers
-            players={players}
-            status={playersStatus}
-            selectedPlayerId={selectedPlayer?.providerTitleId ?? ''}
-            onSelect={setSelectedPlayerId}
-          />
+          {!selectedPlayer?.streamUrl && playersStatus ? <p className="player-status">{playersStatus}</p> : null}
         </section>
 
         <aside className="details-panel">
@@ -804,48 +797,6 @@ function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvide
         {player.title} · {qualityLabel(player.quality)}
       </div>
     </div>
-  );
-}
-
-function ProviderPlayers({
-  players,
-  status,
-  selectedPlayerId,
-  onSelect,
-}: {
-  players: PlayerProviderResult[];
-  status: string;
-  selectedPlayerId: string;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <section className="provider-players">
-      <div className="section-heading">
-        <h3>Плееры провайдеров</h3>
-        {status ? <span>{status}</span> : null}
-      </div>
-      <div className="provider-grid">
-        {players.map((player) => (
-          <button
-            key={`${player.provider}-${player.providerTitleId}`}
-            className={`provider-card ${player.providerTitleId === selectedPlayerId ? 'active' : ''}`}
-            onClick={() => onSelect(player.providerTitleId)}
-            type="button"
-          >
-            {player.posterUrl ? <img src={player.posterUrl} alt="" /> : null}
-            <span>
-              <strong>{player.title}</strong>
-              <small>{player.originalTitle ?? 'AniLibria / AniLiberty'}</small>
-              <small>
-                Серия {player.requestedEpisode}
-                {player.episodeCount ? ` из ${player.episodeCount}` : ''} · {player.streamUrl ? qualityLabel(player.quality) : 'открыть у провайдера'}
-              </small>
-            </span>
-            {player.streamUrl ? <em>В Anima</em> : <a href={player.watchUrl} target="_blank" rel="noreferrer">Сайт</a>}
-          </button>
-        ))}
-      </div>
-    </section>
   );
 }
 
