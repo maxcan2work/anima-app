@@ -805,6 +805,60 @@ function WatchHome({
   onOpenAnime: (result: CatalogSearchResult) => void;
   onPageChange: (page: number) => void;
 }) {
+  return (
+    <CatalogBrowser
+      className="watch-home"
+      eyebrow="Shikimori"
+      title="Каталог аниме"
+      browseResults={browseResults}
+      browsePage={browsePage}
+      browseHasNext={browseHasNext}
+      browseLoading={browseLoading}
+      browseStatus={browseStatus}
+      searchQuery={searchQuery}
+      searchResults={searchResults}
+      searchLoading={searchLoading}
+      searchStatus={searchStatus}
+      onSearchChange={onSearchChange}
+      onOpenAnime={onOpenAnime}
+      onPageChange={onPageChange}
+    />
+  );
+}
+
+function CatalogBrowser({
+  className,
+  eyebrow,
+  title,
+  browseResults,
+  browsePage,
+  browseHasNext,
+  browseLoading,
+  browseStatus,
+  searchQuery,
+  searchResults,
+  searchLoading,
+  searchStatus,
+  onSearchChange,
+  onOpenAnime,
+  onPageChange,
+}: {
+  className: string;
+  eyebrow: string;
+  title: string;
+  browseResults: CatalogSearchResult[];
+  browsePage: number;
+  browseHasNext: boolean;
+  browseLoading: boolean;
+  browseStatus: string;
+  searchQuery: string;
+  searchResults: CatalogSearchResult[];
+  searchLoading: boolean;
+  searchStatus: string;
+  onSearchChange: (query: string) => void;
+  onOpenAnime: (result: CatalogSearchResult) => void;
+  onPageChange: (page: number) => void;
+}) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isSearching = searchQuery.trim().length >= 2;
   const visibleResults = isSearching ? searchResults : browseResults;
@@ -832,11 +886,11 @@ function WatchHome({
   }, [browseHasNext, browseLoading, browsePage, isSearching, onPageChange]);
 
   return (
-    <section className="watch-home">
+    <section className={className}>
       <header className="browse-header">
         <div>
-          <p className="eyebrow">Shikimori</p>
-          <h2>Каталог аниме</h2>
+          <p className="eyebrow">{eyebrow}</p>
+          <h2>{title}</h2>
         </div>
         <label className="catalog-search" aria-label="Найти аниме">
           <input
@@ -874,14 +928,11 @@ function WatchHome({
         </div>
       )}
 
-      {isSearching ? (
-        null
-      ) : (
+      {!isSearching ? (
         <div ref={sentinelRef} className="scroll-sentinel">
           {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
         </div>
-      )}
-
+      ) : null}
     </section>
   );
 }
@@ -1013,6 +1064,8 @@ function WatchPartyPage({
   const [animeSearchStatus, setAnimeSearchStatus] = useState('');
   const [animeSearchLoading, setAnimeSearchLoading] = useState(false);
   const [partyCatalogResults, setPartyCatalogResults] = useState<CatalogSearchResult[]>([]);
+  const [partyCatalogPage, setPartyCatalogPage] = useState(1);
+  const [partyCatalogHasNext, setPartyCatalogHasNext] = useState(true);
   const [partyCatalogStatus, setPartyCatalogStatus] = useState('');
   const [partyCatalogLoading, setPartyCatalogLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
@@ -1030,6 +1083,9 @@ function WatchPartyPage({
       setOwnParticipantId('');
       setSelectedAnime(null);
       setPartyEpisode(1);
+      setPartyCatalogResults([]);
+      setPartyCatalogPage(1);
+      setPartyCatalogHasNext(true);
       setConnectionStatus('');
       return;
     }
@@ -1068,6 +1124,12 @@ function WatchPartyPage({
       socket.disconnect();
     };
   }, [code, user?.avatarUrl, user?.displayName]);
+
+  useEffect(() => {
+    setPartyCatalogResults([]);
+    setPartyCatalogPage(1);
+    setPartyCatalogHasNext(true);
+  }, [code]);
 
   useEffect(() => {
     if (!code || !isHost) return;
@@ -1114,18 +1176,29 @@ function WatchPartyPage({
 
     let ignore = false;
     setPartyCatalogLoading(true);
-    setPartyCatalogStatus('');
+    setPartyCatalogStatus(partyCatalogPage === 1 ? 'Загружаем каталог Shikimori...' : '');
 
     async function loadPartyCatalog() {
       try {
-        const response = await browseCatalog(1, 'popularity');
+        const response = await browseCatalog(partyCatalogPage, 'popularity');
         if (ignore) return;
 
-        setPartyCatalogResults(response.results);
-        setPartyCatalogStatus(response.results.length ? '' : 'Каталог пока пуст.');
+        setPartyCatalogResults((current) => {
+          const next = partyCatalogPage === 1 ? response.results : [...current, ...response.results];
+          const seen = new Set<number>();
+          return next.filter((item) => {
+            if (seen.has(item.providerId)) return false;
+            seen.add(item.providerId);
+            return true;
+          });
+        });
+        setPartyCatalogHasNext(response.hasNextPage);
+        setPartyCatalogStatus('');
       } catch {
         if (!ignore) {
-          setPartyCatalogResults([]);
+          if (partyCatalogPage === 1) {
+            setPartyCatalogResults([]);
+          }
           setPartyCatalogStatus('Не удалось загрузить каталог.');
         }
       } finally {
@@ -1140,7 +1213,7 @@ function WatchPartyPage({
     return () => {
       ignore = true;
     };
-  }, [code, isHost, selectedAnime]);
+  }, [code, isHost, partyCatalogPage, selectedAnime]);
 
   function handleCreateRoom() {
     onCreateRoom(createWatchPartyCode());
@@ -1202,47 +1275,23 @@ function WatchPartyPage({
               }
             />
           ) : isHost ? (
-            <div className="watch-party-catalog">
-              <header className="browse-header">
-                <div>
-                  <p className="eyebrow">Совместный просмотр</p>
-                  <h2>Выбери аниме</h2>
-                </div>
-                <label className="catalog-search" aria-label="Найти аниме">
-                  <input
-                    type="search"
-                    value={animeQuery}
-                    onChange={(event) => setAnimeQuery(event.target.value)}
-                    placeholder="Найти аниме"
-                  />
-                </label>
-              </header>
-              {animeSearchLoading || partyCatalogLoading ? <SearchLoader /> : null}
-              {animeSearchStatus || partyCatalogStatus ? (
-                <p className="catalog-status">{animeSearchStatus || partyCatalogStatus}</p>
-              ) : null}
-              {!animeSearchLoading && !partyCatalogLoading ? (
-                <div className="browse-grid">
-                  {(animeQuery.trim().length >= 2 ? animeResults : partyCatalogResults).map((result) => (
-                    <button
-                      key={`${result.provider}-${result.providerId}`}
-                      type="button"
-                      className="browse-card"
-                      onClick={() => handleSelectAnime(result)}
-                    >
-                      {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
-                      <div>
-                        <strong>{result.title}</strong>
-                        <small>{result.originalTitle}</small>
-                        <small>
-                          {result.episodes} сер. · {result.score ?? 'без оценки'}
-                        </small>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <CatalogBrowser
+              className="watch-party-catalog"
+              eyebrow="Совместный просмотр"
+              title="Выбери аниме"
+              browseResults={partyCatalogResults}
+              browsePage={partyCatalogPage}
+              browseHasNext={partyCatalogHasNext}
+              browseLoading={partyCatalogLoading}
+              browseStatus={partyCatalogStatus}
+              searchQuery={animeQuery}
+              searchResults={animeResults}
+              searchLoading={animeSearchLoading}
+              searchStatus={animeSearchStatus}
+              onSearchChange={setAnimeQuery}
+              onOpenAnime={handleSelectAnime}
+              onPageChange={setPartyCatalogPage}
+            />
           ) : (
             <div className="watch-party-stage">
               <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
