@@ -182,3 +182,7 @@ export async function saveAnimeProgress(animeId: string, payload: SaveAnimeProgr
 export async function getEpisodePlayers(animeId: string, episodeNumber: number) {
   return apiFetch<{ providers: PlayerProviderResult[] }>(`/anime/${animeId}/episodes/${episodeNumber}/players`);
 }
+
+export async function checkWatchPartyRoom(code: string) {
+  return apiFetch<{ exists: boolean }>(`/watch-party/${encodeURIComponent(code)}`);
+}

@@ -68,6 +68,11 @@ app.get('/health', (_request, response) => {
   response.json({ ok: true });
 });
 
+app.get('/watch-party/:code', (request, response) => {
+  const code = normalizeWatchPartyCode(request.params.code);
+  response.json({ exists: code ? watchPartyRooms.has(code) : false });
+});
+
 app.get('/auth/discord', (_request, response, next) => {
   try {
     response.redirect(getDiscordAuthUrl());
@@ -359,7 +364,13 @@ io.on('connection', (socket) => {
     const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
     if (!code) return;
 
-    const room = getOrCreateWatchPartyRoom(code, socket.id);
+    const shouldCreateRoom = getPayloadValue(payload, 'create') === true;
+    const room = watchPartyRooms.get(code) ?? (shouldCreateRoom ? createWatchPartyRoom(code, socket.id) : null);
+    if (!room) {
+      socket.emit('watch-party:join-rejected', { reason: 'room-not-found' });
+      return;
+    }
+
     if (!room.participants.has(socket.id) && room.participants.size >= WATCH_PARTY_MAX_PARTICIPANTS) {
       socket.emit('watch-party:join-rejected', { reason: 'room-full' });
       return;
@@ -441,10 +452,7 @@ server.listen(config.PORT, () => {
   console.log(`Backend Anima API: http://localhost:${config.PORT}`);
 });
 
-function getOrCreateWatchPartyRoom(code: string, socketId: string) {
-  const existing = watchPartyRooms.get(code);
-  if (existing) return existing;
-
+function createWatchPartyRoom(code: string, socketId: string) {
   const room: WatchPartyRoom = {
     code,
     hostSocketId: socketId,

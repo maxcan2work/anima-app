@@ -17,6 +17,7 @@ import watchPartyIcon from './assets/watch-party.svg';
 import {
   API_URL,
   browseCatalog,
+  checkWatchPartyRoom,
   clearMyRandomHistory,
   deleteRandomHistoryEntry,
   getAnimeById,
@@ -119,6 +120,7 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [toast, setToast] = useState('');
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
+  const [watchPartyCreateCode, setWatchPartyCreateCode] = useState('');
   const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<{ path: string; view: AppView } | null>(null);
   const [watchPartyLeaveModalClosing, setWatchPartyLeaveModalClosing] = useState(false);
   const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
@@ -237,9 +239,14 @@ export function App() {
     setView('watchParty');
   }, []);
 
+  const consumeWatchPartyCreate = useCallback(() => {
+    setWatchPartyCreateCode('');
+  }, []);
+
   const leaveWatchParty = useCallback(() => {
     const path = '/watch-party';
     setWatchPartyCode('');
+    setWatchPartyCreateCode('');
     setWatchPartyLeaveTarget(null);
     setWatchPartyLeaveModalClosing(false);
     setCurrentPath((current) => {
@@ -694,10 +701,15 @@ export function App() {
         ) : displayedView === 'watchParty' ? (
           <WatchPartyPage
             code={getWatchPartyCodeFromPath(displayedPath)}
+            createRoom={watchPartyCreateCode === getWatchPartyCodeFromPath(displayedPath)}
             user={user}
-            onCreateRoom={(code) => openWatchParty(`/watch-party/${code}`)}
+            onCreateRoom={(code) => {
+              setWatchPartyCreateCode(code);
+              openWatchParty(`/watch-party/${code}`);
+            }}
             onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
             onLeaveRoom={leaveWatchParty}
+            onCreateRoomConsumed={consumeWatchPartyCreate}
             onToast={setToast}
           />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
@@ -1118,17 +1130,21 @@ function RandomAnimePage({
 
 function WatchPartyPage({
   code,
+  createRoom,
   user,
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
+  onCreateRoomConsumed,
   onToast,
 }: {
   code: string;
+  createRoom: boolean;
   user: CurrentUser | null;
   onCreateRoom: (code: string) => void;
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
+  onCreateRoomConsumed: () => void;
   onToast: (message: string) => void;
 }) {
   const [joinCode, setJoinCode] = useState(code);
@@ -1145,10 +1161,16 @@ function WatchPartyPage({
   const [partyCatalogHasNext, setPartyCatalogHasNext] = useState(true);
   const [partyCatalogStatus, setPartyCatalogStatus] = useState('');
   const [partyCatalogLoading, setPartyCatalogLoading] = useState(false);
+  const [joinChecking, setJoinChecking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const socketRef = useRef<Socket | null>(null);
+  const createRoomRef = useRef(createRoom);
   const ownParticipant = participants.find((participant) => participant.id === ownParticipantId);
   const isHost = Boolean(ownParticipant?.isHost);
+
+  useEffect(() => {
+    createRoomRef.current = createRoom;
+  }, [createRoom]);
 
   useEffect(() => {
     setJoinCode(code);
@@ -1176,11 +1198,16 @@ function WatchPartyPage({
     socket.on('connect', () => {
       setOwnParticipantId(socket.id ?? '');
       setConnectionStatus('');
+      const shouldCreateRoom = createRoomRef.current;
       socket.emit('watch-party:join', {
         code,
+        create: shouldCreateRoom,
         name: user?.displayName ?? 'Гость',
         avatarUrl: user?.avatarUrl ?? null,
       });
+      if (shouldCreateRoom) {
+        onCreateRoomConsumed();
+      }
     });
 
     socket.on('watch-party:state', (state: WatchPartyRoomState) => {
@@ -1200,7 +1227,12 @@ function WatchPartyPage({
     });
 
     socket.on('watch-party:join-rejected', (payload: { reason?: string }) => {
-      onToast(payload.reason === 'room-full' ? 'Комната заполнена' : 'Не удалось войти в комнату');
+      const message = payload.reason === 'room-full'
+        ? 'Комната заполнена'
+        : payload.reason === 'room-not-found'
+          ? 'Комната с таким кодом не найдена'
+          : 'Не удалось войти в комнату';
+      onToast(message);
       onLeaveRoom();
     });
 
@@ -1210,7 +1242,7 @@ function WatchPartyPage({
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [code, onLeaveRoom, onToast, user?.avatarUrl, user?.displayName]);
+  }, [code, onCreateRoomConsumed, onLeaveRoom, onToast, user?.avatarUrl, user?.displayName]);
 
   useEffect(() => {
     setPartyCatalogResults([]);
@@ -1306,11 +1338,28 @@ function WatchPartyPage({
     onCreateRoom(createWatchPartyCode());
   }
 
-  function handleJoinRoom(event: FormEvent<HTMLFormElement>) {
+  async function handleJoinRoom(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalized = normalizeWatchPartyCode(joinCode);
-    if (normalized) {
-      onJoinRoom(normalized);
+    if (normalized && !joinChecking) {
+      setJoinChecking(true);
+      try {
+        const { exists } = await checkWatchPartyRoom(normalized);
+        if (!exists) {
+          onToast('Комната с таким кодом не найдена');
+          return;
+        }
+
+        setConnectionStatus('');
+        setParticipants([]);
+        setOwnParticipantId('');
+        setSelectedAnime(null);
+        onJoinRoom(normalized);
+      } catch {
+        onToast('Не удалось проверить комнату');
+      } finally {
+        setJoinChecking(false);
+      }
     }
   }
 
@@ -1447,7 +1496,7 @@ function WatchPartyPage({
                 placeholder="Код комнаты"
                 maxLength={12}
               />
-              <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)}>
+              <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)} aria-busy={joinChecking}>
                 Подключиться
               </button>
             </form>
