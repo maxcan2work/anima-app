@@ -1045,10 +1045,12 @@ function AnimeHero({
             </div>
           </div>
           <div className="details-content">
-            <div className="genres">
-              {anime.genres.map((genre) => (
-                <span key={genre}>{genre}</span>
-              ))}
+            <div className="genres" tabIndex={0} aria-label="Жанры">
+              <div className="genres-track">
+                {anime.genres.map((genre) => (
+                  <span key={genre}>{genre}</span>
+                ))}
+              </div>
             </div>
           </div>
 

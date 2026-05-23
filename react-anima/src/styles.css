@@ -880,17 +880,50 @@ h2 {
 }
 
 .genres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  container-type: inline-size;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
 }
 
-.genres span {
+.genres::-webkit-scrollbar {
+  display: none;
+}
+
+.genres:focus-visible {
+  outline: none;
+}
+
+.genres-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.genres:hover .genres-track,
+.genres:focus-visible .genres-track {
+  animation: genres-marquee 2s linear infinite alternate both;
+}
+
+.genres-track span {
+  flex: 0 0 auto;
   padding: 7px 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   color: #efe3cf;
   font-size: 13px;
+  white-space: nowrap;
+}
+
+@keyframes genres-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-100% + 100cqw));
+  }
 }
 
 .watch-tools {
