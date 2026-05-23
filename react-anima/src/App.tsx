@@ -53,9 +53,23 @@ export function App() {
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile'>(() => (window.location.pathname === '/profile' ? 'profile' : 'watch'));
-  const routeAnimeId = getRouteAnimeId();
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
+
+  useEffect(() => {
+    function handlePopState() {
+      setCurrentPath(window.location.pathname);
+      setView(window.location.pathname === '/profile' ? 'profile' : 'watch');
+    }
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -203,7 +217,7 @@ export function App() {
       setLibrary((current) => mergeAnimeLibrary(current, [anime]));
       setSelectedId(anime.id);
       setView('watch');
-      pushAnimeRoute(anime.id);
+      pushAnimeRoute(anime.id, setCurrentPath);
     } catch {
       console.warn('Failed to import catalog anime');
     }
@@ -293,7 +307,7 @@ export function App() {
           authStatus={authStatus}
           onLogin={loginWithDiscord}
           onProfile={() => {
-            window.history.pushState(null, '', '/profile');
+            navigateTo('/profile', setCurrentPath);
             setView('profile');
           }}
         />
@@ -302,7 +316,7 @@ export function App() {
           <button
             className={view === 'watch' ? 'active' : ''}
             onClick={() => {
-              window.history.pushState(null, '', '/anime');
+              navigateTo('/anime', setCurrentPath);
               setView('watch');
             }}
           >
@@ -345,7 +359,7 @@ export function App() {
             onLogin={loginWithDiscord}
             onSelectAnime={(id) => {
               setSelectedId(id);
-              pushAnimeRoute(id);
+              pushAnimeRoute(id, setCurrentPath);
               setView('watch');
             }}
             onSave={handleDiarySave}
@@ -930,9 +944,9 @@ function qualityLabel(quality: PlayerProviderResult['quality']) {
   }
 }
 
-function getRouteAnimeId() {
-  if (window.location.pathname === '/anime') return '';
-  const match = window.location.pathname.match(/^\/anime\/([^/]+)$/);
+function getRouteAnimeId(pathname: string) {
+  if (pathname === '/anime') return '';
+  const match = pathname.match(/^\/anime\/([^/]+)$/);
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
@@ -945,11 +959,16 @@ function animeRouteFromCatalog(result: CatalogSearchResult) {
   return `/anime/shikimori-${result.providerId}`;
 }
 
-function pushAnimeRoute(animeId: string) {
-  const path = `/anime/${encodeURIComponent(animeId)}`;
+function navigateTo(path: string, setCurrentPath: (path: string) => void) {
   if (window.location.pathname !== path) {
     window.history.pushState(null, '', path);
   }
+  setCurrentPath(path);
+}
+
+function pushAnimeRoute(animeId: string, setCurrentPath: (path: string) => void) {
+  const path = `/anime/${encodeURIComponent(animeId)}`;
+  navigateTo(path, setCurrentPath);
 }
 
 function mapServerAnime(anime: ServerAnime): AnimeTitle {
