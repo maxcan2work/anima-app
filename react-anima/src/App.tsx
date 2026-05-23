@@ -1374,7 +1374,7 @@ function WatchPartyPage({
               onPageChange={setPartyCatalogPage}
             />
           ) : (
-            <div className="watch-party-stage">
+            <div className="watch-party-stage waiting-host">
               <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
               <p className="eyebrow">Совместный просмотр</p>
               <h2>Комната {code}</h2>

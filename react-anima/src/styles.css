@@ -1002,6 +1002,17 @@ h1 {
   line-height: 1.6;
 }
 
+.watch-party-stage.waiting-host {
+  align-self: center;
+  min-height: calc(100vh - 112px);
+  align-content: center;
+}
+
+.watch-party-stage.waiting-host h2 {
+  max-width: 720px;
+  font-size: clamp(32px, 5vw, 64px);
+}
+
 .watch-party-icon {
   width: 92px;
   height: 92px;
