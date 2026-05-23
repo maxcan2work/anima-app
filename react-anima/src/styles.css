@@ -508,6 +508,80 @@ h1 {
   animation: toast-lifecycle 2.4s both;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 6, 6, 0.68);
+  backdrop-filter: blur(8px);
+  animation: modal-backdrop-in 140ms ease-out both;
+}
+
+.modal-backdrop.closing {
+  pointer-events: none;
+  animation: modal-backdrop-out 140ms ease-in both;
+}
+
+.confirm-modal {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(24, 24, 22, 0.98);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  padding: 20px;
+  animation: modal-pop 160ms ease-out both;
+}
+
+.modal-backdrop.closing .confirm-modal {
+  animation: modal-pop-out 140ms ease-in both;
+}
+
+.confirm-modal h3,
+.confirm-modal p {
+  margin: 0;
+}
+
+.confirm-modal h3 {
+  color: #fff7ec;
+  font-size: 22px;
+}
+
+.confirm-modal p {
+  color: #cfc7ba;
+  line-height: 1.55;
+}
+
+.confirm-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.danger-button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #d94d38;
+  color: white;
+  padding: 0 12px;
+  font-weight: 900;
+}
+
+.danger-button:hover {
+  background: #e15843;
+}
+
+.confirm-modal button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 @keyframes screen-fade-left {
   from {
     opacity: 1;
@@ -529,6 +603,50 @@ h1 {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
