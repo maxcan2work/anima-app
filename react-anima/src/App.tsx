@@ -41,8 +41,8 @@ const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
 const EPISODES_PER_PAGE = 15;
 const PLAYER_PROVIDER_OPTIONS: Array<{ value: PlayerProvider; label: string }> = [
-  { value: 'anilibria', label: 'AniLiberty' },
   { value: 'kodik', label: 'Kodik' },
+  { value: 'anilibria', label: 'AniLiberty' },
 ];
 const WATCH_STATUS_OPTIONS: Array<{ value: WatchState['status']; label: string }> = [
   { value: 'planned', label: 'В планах' },
