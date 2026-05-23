@@ -31,6 +31,24 @@ type WatchPartyRoom = {
   code: string;
   hostSocketId: string;
   participants: Map<string, WatchPartyParticipant>;
+  selectedAnime: WatchPartyAnime | null;
+  episode: number;
+};
+
+type WatchPartyAnime = {
+  id: string;
+  title: string;
+  originalTitle: string | null;
+  episodes: number;
+  posterUrl: string | null;
+  shikimoriId: number | null;
+  malId: number | null;
+  kind: string | null;
+  genres: string | null;
+  score: string | null;
+  status: string | null;
+  sourceUrl: string | null;
+  airedOn: string | null;
 };
 
 const watchPartyRooms = new Map<string, WatchPartyRoom>();
@@ -353,6 +371,31 @@ io.on('connection', (socket) => {
     emitWatchPartyState(room);
   });
 
+  socket.on('watch-party:select-anime', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id) return;
+
+    const anime = getPayloadObject(payload, 'anime') as WatchPartyAnime | null;
+    if (!anime || !anime.id || !anime.title) return;
+
+    room.selectedAnime = anime;
+    room.episode = 1;
+    emitWatchPartyState(room);
+  });
+
+  socket.on('watch-party:set-episode', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id || !room.selectedAnime) return;
+
+    const episode = Number(getPayloadValue(payload, 'episode'));
+    if (!Number.isFinite(episode)) return;
+
+    room.episode = Math.min(Math.max(Math.trunc(episode), 1), room.selectedAnime.episodes || 1);
+    emitWatchPartyState(room);
+  });
+
   socket.on('disconnect', () => {
     for (const room of watchPartyRooms.values()) {
       if (!room.participants.has(socket.id)) continue;
@@ -389,6 +432,8 @@ function getOrCreateWatchPartyRoom(code: string, socketId: string) {
     code,
     hostSocketId: socketId,
     participants: new Map(),
+    selectedAnime: null,
+    episode: 1,
   };
   watchPartyRooms.set(code, room);
   return room;
@@ -403,6 +448,8 @@ function emitWatchPartyState(room: WatchPartyRoom) {
   io.to(watchPartyRoomName(room.code)).emit('watch-party:state', {
     code: room.code,
     participants,
+    selectedAnime: room.selectedAnime,
+    episode: room.episode,
   });
 }
 
@@ -411,9 +458,18 @@ function watchPartyRoomName(code: string) {
 }
 
 function getPayloadString(payload: unknown, key: string) {
-  if (!payload || typeof payload !== 'object' || !(key in payload)) return '';
-  const value = (payload as Record<string, unknown>)[key];
+  const value = getPayloadValue(payload, key);
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function getPayloadObject(payload: unknown, key: string) {
+  const value = getPayloadValue(payload, key);
+  return value && typeof value === 'object' ? value : null;
+}
+
+function getPayloadValue(payload: unknown, key: string) {
+  if (!payload || typeof payload !== 'object' || !(key in payload)) return '';
+  return (payload as Record<string, unknown>)[key];
 }
 
 function normalizeWatchPartyCode(value: string) {

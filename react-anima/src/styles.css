@@ -915,6 +915,80 @@ h1 {
   letter-spacing: 0.06em;
 }
 
+.party-anime-picker {
+  width: min(100%, 560px);
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.party-anime-picker input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1e7dc;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+
+.party-anime-picker input:focus {
+  border-color: rgba(201, 166, 109, 0.58);
+}
+
+.party-anime-picker .search-loader {
+  min-height: 82px;
+}
+
+.party-anime-results {
+  display: grid;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.party-anime-results button {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  padding: 8px;
+  text-align: left;
+}
+
+.party-anime-results button:hover {
+  border-color: rgba(201, 166, 109, 0.42);
+  background: rgba(201, 166, 109, 0.1);
+}
+
+.party-anime-results img {
+  width: 46px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.party-anime-results strong,
+.party-anime-results small {
+  display: block;
+}
+
+.party-anime-results strong {
+  color: #f1e7dc;
+}
+
+.party-anime-results small {
+  margin-top: 3px;
+  color: #aaa196;
+}
+
 .watch-party-panel {
   display: grid;
   gap: 12px;

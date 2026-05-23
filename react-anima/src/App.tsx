@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
 import Hls from 'hls.js';
-import { io } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
@@ -48,6 +48,11 @@ type WatchPartyParticipant = {
   name: string;
   avatarUrl: string | null;
   isHost: boolean;
+};
+type WatchPartyRoomState = {
+  participants: WatchPartyParticipant[];
+  selectedAnime: ServerAnime | null;
+  episode: number;
 };
 
 const STORAGE_KEY = 'anima.watchState.v1';
@@ -986,7 +991,17 @@ function WatchPartyPage({
 }) {
   const [joinCode, setJoinCode] = useState(code);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
+  const [ownParticipantId, setOwnParticipantId] = useState('');
+  const [selectedAnime, setSelectedAnime] = useState<AnimeTitle | null>(null);
+  const [partyEpisode, setPartyEpisode] = useState(1);
+  const [animeQuery, setAnimeQuery] = useState('');
+  const [animeResults, setAnimeResults] = useState<CatalogSearchResult[]>([]);
+  const [animeSearchStatus, setAnimeSearchStatus] = useState('');
+  const [animeSearchLoading, setAnimeSearchLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
+  const socketRef = useRef<Socket | null>(null);
+  const ownParticipant = participants.find((participant) => participant.id === ownParticipantId);
+  const isHost = Boolean(ownParticipant?.isHost);
 
   useEffect(() => {
     setJoinCode(code);
@@ -995,6 +1010,9 @@ function WatchPartyPage({
   useEffect(() => {
     if (!code) {
       setParticipants([]);
+      setOwnParticipantId('');
+      setSelectedAnime(null);
+      setPartyEpisode(1);
       setConnectionStatus('');
       return;
     }
@@ -1006,6 +1024,7 @@ function WatchPartyPage({
     });
 
     socket.on('connect', () => {
+      setOwnParticipantId(socket.id ?? '');
       setConnectionStatus('');
       socket.emit('watch-party:join', {
         code,
@@ -1014,19 +1033,64 @@ function WatchPartyPage({
       });
     });
 
-    socket.on('watch-party:state', (state: { participants?: WatchPartyParticipant[] }) => {
+    socket.on('watch-party:state', (state: WatchPartyRoomState) => {
       setConnectionStatus('');
       setParticipants(state.participants ?? []);
+      setSelectedAnime(state.selectedAnime ? mapServerAnime(state.selectedAnime) : null);
+      setPartyEpisode(state.episode ?? 1);
     });
 
     socket.on('connect_error', () => {
       setConnectionStatus('Не удалось подключиться к комнате.');
     });
 
+    socketRef.current = socket;
+
     return () => {
+      socketRef.current = null;
       socket.disconnect();
     };
   }, [code, user?.avatarUrl, user?.displayName]);
+
+  useEffect(() => {
+    if (!code || !isHost) return;
+
+    const query = animeQuery.trim();
+    if (query.length < 2) {
+      setAnimeResults([]);
+      setAnimeSearchStatus('');
+      setAnimeSearchLoading(false);
+      return;
+    }
+
+    let ignore = false;
+    setAnimeSearchLoading(true);
+    setAnimeSearchStatus('');
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await searchCatalog(query);
+        if (ignore) return;
+
+        setAnimeResults(response.results);
+        setAnimeSearchStatus(response.results.length ? '' : 'Ничего не нашли.');
+      } catch {
+        if (!ignore) {
+          setAnimeResults([]);
+          setAnimeSearchStatus('Не удалось найти аниме.');
+        }
+      } finally {
+        if (!ignore) {
+          setAnimeSearchLoading(false);
+        }
+      }
+    }, 260);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timer);
+    };
+  }, [animeQuery, code, isHost]);
 
   function handleCreateRoom() {
     onCreateRoom(createWatchPartyCode());
@@ -1040,22 +1104,87 @@ function WatchPartyPage({
     }
   }
 
+  async function handleSelectAnime(result: CatalogSearchResult) {
+    if (!socketRef.current || !isHost) return;
+
+    setAnimeSearchStatus('Загружаем тайтл...');
+    try {
+      const response = await importCatalogAnime(result.provider, result.providerId);
+      socketRef.current.emit('watch-party:select-anime', {
+        code,
+        anime: response.anime,
+      });
+      setAnimeQuery('');
+      setAnimeResults([]);
+      setAnimeSearchStatus('');
+    } catch {
+      setAnimeSearchStatus('Не удалось выбрать аниме.');
+    }
+  }
+
+  function handlePartyStateChange(patch: Partial<WatchState>) {
+    if (!socketRef.current || !isHost || !selectedAnime) return;
+    const nextEpisode = patch.episode ?? partyEpisode;
+    socketRef.current.emit('watch-party:set-episode', {
+      code,
+      episode: nextEpisode,
+    });
+  }
+
   if (code) {
     return (
       <section className="watch-party-page">
         <div className="watch-party-room">
-          <div className="watch-party-stage">
-            <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
-            <p className="eyebrow">Совместный просмотр</p>
-            <h2>Комната {code}</h2>
-            <p>Здесь будет общий плеер, синхронизация серии и список участников.</p>
-            <div className="watch-party-code">
-              <span>{code}</span>
-              <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
-                Скопировать код
-              </button>
+          {selectedAnime ? (
+            <AnimeHero
+              anime={selectedAnime}
+              state={{ episode: partyEpisode, status: 'watching' }}
+              onStateChange={handlePartyStateChange}
+            />
+          ) : (
+            <div className="watch-party-stage">
+              <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+              <p className="eyebrow">Совместный просмотр</p>
+              <h2>Комната {code}</h2>
+              {isHost ? (
+                <div className="party-anime-picker">
+                  <input
+                    type="search"
+                    value={animeQuery}
+                    onChange={(event) => setAnimeQuery(event.target.value)}
+                    placeholder="Найти аниме"
+                  />
+                  {animeSearchLoading ? <SearchLoader /> : null}
+                  {animeSearchStatus ? <p className="catalog-status">{animeSearchStatus}</p> : null}
+                  {animeResults.length > 0 ? (
+                    <div className="party-anime-results">
+                      {animeResults.map((result) => (
+                        <button
+                          key={`${result.provider}-${result.providerId}`}
+                          type="button"
+                          onClick={() => handleSelectAnime(result)}
+                        >
+                          {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
+                          <span>
+                            <strong>{result.title}</strong>
+                            <small>{result.originalTitle}</small>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p>Ждём, пока хост выберет аниме для просмотра.</p>
+              )}
+              <div className="watch-party-code">
+                <span>{code}</span>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
+                  Скопировать код
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <aside className="watch-party-panel">
             <h3>Участники</h3>
