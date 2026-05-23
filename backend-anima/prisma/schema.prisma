@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  DISCORD
+  GOOGLE
+  TELEGRAM
+}
+
+enum WatchStatus {
+  PLANNED
+  WATCHING
+  COMPLETED
+  DROPPED
+}
+
+model User {
+  id          String        @id @default(cuid())
+  displayName String
+  avatarUrl   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  accounts    AuthAccount[]
+  animeList   UserAnime[]
+}
+
+model AuthAccount {
+  id             String       @id @default(cuid())
+  userId         String
+  provider       AuthProvider
+  providerUserId String
+  accessToken    String?
+  refreshToken   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+}
+
+model Anime {
+  id            String      @id
+  title         String
+  originalTitle String?
+  episodes      Int
+  posterUrl     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  userEntries   UserAnime[]
+}
+
+model UserAnime {
+  id             String      @id @default(cuid())
+  userId         String
+  animeId        String
+  status         WatchStatus @default(PLANNED)
+  currentEpisode Int         @default(1)
+  score          Int?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anime          Anime       @relation(fields: [animeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, animeId])
+}
