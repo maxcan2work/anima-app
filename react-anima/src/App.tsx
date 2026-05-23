@@ -119,7 +119,7 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [toast, setToast] = useState('');
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
-  const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<string | null>(null);
+  const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<{ path: string; view: AppView } | null>(null);
   const [watchPartyLeaveModalClosing, setWatchPartyLeaveModalClosing] = useState(false);
   const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -199,14 +199,18 @@ export function App() {
     });
   }, [displayedPath]);
 
-  function requestAnimeRoute(path: string) {
-    if (view === 'watchParty' && watchPartyCode) {
-      setWatchPartyLeaveTarget(path);
+  function requestRoute(path: string, nextView: AppView) {
+    if (watchPartyCode && nextView !== 'watchParty') {
+      setWatchPartyLeaveTarget({ path, view: nextView });
       return;
     }
 
     navigateToRemembered(path, setCurrentPath, scrollByPathRef);
-    setView('watch');
+    setView(nextView);
+  }
+
+  function requestAnimeRoute(path: string) {
+    requestRoute(path, 'watch');
   }
 
   function openCatalogAnime(result: CatalogSearchResult) {
@@ -236,11 +240,6 @@ export function App() {
 
   function requestWatchView() {
     const nextPath = view === 'watch' && routeAnimeId ? '/anime' : lastWatchPathRef.current;
-    if (view === 'watchParty' && watchPartyCode) {
-      setWatchPartyLeaveTarget(nextPath);
-      return;
-    }
-
     requestAnimeRoute(nextPath);
   }
 
@@ -255,18 +254,18 @@ export function App() {
 
   function confirmLeaveWatchParty() {
     if (watchPartyLeaveModalClosing) return;
-    const nextPath = watchPartyLeaveTarget ?? '/anime';
+    const target = watchPartyLeaveTarget ?? { path: '/anime', view: 'watch' as AppView };
     setWatchPartyLeaveTarget(null);
     setWatchPartyLeaveModalClosing(false);
     setWatchPartyCode('');
     setCurrentPath((current) => {
       scrollByPathRef.current[current] = window.scrollY;
-      if (window.location.pathname !== nextPath) {
-        window.history.replaceState(null, '', nextPath);
+      if (window.location.pathname !== target.path) {
+        window.history.replaceState(null, '', target.path);
       }
-      return nextPath;
+      return target.path;
     });
-    setView('watch');
+    setView(target.view);
   }
 
   useEffect(() => {
@@ -632,10 +631,7 @@ export function App() {
             title="Случайное аниме"
             description="Подборка наугад"
             collapsed={sidebarCollapsed}
-            onClick={() => {
-              navigateToRemembered('/random', setCurrentPath, scrollByPathRef);
-              setView('random');
-            }}
+            onClick={() => requestRoute('/random', 'random')}
           />
           <SideNavButton
             active={view === 'watchParty'}
@@ -661,8 +657,7 @@ export function App() {
           collapsed={sidebarCollapsed}
           onLogin={loginWithDiscord}
           onProfile={() => {
-            navigateToRemembered('/profile', setCurrentPath, scrollByPathRef);
-            setView('profile');
+            requestRoute('/profile', 'profile');
           }}
         />
       </aside>
@@ -731,8 +726,8 @@ export function App() {
           onClick={closeWatchPartyLeaveModal}
         >
           <div className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="leave-watch-party-title" onClick={(event) => event.stopPropagation()}>
-            <h3 id="leave-watch-party-title">Выйти из комнаты?</h3>
-            <p>Чтобы перейти в обычный просмотр, нужно покинуть совместный просмотр. Текущая комната будет отключена для тебя.</p>
+            <h3 id="leave-watch-party-title">Покинуть совместный просмотр?</h3>
+            <p>Чтобы перейти в другой раздел, нужно выйти из комнаты. Текущий совместный просмотр будет отключен для тебя.</p>
             <div className="confirm-modal-actions">
               <button className="text-button" type="button" onClick={closeWatchPartyLeaveModal} disabled={watchPartyLeaveModalClosing}>
                 Остаться
