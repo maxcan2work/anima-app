@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefOb
 import Hls from 'hls.js';
 import { io, type Socket } from 'socket.io-client';
 import copyIcon from './assets/copy.svg';
+import crownIcon from './assets/crown.svg';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import leaveRoomIcon from './assets/leave-room.svg';
 import loginIcon from './assets/login.svg';
@@ -1375,8 +1376,10 @@ function WatchPartyParticipants({
               <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
             )}
             <span>
-              <strong>{participant.name}</strong>
-              <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
+              <strong>
+                {participant.name}
+                {participant.isHost ? <img className="party-host-icon" src={crownIcon} alt="Хост" /> : null}
+              </strong>
             </span>
           </div>
         ))}

@@ -1044,13 +1044,13 @@ h1 {
   align-items: center;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
-  padding: 12px;
+  padding: 8px 10px;
 }
 
 .party-member img,
 .party-member .avatar-fallback {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   flex: 0 0 auto;
 }
@@ -1065,7 +1065,16 @@ h1 {
 }
 
 .party-member strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #f1e7dc;
+}
+
+.party-member .party-host-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
 }
 
 .party-member small {
