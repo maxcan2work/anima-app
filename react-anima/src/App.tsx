@@ -7,13 +7,16 @@ import {
   getAnimeCatalog,
   getEpisodePlayers,
   getMyAnimeList,
+  getMyRandomHistory,
   importCatalogAnime,
   loginWithDiscord,
   logout,
+  saveRandomHistoryEntry,
   saveAnimeProgress,
   type CatalogSearchResult,
   type CurrentUser,
   type PlayerProviderResult,
+  type ServerRandomHistoryEntry,
   type ServerAnime,
   type ServerWatchEntry,
 } from './api';
@@ -185,7 +188,11 @@ export function App() {
 
     async function loadSession() {
       try {
-        const [{ user: currentUser }, { list }] = await Promise.all([getCurrentUser(), getMyAnimeList()]);
+        const [{ user: currentUser }, { list }, { history }] = await Promise.all([
+          getCurrentUser(),
+          getMyAnimeList(),
+          getMyRandomHistory(),
+        ]);
         if (ignore) return;
 
         const serverState = list.reduce<Record<string, WatchState>>((acc, entry) => {
@@ -199,6 +206,7 @@ export function App() {
         setUser(currentUser);
         setWatchState(serverState);
         setDiaryEntries(list);
+        setRandomHistory(history.map(mapRandomHistoryEntry));
         setAuthStatus('ready');
       } catch {
         if (!ignore) {
@@ -248,6 +256,18 @@ export function App() {
         const withoutDuplicate = current.filter((item) => item.providerId !== next.providerId);
         return [next, ...withoutDuplicate].slice(0, 10);
       });
+
+      if (user) {
+        saveRandomHistoryEntry(next)
+          .then(({ entry }) => {
+            const saved = mapRandomHistoryEntry(entry);
+            setRandomHistory((current) => {
+              const withoutDuplicate = current.filter((item) => item.providerId !== saved.providerId);
+              return [saved, ...withoutDuplicate].slice(0, 10);
+            });
+          })
+          .catch(() => setRandomStatus('Случайный тайтл показан, но историю не удалось сохранить.'));
+      }
     } catch {
       setRandomStatus('Не удалось получить случайное аниме.');
     } finally {
@@ -296,6 +316,8 @@ export function App() {
     setUser(null);
     setAuthStatus('guest');
     setDiaryEntries([]);
+    setRandomHistory([]);
+    setRandomAnime(null);
     setWatchState(loadWatchState());
   }
 
@@ -916,6 +938,22 @@ function mapServerAnime(anime: ServerAnime): AnimeTitle {
           },
         ]
       : [],
+  };
+}
+
+function mapRandomHistoryEntry(entry: ServerRandomHistoryEntry): CatalogSearchResult {
+  return {
+    provider: entry.provider,
+    providerId: entry.providerId,
+    title: entry.title,
+    originalTitle: entry.originalTitle,
+    episodes: entry.episodes,
+    posterUrl: entry.posterUrl,
+    kind: entry.kind,
+    score: entry.score,
+    status: entry.status,
+    malId: entry.malId,
+    sourceUrl: entry.sourceUrl,
   };
 }
 

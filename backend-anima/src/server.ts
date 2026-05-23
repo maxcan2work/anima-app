@@ -203,6 +203,76 @@ app.put('/me/anime/:animeId', requireAuth, async (request, response) => {
   response.json({ entry });
 });
 
+app.get('/me/random-history', requireAuth, async (request, response) => {
+  const history = await prisma.userRandomAnime.findMany({
+    where: { userId: request.userId },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
+  });
+
+  response.json({ history });
+});
+
+app.post('/me/random-history', requireAuth, async (request, response) => {
+  const provider = String(request.body.provider ?? '');
+  const providerId = Number(request.body.providerId);
+
+  if (provider !== 'shikimori' || !Number.isFinite(providerId)) {
+    response.status(400).json({ error: 'Invalid random anime provider' });
+    return;
+  }
+
+  const entry = await prisma.userRandomAnime.upsert({
+    where: {
+      userId_provider_providerId: {
+        userId: request.userId!,
+        provider,
+        providerId: Math.trunc(providerId),
+      },
+    },
+    create: {
+      userId: request.userId!,
+      provider,
+      providerId: Math.trunc(providerId),
+      title: parseRequiredText(request.body.title, 'title'),
+      originalTitle: parseRequiredText(request.body.originalTitle, 'originalTitle'),
+      episodes: Math.max(Math.trunc(Number(request.body.episodes) || 1), 1),
+      posterUrl: parseNullableText(request.body.posterUrl),
+      kind: parseNullableText(request.body.kind),
+      score: parseNullableText(request.body.score),
+      status: parseNullableText(request.body.status),
+      malId: parseNullableInt(request.body.malId),
+      sourceUrl: parseRequiredText(request.body.sourceUrl, 'sourceUrl'),
+    },
+    update: {
+      title: parseRequiredText(request.body.title, 'title'),
+      originalTitle: parseRequiredText(request.body.originalTitle, 'originalTitle'),
+      episodes: Math.max(Math.trunc(Number(request.body.episodes) || 1), 1),
+      posterUrl: parseNullableText(request.body.posterUrl),
+      kind: parseNullableText(request.body.kind),
+      score: parseNullableText(request.body.score),
+      status: parseNullableText(request.body.status),
+      malId: parseNullableInt(request.body.malId),
+      sourceUrl: parseRequiredText(request.body.sourceUrl, 'sourceUrl'),
+    },
+  });
+
+  const staleEntries = await prisma.userRandomAnime.findMany({
+    where: { userId: request.userId },
+    orderBy: { updatedAt: 'desc' },
+    skip: 10,
+    select: { id: true },
+  });
+
+  if (staleEntries.length > 0) {
+    await prisma.userRandomAnime.deleteMany({
+      where: { id: { in: staleEntries.map((item) => item.id) } },
+    });
+  }
+
+  response.status(201).json({ entry });
+});
+
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   const message = error instanceof Error ? error.message : 'Internal server error';
   const status = message.includes('not configured') ? 503 : 500;
@@ -242,4 +312,19 @@ function parseNullableText(value: unknown) {
   if (value == null) return null;
   const text = String(value).trim();
   return text.length > 0 ? text : null;
+}
+
+function parseNullableInt(value: unknown) {
+  if (value == null || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.trunc(number) : null;
+}
+
+function parseRequiredText(value: unknown, field: string) {
+  const text = parseNullableText(value);
+  if (!text) {
+    throw new Error(`${field} is required`);
+  }
+
+  return text;
 }

@@ -71,6 +71,11 @@ export type CatalogSearchResult = {
   sourceUrl: string;
 };
 
+export type ServerRandomHistoryEntry = CatalogSearchResult & {
+  id: string;
+  updatedAt: string;
+};
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -106,6 +111,17 @@ export async function getCurrentUser() {
 
 export async function getMyAnimeList() {
   return apiFetch<{ list: ServerWatchEntry[] }>('/me/anime');
+}
+
+export async function getMyRandomHistory() {
+  return apiFetch<{ history: ServerRandomHistoryEntry[] }>('/me/random-history');
+}
+
+export async function saveRandomHistoryEntry(entry: CatalogSearchResult) {
+  return apiFetch<{ entry: ServerRandomHistoryEntry }>('/me/random-history', {
+    method: 'POST',
+    body: JSON.stringify(entry),
+  });
 }
 
 export async function getAnimeCatalog() {

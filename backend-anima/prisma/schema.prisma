@@ -28,6 +28,7 @@ model User {
   updatedAt   DateTime      @updatedAt
   accounts    AuthAccount[]
   animeList   UserAnime[]
+  randomHistory UserRandomAnime[]
 }
 
 model AuthAccount {
@@ -94,4 +95,26 @@ model UserAnime {
   anime          Anime       @relation(fields: [animeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, animeId])
+}
+
+model UserRandomAnime {
+  id            String   @id @default(cuid())
+  userId        String
+  provider      String
+  providerId    Int
+  title         String
+  originalTitle String
+  episodes      Int
+  posterUrl     String?
+  kind          String?
+  score         String?
+  status        String?
+  malId         Int?
+  sourceUrl     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, providerId])
+  @@index([userId, updatedAt])
 }
