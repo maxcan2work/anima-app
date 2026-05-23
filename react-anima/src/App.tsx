@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
 import Hls from 'hls.js';
+import { io } from 'socket.io-client';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
@@ -10,6 +11,7 @@ import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
 import trashIcon from './assets/trash.svg';
 import watchPartyIcon from './assets/watch-party.svg';
 import {
+  API_URL,
   browseCatalog,
   clearMyRandomHistory,
   deleteRandomHistoryEntry,
@@ -41,6 +43,12 @@ type WatchState = {
 
 type PlayerProvider = PlayerProviderResult['provider'];
 type AppView = 'watch' | 'profile' | 'random' | 'watchParty';
+type WatchPartyParticipant = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  isHost: boolean;
+};
 
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
@@ -961,10 +969,48 @@ function WatchPartyPage({
   onJoinRoom: (code: string) => void;
 }) {
   const [joinCode, setJoinCode] = useState(code);
+  const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState('');
 
   useEffect(() => {
     setJoinCode(code);
   }, [code]);
+
+  useEffect(() => {
+    if (!code) {
+      setParticipants([]);
+      setConnectionStatus('');
+      return;
+    }
+
+    setConnectionStatus('Подключаемся...');
+    const socket = io(API_URL, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+    });
+
+    socket.on('connect', () => {
+      setConnectionStatus('');
+      socket.emit('watch-party:join', {
+        code,
+        name: user?.displayName ?? 'Гость',
+        avatarUrl: user?.avatarUrl ?? null,
+      });
+    });
+
+    socket.on('watch-party:state', (state: { participants?: WatchPartyParticipant[] }) => {
+      setConnectionStatus('');
+      setParticipants(state.participants ?? []);
+    });
+
+    socket.on('connect_error', () => {
+      setConnectionStatus('Не удалось подключиться к комнате.');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [code, user?.avatarUrl, user?.displayName]);
 
   function handleCreateRoom() {
     onCreateRoom(createWatchPartyCode());
@@ -997,17 +1043,20 @@ function WatchPartyPage({
 
           <aside className="watch-party-panel">
             <h3>Участники</h3>
-            <div className="party-member">
-              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user?.displayName?.[0] ?? 'G'}</div>}
-              <span>
-                <strong>{user?.displayName ?? 'Гость'}</strong>
-                <small>Хост</small>
-              </span>
-            </div>
-            <div className="party-placeholder">
-              <strong>Следующий шаг</strong>
-              <small>Подключим socket.io, хранение комнат и синхронизацию состояния плеера.</small>
-            </div>
+            {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
+            {participants.map((participant) => (
+              <div className="party-member" key={participant.id}>
+                {participant.avatarUrl ? (
+                  <img src={participant.avatarUrl} alt="" />
+                ) : (
+                  <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
+                )}
+                <span>
+                  <strong>{participant.name}</strong>
+                  <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
+                </span>
+              </div>
+            ))}
           </aside>
         </div>
       </section>

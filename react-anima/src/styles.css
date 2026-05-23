@@ -926,8 +926,13 @@ h1 {
   font-size: 18px;
 }
 
-.party-member,
-.party-placeholder {
+.party-status {
+  margin: 0;
+  color: #aaa196;
+  font-size: 13px;
+}
+
+.party-member {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -949,26 +954,17 @@ h1 {
 }
 
 .party-member strong,
-.party-member small,
-.party-placeholder strong,
-.party-placeholder small {
+.party-member small {
   display: block;
 }
 
-.party-member strong,
-.party-placeholder strong {
+.party-member strong {
   color: #f1e7dc;
 }
 
-.party-member small,
-.party-placeholder small {
+.party-member small {
   color: #aaa196;
   line-height: 1.4;
-}
-
-.party-placeholder {
-  display: grid;
-  align-items: start;
 }
 
 .player-layout {

@@ -1,6 +1,8 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
 import { WatchStatus } from '@prisma/client';
 import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSession } from './auth.js';
 import { config } from './config.js';
@@ -10,6 +12,28 @@ import { browseCatalog, importShikimoriAnime, searchCatalog } from './catalogPro
 import { findPlayerProviders } from './playerProviders.js';
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: config.WEB_ORIGIN,
+    credentials: true,
+  },
+});
+
+type WatchPartyParticipant = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  isHost: boolean;
+};
+
+type WatchPartyRoom = {
+  code: string;
+  hostSocketId: string;
+  participants: Map<string, WatchPartyParticipant>;
+};
+
+const watchPartyRooms = new Map<string, WatchPartyRoom>();
 
 app.use(
   cors({
@@ -311,9 +335,90 @@ app.use((error: unknown, _request: express.Request, response: express.Response, 
   response.status(status).json({ error: message });
 });
 
-app.listen(config.PORT, () => {
+io.on('connection', (socket) => {
+  socket.on('watch-party:join', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    if (!code) return;
+
+    const room = getOrCreateWatchPartyRoom(code, socket.id);
+    const participant: WatchPartyParticipant = {
+      id: socket.id,
+      name: getPayloadString(payload, 'name') || 'Гость',
+      avatarUrl: getPayloadString(payload, 'avatarUrl') || null,
+      isHost: room.hostSocketId === socket.id,
+    };
+
+    socket.join(watchPartyRoomName(code));
+    room.participants.set(socket.id, participant);
+    emitWatchPartyState(room);
+  });
+
+  socket.on('disconnect', () => {
+    for (const room of watchPartyRooms.values()) {
+      if (!room.participants.has(socket.id)) continue;
+
+      room.participants.delete(socket.id);
+      if (room.participants.size === 0) {
+        watchPartyRooms.delete(room.code);
+        continue;
+      }
+
+      if (room.hostSocketId === socket.id) {
+        const nextHost = room.participants.values().next().value as WatchPartyParticipant | undefined;
+        if (nextHost) {
+          room.hostSocketId = nextHost.id;
+          nextHost.isHost = true;
+          room.participants.set(nextHost.id, nextHost);
+        }
+      }
+
+      emitWatchPartyState(room);
+    }
+  });
+});
+
+server.listen(config.PORT, () => {
   console.log(`Backend Anima API: http://localhost:${config.PORT}`);
 });
+
+function getOrCreateWatchPartyRoom(code: string, socketId: string) {
+  const existing = watchPartyRooms.get(code);
+  if (existing) return existing;
+
+  const room: WatchPartyRoom = {
+    code,
+    hostSocketId: socketId,
+    participants: new Map(),
+  };
+  watchPartyRooms.set(code, room);
+  return room;
+}
+
+function emitWatchPartyState(room: WatchPartyRoom) {
+  const participants = Array.from(room.participants.values()).map((participant) => ({
+    ...participant,
+    isHost: participant.id === room.hostSocketId,
+  }));
+
+  io.to(watchPartyRoomName(room.code)).emit('watch-party:state', {
+    code: room.code,
+    participants,
+  });
+}
+
+function watchPartyRoomName(code: string) {
+  return `watch-party:${code}`;
+}
+
+function getPayloadString(payload: unknown, key: string) {
+  if (!payload || typeof payload !== 'object' || !(key in payload)) return '';
+  const value = (payload as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeWatchPartyCode(value: string) {
+  return value.replace(/[^a-z0-9]/gi, '').slice(0, 12).toUpperCase();
+}
 
 function parseWatchStatus(value: unknown) {
   const status = String(value ?? WatchStatus.PLANNED).toUpperCase();
