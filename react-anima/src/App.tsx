@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
 import Hls from 'hls.js';
 import episodeArrowIcon from './assets/episode-arrow.svg';
 import loginIcon from './assets/login.svg';
@@ -8,6 +8,7 @@ import randomDiceIcon from './assets/random-dice.svg';
 import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
 import trashIcon from './assets/trash.svg';
+import watchPartyIcon from './assets/watch-party.svg';
 import {
   browseCatalog,
   clearMyRandomHistory,
@@ -39,6 +40,7 @@ type WatchState = {
 };
 
 type PlayerProvider = PlayerProviderResult['provider'];
+type AppView = 'watch' | 'profile' | 'random' | 'watchParty';
 
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
@@ -98,7 +100,8 @@ export function App() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
-  const [view, setView] = useState<'watch' | 'profile' | 'random'>(() => getViewFromPath(window.location.pathname));
+  const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
+  const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
   const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
@@ -107,7 +110,7 @@ export function App() {
   const screenKey = `${view}:${currentPath}`;
   const [displayedScreenKey, setDisplayedScreenKey] = useState(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
-  const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as 'watch' | 'profile' | 'random';
+  const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
   const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
   const displayedRouteAnimeId = getRouteAnimeId(displayedPath);
   const routeAnimeId = getRouteAnimeId(currentPath);
@@ -125,6 +128,7 @@ export function App() {
       if (nextView === 'watch') {
         lastWatchPathRef.current = window.location.pathname;
       }
+      setWatchPartyCode(getWatchPartyCodeFromPath(window.location.pathname));
       setView(nextView);
     }
 
@@ -171,6 +175,12 @@ export function App() {
   function openCatalogAnime(result: CatalogSearchResult) {
     navigateToRemembered(animeRouteFromCatalog(result), setCurrentPath, scrollByPathRef);
     setView('watch');
+  }
+
+  function openWatchParty(path: string) {
+    setWatchPartyCode(getWatchPartyCodeFromPath(path));
+    navigateToRemembered(path, setCurrentPath, scrollByPathRef);
+    setView('watchParty');
   }
 
   useEffect(() => {
@@ -547,6 +557,14 @@ export function App() {
             }}
           />
           <SideNavButton
+            active={view === 'watchParty'}
+            icon={watchPartyIcon}
+            title="Совместный просмотр"
+            description="Комнаты и коды"
+            collapsed={sidebarCollapsed}
+            onClick={() => openWatchParty(watchPartyCode ? `/watch-party/${watchPartyCode}` : '/watch-party')}
+          />
+          <SideNavButton
             disabled
             icon={musicNoteIcon}
             title="Угадай опенинг"
@@ -582,6 +600,13 @@ export function App() {
             onRandomize={handleRandomAnime}
             onClearHistory={handleClearRandomHistory}
             onDeleteHistoryEntry={handleDeleteRandomHistoryEntry}
+          />
+        ) : displayedView === 'watchParty' ? (
+          <WatchPartyPage
+            code={getWatchPartyCodeFromPath(displayedPath)}
+            user={user}
+            onCreateRoom={(code) => openWatchParty(`/watch-party/${code}`)}
+            onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
           />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
@@ -920,6 +945,100 @@ function RandomAnimePage({
           })
         )}
       </aside>
+    </section>
+  );
+}
+
+function WatchPartyPage({
+  code,
+  user,
+  onCreateRoom,
+  onJoinRoom,
+}: {
+  code: string;
+  user: CurrentUser | null;
+  onCreateRoom: (code: string) => void;
+  onJoinRoom: (code: string) => void;
+}) {
+  const [joinCode, setJoinCode] = useState(code);
+
+  useEffect(() => {
+    setJoinCode(code);
+  }, [code]);
+
+  function handleCreateRoom() {
+    onCreateRoom(createWatchPartyCode());
+  }
+
+  function handleJoinRoom(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = normalizeWatchPartyCode(joinCode);
+    if (normalized) {
+      onJoinRoom(normalized);
+    }
+  }
+
+  if (code) {
+    return (
+      <section className="watch-party-page">
+        <div className="watch-party-room">
+          <div className="watch-party-stage">
+            <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+            <p className="eyebrow">Совместный просмотр</p>
+            <h2>Комната {code}</h2>
+            <p>Здесь будет общий плеер, синхронизация серии и список участников.</p>
+            <div className="watch-party-code">
+              <span>{code}</span>
+              <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
+                Скопировать код
+              </button>
+            </div>
+          </div>
+
+          <aside className="watch-party-panel">
+            <h3>Участники</h3>
+            <div className="party-member">
+              {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user?.displayName?.[0] ?? 'G'}</div>}
+              <span>
+                <strong>{user?.displayName ?? 'Гость'}</strong>
+                <small>Хост</small>
+              </span>
+            </div>
+            <div className="party-placeholder">
+              <strong>Следующий шаг</strong>
+              <small>Подключим socket.io, хранение комнат и синхронизацию состояния плеера.</small>
+            </div>
+          </aside>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="watch-party-page">
+      <div className="watch-party-entry">
+        <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+        <p className="eyebrow">Совместный просмотр</p>
+        <h2>Собери комнату для просмотра</h2>
+        <p>Создай лобби или подключись по коду. Позже здесь появится список активных комнат аккаунта.</p>
+
+        <div className="watch-party-actions">
+          <button className="random-button" type="button" onClick={handleCreateRoom}>
+            Создать комнату
+          </button>
+          <form className="watch-party-join" onSubmit={handleJoinRoom}>
+            <input
+              value={joinCode}
+              onChange={(event) => setJoinCode(event.target.value)}
+              placeholder="Код комнаты"
+              maxLength={12}
+            />
+            <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)}>
+              Подключиться
+            </button>
+          </form>
+        </div>
+      </div>
     </section>
   );
 }
@@ -1374,10 +1493,24 @@ function getRouteAnimeId(pathname: string) {
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
-function getViewFromPath(pathname: string): 'watch' | 'profile' | 'random' {
+function getViewFromPath(pathname: string): AppView {
   if (pathname === '/profile') return 'profile';
   if (pathname === '/random') return 'random';
+  if (pathname === '/watch-party' || pathname.startsWith('/watch-party/')) return 'watchParty';
   return 'watch';
+}
+
+function getWatchPartyCodeFromPath(pathname: string) {
+  const match = pathname.match(/^\/watch-party\/([^/]+)$/);
+  return match?.[1] ? normalizeWatchPartyCode(decodeURIComponent(match[1])) : '';
+}
+
+function createWatchPartyCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function normalizeWatchPartyCode(value: string) {
+  return value.replace(/[^a-z0-9]/gi, '').slice(0, 12).toUpperCase();
 }
 
 function parseShikimoriRouteId(animeId: string) {
