@@ -225,6 +225,26 @@ app.delete('/me/random-history', requireAuth, async (request, response) => {
   response.status(204).end();
 });
 
+app.delete('/me/random-history/:provider/:providerId', requireAuth, async (request, response) => {
+  const provider = String(request.params.provider ?? '');
+  const providerId = Number(request.params.providerId);
+
+  if (provider !== 'shikimori' || !Number.isFinite(providerId)) {
+    response.status(400).json({ error: 'Invalid random anime provider' });
+    return;
+  }
+
+  await prisma.userRandomAnime.deleteMany({
+    where: {
+      userId: request.userId,
+      provider,
+      providerId: Math.trunc(providerId),
+    },
+  });
+
+  response.status(204).end();
+});
+
 app.post('/me/random-history', requireAuth, async (request, response) => {
   const provider = String(request.body.provider ?? '');
   const providerId = Number(request.body.providerId);

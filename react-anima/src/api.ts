@@ -123,6 +123,10 @@ export async function clearMyRandomHistory() {
   return apiFetch<void>('/me/random-history', { method: 'DELETE' });
 }
 
+export async function deleteRandomHistoryEntry(provider: CatalogSearchResult['provider'], providerId: number) {
+  return apiFetch<void>(`/me/random-history/${encodeURIComponent(provider)}/${providerId}`, { method: 'DELETE' });
+}
+
 export async function saveRandomHistoryEntry(entry: CatalogSearchResult) {
   return apiFetch<{ entry: ServerRandomHistoryEntry }>('/me/random-history', {
     method: 'POST',

@@ -7,9 +7,11 @@ import nekoIcon from './assets/neko.svg';
 import randomDiceIcon from './assets/random-dice.svg';
 import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
+import trashIcon from './assets/trash.svg';
 import {
   browseCatalog,
   clearMyRandomHistory,
+  deleteRandomHistoryEntry,
   getAnimeById,
   getCurrentUser,
   getAnimeCatalog,
@@ -92,6 +94,7 @@ export function App() {
   const [randomLoading, setRandomLoading] = useState(false);
   const [randomStatus, setRandomStatus] = useState('');
   const [randomClearing, setRandomClearing] = useState(false);
+  const [deletingRandomKey, setDeletingRandomKey] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
@@ -378,6 +381,25 @@ export function App() {
     }
   }
 
+  async function handleDeleteRandomHistoryEntry(entry: CatalogSearchResult) {
+    const key = `${entry.provider}-${entry.providerId}`;
+    if (deletingRandomKey) return;
+
+    setDeletingRandomKey(key);
+    setRandomStatus('');
+
+    try {
+      if (user) {
+        await deleteRandomHistoryEntry(entry.provider, entry.providerId);
+      }
+      setRandomHistory((current) => current.filter((item) => `${item.provider}-${item.providerId}` !== key));
+    } catch {
+      setRandomStatus('Не удалось удалить запись из истории.');
+    } finally {
+      setDeletingRandomKey('');
+    }
+  }
+
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
       const anime = library.find((item) => item.id === id);
@@ -495,9 +517,11 @@ export function App() {
             loading={randomLoading}
             status={randomStatus}
             clearing={randomClearing}
+            deletingKey={deletingRandomKey}
             onOpenAnime={openCatalogAnime}
             onRandomize={handleRandomAnime}
             onClearHistory={handleClearRandomHistory}
+            onDeleteHistoryEntry={handleDeleteRandomHistoryEntry}
           />
         ) : view === 'watch' && !routeAnimeId ? (
           <WatchHome
@@ -753,18 +777,22 @@ function RandomAnimePage({
   loading,
   status,
   clearing,
+  deletingKey,
   onOpenAnime,
   onRandomize,
   onClearHistory,
+  onDeleteHistoryEntry,
 }: {
   randomAnime: CatalogSearchResult | null;
   history: CatalogSearchResult[];
   loading: boolean;
   status: string;
   clearing: boolean;
+  deletingKey: string;
   onOpenAnime: (result: CatalogSearchResult) => void;
   onRandomize: () => void;
   onClearHistory: () => void;
+  onDeleteHistoryEntry: (result: CatalogSearchResult) => void;
 }) {
   return (
     <section className="random-page">
@@ -806,20 +834,29 @@ function RandomAnimePage({
         {history.length === 0 ? (
           <p className="muted-copy">Здесь появятся последние варианты.</p>
         ) : (
-          history.map((item) => (
-            <button
-              key={`${item.provider}-${item.providerId}`}
-              className="random-history-row"
-              onClick={() => onOpenAnime(item)}
-              type="button"
-            >
-              {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className="poster-fallback" />}
-              <span>
-                <strong>{item.title}</strong>
-                <small>{item.score ?? 'без оценки'}</small>
-              </span>
-            </button>
-          ))
+          history.map((item) => {
+            const key = `${item.provider}-${item.providerId}`;
+            return (
+              <div key={key} className="random-history-row">
+                <button className="random-history-open" onClick={() => onOpenAnime(item)} type="button">
+                  {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className="poster-fallback" />}
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.score ?? 'без оценки'}</small>
+                  </span>
+                </button>
+                <button
+                  className="random-history-delete"
+                  type="button"
+                  aria-label={`Удалить ${item.title} из истории`}
+                  disabled={deletingKey === key}
+                  onClick={() => onDeleteHistoryEntry(item)}
+                >
+                  <img src={trashIcon} alt="" aria-hidden="true" />
+                </button>
+              </div>
+            );
+          })
         )}
       </aside>
     </section>
