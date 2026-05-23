@@ -194,6 +194,20 @@ export function App() {
   }, [currentPath]);
 
   useEffect(() => {
+    if (authStatus === 'loading' || user || currentPath !== '/profile') return;
+
+    const path = '/anime';
+    setCurrentPath((current) => {
+      scrollByPathRef.current[current] = window.scrollY;
+      if (window.location.pathname !== path) {
+        window.history.replaceState(null, '', path);
+      }
+      return path;
+    });
+    setView('watch');
+  }, [authStatus, currentPath, user]);
+
+  useEffect(() => {
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: scrollByPathRef.current[displayedPath] ?? 0 });
     });
