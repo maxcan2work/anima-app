@@ -30,6 +30,16 @@ select {
 
 button {
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease,
+    transform 140ms ease;
+}
+
+button:not(:disabled):hover {
+  transform: scale(1.01);
 }
 
 .app-shell {
@@ -221,7 +231,7 @@ h1 {
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
   text-align: left;
-  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
 }
 
 .auth-icon-button {
@@ -358,7 +368,7 @@ h1 {
   color: #f5f1e8;
   font-weight: 800;
   text-align: left;
-  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
 }
 
 .nav-icon {
