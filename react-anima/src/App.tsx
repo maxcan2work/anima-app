@@ -67,6 +67,7 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile' | 'random'>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
@@ -367,18 +368,27 @@ export function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
       <aside className="library-panel" aria-label="Каталог аниме">
         <div className="brand-row">
           <div>
             <p className="eyebrow">Anima</p>
-            <h1>Просмотр</h1>
           </div>
+          <button
+            className="sidebar-toggle"
+            type="button"
+            onClick={() => setSidebarCollapsed((current) => !current)}
+            aria-label={sidebarCollapsed ? 'Развернуть сайдбар' : 'Свернуть сайдбар'}
+            data-tooltip={sidebarCollapsed ? 'Развернуть' : 'Свернуть'}
+          >
+            {sidebarCollapsed ? '›' : '‹'}
+          </button>
         </div>
 
         <AuthPanel
           user={user}
           authStatus={authStatus}
+          collapsed={sidebarCollapsed}
           onLogin={loginWithDiscord}
           onProfile={() => {
             navigateTo('/profile', setCurrentPath);
@@ -387,30 +397,36 @@ export function App() {
         />
 
         <nav className="side-nav" aria-label="Разделы">
-          <button
-            className={view === 'watch' ? 'active' : ''}
+          <SideNavButton
+            active={view === 'watch'}
+            icon="A"
+            title="Просмотр"
+            description="Каталог Shikimori"
+            collapsed={sidebarCollapsed}
             onClick={() => {
               navigateTo('/anime', setCurrentPath);
               setView('watch');
             }}
-          >
-            <span>Просмотр</span>
-            <small>Каталог Shikimori</small>
-          </button>
-          <button
-            className={view === 'random' ? 'active' : ''}
+          />
+          <SideNavButton
+            active={view === 'random'}
+            icon="?"
+            title="Случайное аниме"
+            description="Подборка наугад"
+            collapsed={sidebarCollapsed}
             onClick={() => {
               navigateTo('/random', setCurrentPath);
               setView('random');
             }}
-          >
-            <span>Случайное аниме</span>
-            <small>Подборка наугад</small>
-          </button>
-          <button disabled>
-            <span>Угадай опенинг</span>
-            <small>Скоро</small>
-          </button>
+          />
+          <SideNavButton
+            disabled
+            icon="♪"
+            title="Угадай опенинг"
+            description="Скоро"
+            collapsed={sidebarCollapsed}
+            onClick={() => undefined}
+          />
         </nav>
       </aside>
 
@@ -461,22 +477,34 @@ export function App() {
 function AuthPanel({
   user,
   authStatus,
+  collapsed,
   onLogin,
   onProfile,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
+  collapsed: boolean;
   onLogin: () => void;
   onProfile: () => void;
 }) {
   if (authStatus === 'loading') {
-    return <div className="auth-panel muted">Проверяем сессию...</div>;
+    return <div className="auth-panel muted">{collapsed ? '...' : 'Проверяем сессию...'}</div>;
   }
 
   if (!user) {
+    if (collapsed) {
+      return (
+        <div className="auth-panel collapsed-auth">
+          <button className="auth-icon-button" onClick={onLogin} data-tooltip="Войти через Discord" type="button">
+            D
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="auth-panel">
-        <div>
+        <div className="auth-copy">
           <strong>Гостевой режим</strong>
           <span>Прогресс хранится только в этом браузере</span>
         </div>
@@ -487,13 +515,48 @@ function AuthPanel({
 
   return (
     <div className="auth-panel signed-in">
-      <button className="profile-link" onClick={onProfile}>
+      <button className="profile-link" onClick={onProfile} data-tooltip={user.displayName}>
         {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
         <span>
           <strong>{user.displayName}</strong>
         </span>
       </button>
     </div>
+  );
+}
+
+function SideNavButton({
+  active,
+  disabled,
+  icon,
+  title,
+  description,
+  collapsed,
+  onClick,
+}: {
+  active?: boolean;
+  disabled?: boolean;
+  icon: string;
+  title: string;
+  description: string;
+  collapsed: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={active ? 'active' : ''}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+      aria-label={title}
+      data-tooltip={collapsed ? title : undefined}
+    >
+      <span className="nav-icon" aria-hidden="true">{icon}</span>
+      <span className="nav-copy">
+        <span>{title}</span>
+        <small>{description}</small>
+      </span>
+    </button>
   );
 }
 

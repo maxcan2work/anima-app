@@ -36,6 +36,10 @@ button {
     linear-gradient(135deg, #111413 0%, #191d1c 46%, #171616 100%);
 }
 
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 104px minmax(0, 1fr);
+}
+
 .library-panel {
   display: flex;
   flex-direction: column;
@@ -47,11 +51,39 @@ button {
   backdrop-filter: blur(18px);
 }
 
+.sidebar-collapsed .library-panel {
+  align-items: center;
+  padding: 24px 18px;
+}
+
 .brand-row {
   display: flex;
-  align-items: start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.sidebar-collapsed .brand-row {
+  width: 100%;
+  justify-content: center;
+}
+
+.sidebar-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f2c063;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.sidebar-collapsed .brand-row .eyebrow {
+  display: none;
 }
 
 .eyebrow {
@@ -76,6 +108,7 @@ h1 {
 }
 
 .auth-panel {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
@@ -83,6 +116,19 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-collapsed .auth-panel {
+  width: 56px;
+  padding: 6px;
+}
+
+.sidebar-collapsed .auth-panel:not(.signed-in) {
+  width: 68px;
+}
+
+.collapsed-auth {
+  justify-items: center;
 }
 
 .auth-panel.signed-in {
@@ -109,6 +155,7 @@ h1 {
 }
 
 .profile-link {
+  position: relative;
   display: grid;
   grid-template-columns: 44px 1fr;
   align-items: center;
@@ -118,6 +165,30 @@ h1 {
   background: transparent;
   color: inherit;
   text-align: left;
+}
+
+.auth-icon-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #5865f2;
+  color: white;
+  font-weight: 900;
+}
+
+.sidebar-collapsed .profile-link {
+  grid-template-columns: 44px;
+  justify-content: center;
+}
+
+.sidebar-collapsed .profile-link span,
+.sidebar-collapsed .auth-copy,
+.sidebar-collapsed .discord-button {
+  display: none;
 }
 
 .auth-panel img,
@@ -162,10 +233,14 @@ h1 {
 .side-nav {
   display: grid;
   gap: 8px;
+  width: 100%;
 }
 
 .side-nav button {
+  position: relative;
   display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
   gap: 4px;
   min-height: 56px;
   padding: 10px 12px;
@@ -175,6 +250,46 @@ h1 {
   color: #f5f1e8;
   font-weight: 800;
   text-align: left;
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2c063;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.nav-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nav-copy > span,
+.nav-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-collapsed .side-nav {
+  width: 56px;
+}
+
+.sidebar-collapsed .side-nav button {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  min-height: 56px;
+  padding: 10px;
+}
+
+.sidebar-collapsed .nav-copy {
+  display: none;
 }
 
 .side-nav button.active {
@@ -192,6 +307,42 @@ h1 {
   color: #aaa196;
   font-size: 12px;
   font-weight: 600;
+}
+
+.sidebar-toggle::after,
+.auth-icon-button::after,
+.sidebar-collapsed .profile-link::after,
+.sidebar-collapsed .side-nav button::after {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  z-index: 20;
+  min-width: max-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(20, 22, 21, 0.96);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(4px, -50%);
+  transition: opacity 140ms ease, transform 140ms ease;
+  content: attr(data-tooltip);
+}
+
+.sidebar-toggle:hover::after,
+.sidebar-toggle:focus-visible::after,
+.auth-icon-button:hover::after,
+.auth-icon-button:focus-visible::after,
+.sidebar-collapsed .profile-link:hover::after,
+.sidebar-collapsed .profile-link:focus-visible::after,
+.sidebar-collapsed .side-nav button:hover::after,
+.sidebar-collapsed .side-nav button:focus-visible::after {
+  opacity: 1;
+  transform: translate(0, -50%);
 }
 
 .episode-controls input,
