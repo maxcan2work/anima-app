@@ -42,7 +42,7 @@ type PlayerProvider = PlayerProviderResult['provider'];
 
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
-const EPISODES_PER_PAGE = 15;
+const EPISODES_PER_PAGE = 12;
 const PLAYER_PROVIDER_OPTIONS: Array<{ value: PlayerProvider; label: string }> = [
   { value: 'kodik', label: 'Kodik' },
   { value: 'anilibria', label: 'AniLiberty' },
@@ -964,6 +964,7 @@ function AnimeHero({
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
+  const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
   const playablePlayers = players.filter(isPlayablePlayer);
   const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
   const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? players[0];
@@ -975,8 +976,24 @@ function AnimeHero({
   }, [anime.episodes, episodePage]);
 
   useEffect(() => {
-    setEpisodePage(Math.min(episodePages - 1, Math.floor((state.episode - 1) / EPISODES_PER_PAGE)));
+    setEpisodePage((currentPage) => {
+      const nextPage = Math.min(episodePages - 1, Math.floor((state.episode - 1) / EPISODES_PER_PAGE));
+      if (nextPage !== currentPage) {
+        setEpisodePageDirection(nextPage > currentPage ? 'next' : 'prev');
+      }
+      return nextPage;
+    });
   }, [anime.id, episodePages, state.episode]);
+
+  function changeEpisodePage(nextPage: number) {
+    setEpisodePage((currentPage) => {
+      const clampedPage = Math.min(Math.max(nextPage, 0), episodePages - 1);
+      if (clampedPage !== currentPage) {
+        setEpisodePageDirection(clampedPage > currentPage ? 'next' : 'prev');
+      }
+      return clampedPage;
+    });
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -1026,13 +1043,13 @@ function AnimeHero({
             <button
               className="episode-scroll"
               type="button"
-              onClick={() => setEpisodePage((page) => Math.max(0, page - 1))}
+              onClick={() => changeEpisodePage(episodePage - 1)}
               disabled={episodePage === 0}
               aria-label="Предыдущие серии"
             >
               <img src={episodeArrowIcon} alt="" aria-hidden="true" />
             </button>
-            <div className="episode-grid">
+            <div key={episodePage} className={`episode-grid page-${episodePageDirection}`}>
               {visibleEpisodes.map((episode) => (
                 <button
                   key={episode}
@@ -1046,7 +1063,7 @@ function AnimeHero({
             <button
               className="episode-scroll"
               type="button"
-              onClick={() => setEpisodePage((page) => Math.min(episodePages - 1, page + 1))}
+              onClick={() => changeEpisodePage(episodePage + 1)}
               disabled={episodePage >= episodePages - 1}
               aria-label="Следующие серии"
             >
