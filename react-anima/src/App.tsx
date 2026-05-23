@@ -1613,6 +1613,14 @@ function ProfilePage({
     { status: 'dropped', label: 'Брошено', count: entries.filter((entry) => entry.status === 'DROPPED').length, icon: trashIcon },
     { status: 'planned', label: 'В планах', count: entries.filter((entry) => entry.status === 'PLANNED').length, icon: profileNoteIcon },
   ];
+  const profileFriends = [
+    { id: 'mira', name: 'Mira', status: 'online' },
+    { id: 'kira', name: 'Kira', status: 'online' },
+    { id: 'ren', name: 'Ren', status: 'offline' },
+    { id: 'yuki', name: 'Yuki', status: 'offline' },
+    { id: 'sora', name: 'Sora', status: 'offline' },
+  ];
+  const sortedFriends = [...profileFriends].sort((left, right) => Number(right.status === 'online') - Number(left.status === 'online'));
   const [selectedStatus, setSelectedStatus] = useState<WatchState['status']>('watching');
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerStatus(entry.status) === selectedStatus);
@@ -1678,6 +1686,25 @@ function ProfilePage({
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="profile-sidebar-section profile-friends-section" aria-labelledby="profile-friends-section">
+          <div className="profile-section-title">
+            <h3 id="profile-friends-section">Друзья</h3>
+            <span>{profileFriends.length}</span>
+          </div>
+          <div className="profile-friends-list">
+            {sortedFriends.slice(0, 5).map((friend) => (
+              <article key={friend.id} className="profile-friend-row">
+                <span className="profile-friend-avatar">{friend.name[0]}</span>
+                <span className="profile-friend-name">{friend.name}</span>
+                <span className={`profile-friend-status ${friend.status}`}>{friend.status === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
+              </article>
+            ))}
+          </div>
+          <button className="profile-show-all" type="button">
+            Показать всех
+          </button>
         </section>
 
         <button className="profile-logout" type="button" onClick={onLogout}>

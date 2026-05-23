@@ -1950,6 +1950,24 @@ h2 {
   font-weight: 900;
 }
 
+.profile-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profile-section-title span {
+  min-width: 26px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d9d0c5;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2002,6 +2020,75 @@ h2 {
   color: #fffaf2;
   font-size: 22px;
   line-height: 1;
+}
+
+.profile-friends-section {
+  align-self: start;
+  min-height: 0;
+}
+
+.profile-friends-list {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.profile-friend-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-friend-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: rgba(242, 192, 99, 0.14);
+  color: #f2c063;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.profile-friend-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff7ec;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-friend-status {
+  color: #9f978d;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.profile-friend-status.online {
+  color: #82d89c;
+}
+
+.profile-show-all {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1e7dc;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.profile-show-all:hover {
+  border-color: rgba(242, 192, 99, 0.45);
+  background: rgba(242, 192, 99, 0.1);
 }
 
 .profile-logout {
