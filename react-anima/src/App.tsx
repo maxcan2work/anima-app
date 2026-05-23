@@ -1037,10 +1037,14 @@ function AnimeHero({
         </section>
 
         <aside className="details-panel">
-          <img className="poster" src={anime.poster} alt="" />
-          <div>
-            <p className="eyebrow">{anime.originalTitle}</p>
-            <h2>{anime.title}</h2>
+          <div className="details-poster">
+            <img src={anime.poster} alt="" />
+            <div>
+              <p className="eyebrow">{anime.originalTitle}</p>
+              <h2>{anime.title}</h2>
+            </div>
+          </div>
+          <div className="details-content">
             <div className="genres">
               {anime.genres.map((genre) => (
                 <span key={genre}>{genre}</span>
