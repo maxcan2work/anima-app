@@ -76,6 +76,19 @@ app.get('/anime', async (_request, response) => {
   response.json({ anime });
 });
 
+app.get('/anime/:animeId', async (request, response) => {
+  const anime = await prisma.anime.findUnique({
+    where: { id: String(request.params.animeId) },
+  });
+
+  if (!anime) {
+    response.status(404).json({ error: 'Anime not found' });
+    return;
+  }
+
+  response.json({ anime });
+});
+
 app.get('/catalog/search', async (request, response, next) => {
   try {
     const query = String(request.query.q ?? '');
@@ -99,7 +112,7 @@ app.get('/catalog/browse', async (request, response, next) => {
   }
 });
 
-app.post('/catalog/import', requireAuth, async (request, response, next) => {
+app.post('/catalog/import', async (request, response, next) => {
   try {
     const provider = String(request.body.provider ?? '');
     const providerId = Number(request.body.providerId);

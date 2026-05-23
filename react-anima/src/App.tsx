@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
   browseCatalog,
+  getAnimeById,
   getCurrentUser,
   getAnimeCatalog,
   getEpisodePlayers,
@@ -56,6 +57,7 @@ export function App() {
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile'>('watch');
+  const routeAnimeId = getRouteAnimeId();
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
 
@@ -83,6 +85,46 @@ export function App() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!routeAnimeId) return;
+    let ignore = false;
+
+    async function loadRouteAnime() {
+      try {
+        const response = await getAnimeById(routeAnimeId);
+        if (ignore) return;
+
+        const anime = mapServerAnime(response.anime);
+        setLibrary((current) => mergeAnimeLibrary(current, [anime]));
+        setSelectedId(anime.id);
+        setView('watch');
+      } catch {
+        const shikimoriId = parseShikimoriRouteId(routeAnimeId);
+        if (!shikimoriId) return;
+
+        try {
+          const response = await importCatalogAnime('shikimori', shikimoriId);
+          if (ignore) return;
+
+          const anime = mapServerAnime(response.anime);
+          setLibrary((current) => mergeAnimeLibrary(current, [anime]));
+          setSelectedId(anime.id);
+          setView('watch');
+        } catch {
+          if (!ignore) {
+            setCatalogStatus('Не удалось открыть тайтл.');
+          }
+        }
+      }
+    }
+
+    loadRouteAnime();
+
+    return () => {
+      ignore = true;
+    };
+  }, [routeAnimeId]);
 
   useEffect(() => {
     let ignore = false;
@@ -189,11 +231,6 @@ export function App() {
   }
 
   async function handleImportCatalogAnime(result: CatalogSearchResult) {
-    if (!user) {
-      setCatalogStatus('Для импорта и дневника нужно войти через Discord.');
-      return;
-    }
-
     setCatalogStatus('Добавляем в каталог...');
     try {
       const response = await importCatalogAnime(result.provider, result.providerId);
@@ -201,6 +238,7 @@ export function App() {
       setLibrary((current) => mergeAnimeLibrary(current, [anime]));
       setSelectedId(anime.id);
       setView('watch');
+      pushAnimeRoute(anime.id);
       setCatalogStatus('Тайтл добавлен в каталог.');
     } catch {
       setCatalogStatus('Не удалось добавить тайтл.');
@@ -328,7 +366,7 @@ export function App() {
           <div className="catalog-results">
             <h3>Shikimori</h3>
             {catalogResults.map((result) => (
-              <button key={`${result.provider}-${result.providerId}`} className="catalog-result" onClick={() => handleImportCatalogAnime(result)}>
+              <a key={`${result.provider}-${result.providerId}`} className="catalog-result" href={animeRouteFromCatalog(result)}>
                 {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
                 <span>
                   <strong>{result.title}</strong>
@@ -339,14 +377,14 @@ export function App() {
                     MAL {result.malId ?? '-'} · {result.score ?? 'без оценки'}
                   </small>
                 </span>
-              </button>
+              </a>
             ))}
           </div>
         ) : null}
       </aside>
 
       <section className="watch-area">
-        {view === 'watch' ? (
+        {view === 'watch' && !routeAnimeId ? (
           <WatchHome
             browseResults={browseResults}
             browsePage={browsePage}
@@ -354,10 +392,15 @@ export function App() {
             browseLoading={browseLoading}
             browseStatus={browseStatus}
             onPageChange={setBrowsePage}
-            onImport={handleImportCatalogAnime}
           />
         ) : !selected ? (
           <EmptyCatalog onSearch={handleCatalogSearch} />
+        ) : view === 'watch' ? (
+          <AnimeHero
+            anime={selected}
+            state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
+            onStateChange={(patch) => updateState(selected.id, patch)}
+          />
         ) : (
           <ProfilePage
             user={user}
@@ -438,7 +481,6 @@ function WatchHome({
   browseLoading,
   browseStatus,
   onPageChange,
-  onImport,
 }: {
   browseResults: CatalogSearchResult[];
   browsePage: number;
@@ -446,7 +488,6 @@ function WatchHome({
   browseLoading: boolean;
   browseStatus: string;
   onPageChange: (page: number) => void;
-  onImport: (result: CatalogSearchResult) => void;
 }) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -483,7 +524,7 @@ function WatchHome({
 
       <div className="browse-grid">
         {browseResults.map((result) => (
-          <article key={`${result.provider}-${result.providerId}`} className="browse-card">
+          <a key={`${result.provider}-${result.providerId}`} className="browse-card" href={animeRouteFromCatalog(result)}>
             {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
             <div>
               <strong>{result.title}</strong>
@@ -492,8 +533,7 @@ function WatchHome({
                 {result.episodes} сер. · {result.score ?? 'без оценки'}
               </small>
             </div>
-            <button onClick={() => onImport(result)}>Добавить</button>
-          </article>
+          </a>
         ))}
       </div>
 
@@ -981,6 +1021,27 @@ function qualityLabel(quality: PlayerProviderResult['quality']) {
       return '480p HLS';
     default:
       return 'HLS';
+  }
+}
+
+function getRouteAnimeId() {
+  const match = window.location.pathname.match(/^\/anime\/([^/]+)$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : '';
+}
+
+function parseShikimoriRouteId(animeId: string) {
+  const match = animeId.match(/^shikimori-(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
+function animeRouteFromCatalog(result: CatalogSearchResult) {
+  return `/anime/shikimori-${result.providerId}`;
+}
+
+function pushAnimeRoute(animeId: string) {
+  const path = `/anime/${encodeURIComponent(animeId)}`;
+  if (window.location.pathname !== path) {
+    window.history.pushState(null, '', path);
   }
 }
 

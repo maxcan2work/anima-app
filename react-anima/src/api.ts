@@ -112,6 +112,10 @@ export async function getAnimeCatalog() {
   return apiFetch<{ anime: ServerAnime[] }>('/anime');
 }
 
+export async function getAnimeById(animeId: string) {
+  return apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`);
+}
+
 export async function searchCatalog(query: string) {
   return apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?q=${encodeURIComponent(query)}`);
 }
