@@ -413,7 +413,7 @@ export function App() {
             active={view === 'watch'}
             icon={nekoIcon}
             title="Просмотр"
-            description="Каталог Shikimori"
+            description="Список аниме"
             collapsed={sidebarCollapsed}
             onClick={() => {
               navigateTo('/anime', setCurrentPath);
