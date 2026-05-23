@@ -1062,6 +1062,22 @@ h1 {
   align-items: center;
 }
 
+.watch-party-room > .watch-party-player-layout {
+  grid-column: 1 / -1;
+}
+
+.watch-party-player-layout {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.watch-party-player-layout .details-panel {
+  align-content: center;
+}
+
+.watch-party-panel.in-player {
+  margin-top: 2px;
+}
+
 .player {
   display: grid;
   gap: 14px;

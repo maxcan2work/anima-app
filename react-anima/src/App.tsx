@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject, type ReactNode } from 'react';
 import Hls from 'hls.js';
 import { io, type Socket } from 'socket.io-client';
 import episodeArrowIcon from './assets/episode-arrow.svg';
@@ -1140,6 +1140,14 @@ function WatchPartyPage({
               anime={selectedAnime}
               state={{ episode: partyEpisode, status: 'watching' }}
               onStateChange={handlePartyStateChange}
+              mode="watchParty"
+              sidebarExtra={
+                <WatchPartyParticipants
+                  participants={participants}
+                  connectionStatus={connectionStatus}
+                  onLeaveRoom={onLeaveRoom}
+                />
+              }
             />
           ) : (
             <div className="watch-party-stage">
@@ -1186,7 +1194,7 @@ function WatchPartyPage({
             </div>
           )}
 
-          <aside className="watch-party-panel">
+          {!selectedAnime ? <aside className="watch-party-panel">
             <h3>Участники</h3>
             {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
             {participants.map((participant) => (
@@ -1205,7 +1213,7 @@ function WatchPartyPage({
             <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
               Выйти из комнаты
             </button>
-          </aside>
+          </aside> : null}
         </div>
       </section>
     );
@@ -1237,6 +1245,39 @@ function WatchPartyPage({
         </div>
       </div>
     </section>
+  );
+}
+
+function WatchPartyParticipants({
+  participants,
+  connectionStatus,
+  onLeaveRoom,
+}: {
+  participants: WatchPartyParticipant[];
+  connectionStatus: string;
+  onLeaveRoom: () => void;
+}) {
+  return (
+    <>
+      <h3>Участники</h3>
+      {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
+      {participants.map((participant) => (
+        <div className="party-member" key={participant.id}>
+          {participant.avatarUrl ? (
+            <img src={participant.avatarUrl} alt="" />
+          ) : (
+            <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
+          )}
+          <span>
+            <strong>{participant.name}</strong>
+            <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
+          </span>
+        </div>
+      ))}
+      <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
+        Выйти из комнаты
+      </button>
+    </>
   );
 }
 
@@ -1312,19 +1353,23 @@ function AnimeHero({
   anime,
   state,
   onStateChange,
+  mode = 'default',
+  sidebarExtra,
 }: {
   anime: AnimeTitle;
   state: WatchState;
   onStateChange: (patch: Partial<WatchState>) => void;
+  mode?: 'default' | 'watchParty';
+  sidebarExtra?: ReactNode;
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
-  const playablePlayers = players.filter(isPlayablePlayer);
+  const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode === 'default' || player.provider === 'kodik'));
   const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
-  const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? players[0];
+  const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? (mode === 'default' ? players[0] : undefined);
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
@@ -1382,7 +1427,7 @@ function AnimeHero({
 
   return (
     <>
-      <div className="player-layout">
+      <div className={mode === 'watchParty' ? 'player-layout watch-party-player-layout' : 'player-layout'}>
         <section className="player">
           {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
             <VideoPlayer anime={anime} player={selectedPlayer} />
@@ -1447,18 +1492,23 @@ function AnimeHero({
             </div>
           </div>
 
-          <div className="meta-grid">
-            <span>Год<strong>{anime.year}</strong></span>
-            <span>Серии<strong>{anime.episodes}</strong></span>
-            <span>Студия<strong>{anime.studio}</strong></span>
-            <span>Рейтинг<strong>{anime.rating}</strong></span>
-          </div>
+          {mode === 'default' ? (
+            <>
+              <div className="meta-grid">
+                <span>Год<strong>{anime.year}</strong></span>
+                <span>Серии<strong>{anime.episodes}</strong></span>
+                <span>Студия<strong>{anime.studio}</strong></span>
+                <span>Рейтинг<strong>{anime.rating}</strong></span>
+              </div>
 
-          <div className="watch-tools">
-            <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
-            <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
-          </div>
-          <WatchSources anime={anime} />
+              <div className="watch-tools">
+                <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
+                <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
+              </div>
+              <WatchSources anime={anime} />
+            </>
+          ) : null}
+          {sidebarExtra ? <div className="watch-party-panel in-player">{sidebarExtra}</div> : null}
         </aside>
       </div>
 
