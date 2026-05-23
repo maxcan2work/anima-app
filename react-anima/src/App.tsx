@@ -9,6 +9,7 @@ import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
 import {
   browseCatalog,
+  clearMyRandomHistory,
   getAnimeById,
   getCurrentUser,
   getAnimeCatalog,
@@ -90,6 +91,7 @@ export function App() {
   const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
   const [randomLoading, setRandomLoading] = useState(false);
   const [randomStatus, setRandomStatus] = useState('');
+  const [randomClearing, setRandomClearing] = useState(false);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
@@ -358,6 +360,24 @@ export function App() {
     }
   }
 
+  async function handleClearRandomHistory() {
+    if (randomHistory.length === 0 || randomClearing) return;
+
+    setRandomClearing(true);
+    setRandomStatus('');
+
+    try {
+      if (user) {
+        await clearMyRandomHistory();
+      }
+      setRandomHistory([]);
+    } catch {
+      setRandomStatus('Не удалось очистить историю.');
+    } finally {
+      setRandomClearing(false);
+    }
+  }
+
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
       const anime = library.find((item) => item.id === id);
@@ -474,8 +494,10 @@ export function App() {
             history={randomHistory}
             loading={randomLoading}
             status={randomStatus}
+            clearing={randomClearing}
             onOpenAnime={openCatalogAnime}
             onRandomize={handleRandomAnime}
+            onClearHistory={handleClearRandomHistory}
           />
         ) : view === 'watch' && !routeAnimeId ? (
           <WatchHome
@@ -730,15 +752,19 @@ function RandomAnimePage({
   history,
   loading,
   status,
+  clearing,
   onOpenAnime,
   onRandomize,
+  onClearHistory,
 }: {
   randomAnime: CatalogSearchResult | null;
   history: CatalogSearchResult[];
   loading: boolean;
   status: string;
+  clearing: boolean;
   onOpenAnime: (result: CatalogSearchResult) => void;
   onRandomize: () => void;
+  onClearHistory: () => void;
 }) {
   return (
     <section className="random-page">
@@ -769,7 +795,14 @@ function RandomAnimePage({
       </div>
 
       <aside className="random-history" aria-label="История случайных аниме">
-        <h3>История</h3>
+        <div className="random-history-header">
+          <h3>История</h3>
+          {history.length > 0 ? (
+            <button type="button" onClick={onClearHistory} disabled={clearing}>
+              {clearing ? 'Очищаем...' : 'Очистить'}
+            </button>
+          ) : null}
+        </div>
         {history.length === 0 ? (
           <p className="muted-copy">Здесь появятся последние варианты.</p>
         ) : (

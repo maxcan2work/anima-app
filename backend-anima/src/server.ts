@@ -217,6 +217,14 @@ app.get('/me/random-history', requireAuth, async (request, response) => {
   response.json({ history });
 });
 
+app.delete('/me/random-history', requireAuth, async (request, response) => {
+  await prisma.userRandomAnime.deleteMany({
+    where: { userId: request.userId },
+  });
+
+  response.status(204).end();
+});
+
 app.post('/me/random-history', requireAuth, async (request, response) => {
   const provider = String(request.body.provider ?? '');
   const providerId = Number(request.body.providerId);

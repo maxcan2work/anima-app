@@ -635,8 +635,32 @@ h1 {
   gap: 12px;
 }
 
-.random-history h3 {
+.random-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 2px;
+}
+
+.random-history-header h3 {
+  margin: 0;
+}
+
+.random-history-header button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f2c063;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.random-history-header button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .random-history-row {

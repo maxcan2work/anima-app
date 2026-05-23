@@ -119,6 +119,10 @@ export async function getMyRandomHistory() {
   return apiFetch<{ history: ServerRandomHistoryEntry[] }>('/me/random-history');
 }
 
+export async function clearMyRandomHistory() {
+  return apiFetch<void>('/me/random-history', { method: 'DELETE' });
+}
+
 export async function saveRandomHistoryEntry(entry: CatalogSearchResult) {
   return apiFetch<{ entry: ServerRandomHistoryEntry }>('/me/random-history', {
     method: 'POST',
