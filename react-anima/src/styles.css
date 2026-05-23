@@ -214,8 +214,7 @@ h1 {
 .search-loader {
   display: grid;
   place-items: center;
-  min-height: 42px;
-  margin: -10px 0 0;
+  min-height: 360px;
 }
 
 .search-loader svg {

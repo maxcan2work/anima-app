@@ -575,22 +575,26 @@ function WatchHome({
         </label>
       </header>
 
-      {searchLoading && isSearching ? <SearchLoader /> : status ? <p className="catalog-status">{status}</p> : null}
+      {status ? <p className="catalog-status">{status}</p> : null}
 
-      <div className="browse-grid">
-        {visibleResults.map((result) => (
-          <a key={`${result.provider}-${result.providerId}`} className="browse-card" href={animeRouteFromCatalog(result)}>
-            {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
-            <div>
-              <strong>{result.title}</strong>
-              <small>{result.originalTitle}</small>
-              <small>
-                {result.episodes} сер. · {result.score ?? 'без оценки'}
-              </small>
-            </div>
-          </a>
-        ))}
-      </div>
+      {searchLoading && isSearching ? (
+        <SearchLoader />
+      ) : (
+        <div className="browse-grid">
+          {visibleResults.map((result) => (
+            <a key={`${result.provider}-${result.providerId}`} className="browse-card" href={animeRouteFromCatalog(result)}>
+              {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
+              <div>
+                <strong>{result.title}</strong>
+                <small>{result.originalTitle}</small>
+                <small>
+                  {result.episodes} сер. · {result.score ?? 'без оценки'}
+                </small>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
 
       {isSearching ? (
         null
