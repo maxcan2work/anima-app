@@ -299,7 +299,7 @@ export function App() {
           <button
             className={view === 'watch' && !routeAnimeId ? 'active' : ''}
             onClick={() => {
-              window.history.pushState(null, '', '/');
+              window.history.pushState(null, '', '/anime');
               setView('watch');
             }}
           >
@@ -927,6 +927,7 @@ function qualityLabel(quality: PlayerProviderResult['quality']) {
 }
 
 function getRouteAnimeId() {
+  if (window.location.pathname === '/anime') return '';
   const match = window.location.pathname.match(/^\/anime\/([^/]+)$/);
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
