@@ -127,15 +127,13 @@ h1 {
   grid-template-columns: 1fr;
   gap: 12px;
   margin-top: auto;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .sidebar-collapsed .auth-panel {
   width: 56px;
-  padding: 6px;
 }
 
 .sidebar-collapsed .auth-panel:not(.signed-in) {
@@ -175,9 +173,13 @@ h1 {
   grid-template-columns: 44px 1fr;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  min-height: 56px;
   min-width: 0;
-  border: 0;
-  background: transparent;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
   color: inherit;
   text-align: left;
 }
@@ -188,9 +190,9 @@ h1 {
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: #5865f2;
+  background: rgba(255, 255, 255, 0.05);
   color: white;
   font-weight: 900;
 }
@@ -203,6 +205,8 @@ h1 {
 .sidebar-collapsed .profile-link {
   grid-template-columns: 44px;
   justify-content: center;
+  width: 56px;
+  padding: 6px;
 }
 
 .sidebar-collapsed .profile-link span,
@@ -240,6 +244,8 @@ h1 {
 }
 
 .discord-button {
+  width: 100%;
+  min-height: 56px;
   background: #5865f2;
   color: white;
 }
@@ -263,7 +269,7 @@ h1 {
   align-items: center;
   gap: 12px;
   min-height: 56px;
-  padding: 10px 12px;
+  padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
