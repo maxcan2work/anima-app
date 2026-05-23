@@ -291,9 +291,7 @@ export function App() {
         <AuthPanel
           user={user}
           authStatus={authStatus}
-          syncStatus={syncStatus}
           onLogin={loginWithDiscord}
-          onLogout={handleLogout}
           onProfile={() => setView('profile')}
         />
 
@@ -357,16 +355,12 @@ export function App() {
 function AuthPanel({
   user,
   authStatus,
-  syncStatus,
   onLogin,
-  onLogout,
   onProfile,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
-  syncStatus: string;
   onLogin: () => void;
-  onLogout: () => void;
   onProfile: () => void;
 }) {
   if (authStatus === 'loading') {
@@ -391,10 +385,8 @@ function AuthPanel({
         {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
         <span>
           <strong>{user.displayName}</strong>
-          <small>{syncStatus || 'Профиль и дневник'}</small>
         </span>
       </button>
-      <button className="text-button" onClick={onLogout}>Выйти</button>
     </div>
   );
 }

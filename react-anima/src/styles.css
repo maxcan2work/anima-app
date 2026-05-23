@@ -86,7 +86,7 @@ h1 {
 }
 
 .auth-panel.signed-in {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   align-items: center;
 }
 
