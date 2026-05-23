@@ -1,9 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  getCurrentUser,
+  getMyAnimeList,
+  loginWithDiscord,
+  logout,
+  saveAnimeProgress,
+  type CurrentUser,
+} from './api';
 import { ANIME_LIBRARY, type AnimeTitle } from './data';
 
 type WatchState = {
   episode: number;
-  status: 'planned' | 'watching' | 'completed';
+  status: 'planned' | 'watching' | 'completed' | 'dropped';
 };
 
 const STORAGE_KEY = 'anima.watchState.v1';
@@ -25,8 +33,44 @@ export function App() {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(ANIME_LIBRARY[0].id);
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
+  const [syncStatus, setSyncStatus] = useState('');
 
   const selected = ANIME_LIBRARY.find((anime) => anime.id === selectedId) ?? ANIME_LIBRARY[0];
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSession() {
+      try {
+        const [{ user: currentUser }, { list }] = await Promise.all([getCurrentUser(), getMyAnimeList()]);
+        if (ignore) return;
+
+        const serverState = list.reduce<Record<string, WatchState>>((acc, entry) => {
+          acc[entry.animeId] = {
+            episode: entry.currentEpisode,
+            status: fromServerStatus(entry.status),
+          };
+          return acc;
+        }, {});
+
+        setUser(currentUser);
+        setWatchState(serverState);
+        setAuthStatus('ready');
+      } catch {
+        if (!ignore) {
+          setAuthStatus('guest');
+        }
+      }
+    }
+
+    loadSession();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -45,17 +89,38 @@ export function App() {
       const anime = ANIME_LIBRARY.find((item) => item.id === id);
       const previous = current[id] ?? { episode: 1, status: 'planned' };
       const nextEpisode = Math.min(Math.max(patch.episode ?? previous.episode, 1), anime?.episodes ?? 1);
+      const nextEntry = {
+        ...previous,
+        ...patch,
+        episode: nextEpisode,
+      };
       const next = {
         ...current,
-        [id]: {
-          ...previous,
-          ...patch,
-          episode: nextEpisode,
-        },
+        [id]: nextEntry,
       };
-      saveWatchState(next);
+
+      if (user) {
+        setSyncStatus('Сохраняем...');
+        saveAnimeProgress(id, {
+          status: nextEntry.status,
+          currentEpisode: nextEntry.episode,
+        })
+          .then(() => setSyncStatus('Сохранено в профиле'))
+          .catch(() => setSyncStatus('Не удалось сохранить'));
+      } else {
+        saveWatchState(next);
+        setSyncStatus('Сохранено локально');
+      }
+
       return next;
     });
+  }
+
+  async function handleLogout() {
+    await logout();
+    setUser(null);
+    setAuthStatus('guest');
+    setWatchState(loadWatchState());
   }
 
   return (
@@ -68,6 +133,14 @@ export function App() {
           </div>
           <span className="counter">{ANIME_LIBRARY.length}</span>
         </div>
+
+        <AuthPanel
+          user={user}
+          authStatus={authStatus}
+          syncStatus={syncStatus}
+          onLogin={loginWithDiscord}
+          onLogout={handleLogout}
+        />
 
         <label className="search-field">
           <span>Поиск</span>
@@ -99,6 +172,47 @@ export function App() {
         />
       </section>
     </main>
+  );
+}
+
+function AuthPanel({
+  user,
+  authStatus,
+  syncStatus,
+  onLogin,
+  onLogout,
+}: {
+  user: CurrentUser | null;
+  authStatus: 'loading' | 'guest' | 'ready';
+  syncStatus: string;
+  onLogin: () => void;
+  onLogout: () => void;
+}) {
+  if (authStatus === 'loading') {
+    return <div className="auth-panel muted">Проверяем сессию...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="auth-panel">
+        <div>
+          <strong>Гостевой режим</strong>
+          <span>Прогресс хранится только в этом браузере</span>
+        </div>
+        <button className="discord-button" onClick={onLogin}>Войти через Discord</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-panel signed-in">
+      {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
+      <div>
+        <strong>{user.displayName}</strong>
+        <span>{syncStatus || 'Прогресс синхронизируется'}</span>
+      </div>
+      <button className="text-button" onClick={onLogout}>Выйти</button>
+    </div>
   );
 }
 
@@ -194,6 +308,7 @@ function AnimeHero({
               <option value="planned">В планах</option>
               <option value="watching">Смотрю</option>
               <option value="completed">Просмотрено</option>
+              <option value="dropped">Брошено</option>
             </select>
             <button onClick={() => onStateChange({ status: 'watching' })}>Продолжить</button>
           </div>
@@ -223,4 +338,17 @@ function AnimeHero({
       </section>
     </>
   );
+}
+
+function fromServerStatus(status: string): WatchState['status'] {
+  switch (status) {
+    case 'WATCHING':
+      return 'watching';
+    case 'COMPLETED':
+      return 'completed';
+    case 'DROPPED':
+      return 'dropped';
+    default:
+      return 'planned';
+  }
 }
