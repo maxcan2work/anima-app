@@ -20,14 +20,6 @@ enum WatchStatus {
   DROPPED
 }
 
-enum VideoSourceType {
-  MP4
-  WEBM
-  HLS
-  YOUTUBE
-  EXTERNAL
-}
-
 model User {
   id          String        @id @default(cuid())
   displayName String
@@ -36,7 +28,6 @@ model User {
   updatedAt   DateTime      @updatedAt
   accounts    AuthAccount[]
   animeList   UserAnime[]
-  videoSources VideoSource[]
 }
 
 model AuthAccount {
@@ -62,47 +53,6 @@ model Anime {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   userEntries   UserAnime[]
-  episodeList   Episode[]
-}
-
-model Episode {
-  id        String        @id @default(cuid())
-  animeId   String
-  number    Int
-  title     String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  anime     Anime         @relation(fields: [animeId], references: [id], onDelete: Cascade)
-  sources   VideoSource[]
-
-  @@unique([animeId, number])
-}
-
-model VideoSource {
-  id          String           @id @default(cuid())
-  episodeId   String
-  addedById   String?
-  type        VideoSourceType
-  url         String
-  label       String
-  audioLang   String           @default("ja")
-  quality     String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  episode     Episode          @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  addedBy     User?            @relation(fields: [addedById], references: [id], onDelete: SetNull)
-  subtitles   SubtitleTrack[]
-}
-
-model SubtitleTrack {
-  id            String      @id @default(cuid())
-  videoSourceId String
-  url           String
-  lang          String
-  label         String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  videoSource   VideoSource @relation(fields: [videoSourceId], references: [id], onDelete: Cascade)
 }
 
 model UserAnime {

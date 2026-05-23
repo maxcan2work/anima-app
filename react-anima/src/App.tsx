@@ -1,16 +1,12 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
-  addEpisodeSource,
   getCurrentUser,
-  getEpisodeSources,
   getMyAnimeList,
   loginWithDiscord,
   logout,
   saveAnimeProgress,
   type CurrentUser,
-  type AddVideoSourcePayload,
   type ServerWatchEntry,
-  type VideoSource,
 } from './api';
 import { ANIME_LIBRARY, type AnimeTitle } from './data';
 
@@ -210,7 +206,6 @@ export function App() {
         {view === 'watch' ? (
           <AnimeHero
             anime={selected}
-            isAuthenticated={Boolean(user)}
             state={watchState[selected.id] ?? { episode: 1, status: 'planned' }}
             onStateChange={(patch) => updateState(selected.id, patch)}
           />
@@ -468,84 +463,20 @@ function AnimeListItem({
 
 function AnimeHero({
   anime,
-  isAuthenticated,
   state,
   onStateChange,
 }: {
   anime: AnimeTitle;
-  isAuthenticated: boolean;
   state: WatchState;
   onStateChange: (patch: Partial<WatchState>) => void;
 }) {
   const progress = Math.round((state.episode / anime.episodes) * 100);
-  const [sources, setSources] = useState<VideoSource[]>([]);
-  const [selectedSourceId, setSelectedSourceId] = useState('');
-  const [sourceStatus, setSourceStatus] = useState('Загружаем источники...');
-  const [sourceForm, setSourceForm] = useState<AddVideoSourcePayload>({
-    type: 'MP4',
-    url: '',
-    label: 'Русская озвучка',
-    audioLang: 'ru',
-    quality: '1080p',
-    subtitles: [{ url: '', lang: 'ru', label: 'Русские субтитры' }],
-  });
-  const selectedSource = sources.find((source) => source.id === selectedSourceId) ?? sources[0];
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadSources() {
-      setSourceStatus('Загружаем источники...');
-      try {
-        const response = await getEpisodeSources(anime.id, state.episode);
-        if (ignore) return;
-
-        setSources(response.sources);
-        setSelectedSourceId(response.sources[0]?.id ?? '');
-        setSourceStatus(response.sources.length ? '' : 'Для этой серии пока нет встроенных источников.');
-      } catch {
-        if (!ignore) {
-          setSources([]);
-          setSelectedSourceId('');
-          setSourceStatus('Не удалось загрузить источники.');
-        }
-      }
-    }
-
-    loadSources();
-
-    return () => {
-      ignore = true;
-    };
-  }, [anime.id, state.episode]);
-
-  async function handleAddSource(event: FormEvent) {
-    event.preventDefault();
-    setSourceStatus('Добавляем источник...');
-    try {
-      const response = await addEpisodeSource(anime.id, state.episode, {
-        ...sourceForm,
-        subtitles: sourceForm.subtitles.filter((subtitle) => subtitle.url.trim()),
-      });
-      setSources((current) => [response.source, ...current]);
-      setSelectedSourceId(response.source.id);
-      setSourceForm({
-        ...sourceForm,
-        url: '',
-        subtitles: [{ ...sourceForm.subtitles[0], url: '' }],
-      });
-      setSourceStatus('Источник добавлен.');
-    } catch {
-      setSourceStatus('Не удалось добавить источник.');
-    }
-  }
 
   return (
     <>
       <div className="player-layout">
         <section className="player">
-          {selectedSource ? <PlayerFrame anime={anime} source={selectedSource} episode={state.episode} /> : null}
-          <div className={selectedSource ? 'video-frame hidden-frame' : 'video-frame'}>
+          <div className="video-frame">
             <img src={anime.backdrop} alt="" />
             <div className="play-overlay">
               <button aria-label="Запустить эпизод">▶</button>
@@ -569,16 +500,6 @@ function AnimeHero({
             </label>
             <button onClick={() => onStateChange({ episode: state.episode + 1 })}>Дальше</button>
           </div>
-          <SourceManager
-            isAuthenticated={isAuthenticated}
-            sources={sources}
-            selectedSourceId={selectedSource?.id ?? ''}
-            status={sourceStatus}
-            form={sourceForm}
-            onSelect={setSelectedSourceId}
-            onFormChange={setSourceForm}
-            onSubmit={handleAddSource}
-          />
         </section>
 
         <aside className="details-panel">
@@ -640,148 +561,6 @@ function AnimeHero({
   );
 }
 
-function PlayerFrame({ anime, source, episode }: { anime: AnimeTitle; source: VideoSource; episode: number }) {
-  const youtubeId = source.type === 'YOUTUBE' ? getYoutubeId(source.url) : null;
-
-  if (source.type === 'YOUTUBE' && youtubeId) {
-    return (
-      <div className="video-frame">
-        <iframe
-          src={`https://www.youtube.com/embed/${youtubeId}`}
-          title={`${anime.title} episode ${episode}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
-      </div>
-    );
-  }
-
-  if (source.type === 'MP4' || source.type === 'WEBM') {
-    return (
-      <div className="video-frame">
-        <video controls poster={anime.backdrop}>
-          <source src={source.url} type={source.type === 'MP4' ? 'video/mp4' : 'video/webm'} />
-          {source.subtitles.map((subtitle) => (
-            <track key={subtitle.id} src={subtitle.url} kind="subtitles" srcLang={subtitle.lang} label={subtitle.label} />
-          ))}
-        </video>
-      </div>
-    );
-  }
-
-  return (
-    <div className="video-frame">
-      <img src={anime.backdrop} alt="" />
-      <div className="play-overlay">
-        <a className="external-watch-button" href={source.url} target="_blank" rel="noreferrer">
-          Открыть источник
-        </a>
-        <span>{source.type === 'HLS' ? 'HLS добавлен, поддержка hls.js будет следующим шагом.' : source.label}</span>
-      </div>
-    </div>
-  );
-}
-
-function SourceManager({
-  isAuthenticated,
-  sources,
-  selectedSourceId,
-  status,
-  form,
-  onSelect,
-  onFormChange,
-  onSubmit,
-}: {
-  isAuthenticated: boolean;
-  sources: VideoSource[];
-  selectedSourceId: string;
-  status: string;
-  form: AddVideoSourcePayload;
-  onSelect: (id: string) => void;
-  onFormChange: (form: AddVideoSourcePayload) => void;
-  onSubmit: (event: FormEvent) => void;
-}) {
-  const subtitle = form.subtitles[0] ?? { url: '', lang: 'ru', label: 'Русские субтитры' };
-
-  return (
-    <section className="source-manager">
-      <div className="source-picker">
-        <label>
-          Источник серии
-          <select value={selectedSourceId} onChange={(event) => onSelect(event.target.value)} disabled={sources.length === 0}>
-            {sources.length === 0 ? <option value="">Нет источников</option> : null}
-            {sources.map((source) => (
-              <option key={source.id} value={source.id}>
-                {source.label} · {source.audioLang.toUpperCase()} · {source.quality ?? source.type}
-              </option>
-            ))}
-          </select>
-        </label>
-        {status ? <span>{status}</span> : null}
-      </div>
-
-      <form className="source-form" onSubmit={onSubmit}>
-        <h3>Добавить видео</h3>
-        {!isAuthenticated ? <p>Войди через Discord, чтобы сохранять источники в профиль.</p> : null}
-        <div className="source-form-grid">
-          <label>
-            Тип
-            <select value={form.type} onChange={(event) => onFormChange({ ...form, type: event.target.value as VideoSource['type'] })}>
-              <option value="MP4">MP4</option>
-              <option value="WEBM">WEBM</option>
-              <option value="YOUTUBE">YouTube embed</option>
-              <option value="HLS">HLS m3u8</option>
-              <option value="EXTERNAL">Внешний источник</option>
-            </select>
-          </label>
-          <label>
-            Аудио
-            <select value={form.audioLang} onChange={(event) => onFormChange({ ...form, audioLang: event.target.value })}>
-              <option value="ru">Русская озвучка</option>
-              <option value="ja">Японская</option>
-              <option value="en">Английская</option>
-            </select>
-          </label>
-          <label>
-            Качество
-            <input value={form.quality ?? ''} onChange={(event) => onFormChange({ ...form, quality: event.target.value })} placeholder="1080p" />
-          </label>
-        </div>
-        <label>
-          Название
-          <input value={form.label} onChange={(event) => onFormChange({ ...form, label: event.target.value })} placeholder="Русская озвучка" />
-        </label>
-        <label>
-          URL видео
-          <input value={form.url} onChange={(event) => onFormChange({ ...form, url: event.target.value })} placeholder="https://example.com/episode-1.mp4" />
-        </label>
-        <div className="source-form-grid">
-          <label>
-            Субтитры
-            <input
-              value={subtitle.url}
-              onChange={(event) => onFormChange({ ...form, subtitles: [{ ...subtitle, url: event.target.value }] })}
-              placeholder="https://example.com/ru.vtt"
-            />
-          </label>
-          <label>
-            Язык субтитров
-            <select value={subtitle.lang} onChange={(event) => onFormChange({ ...form, subtitles: [{ ...subtitle, lang: event.target.value }] })}>
-              <option value="ru">Русские</option>
-              <option value="en">English</option>
-            </select>
-          </label>
-          <label>
-            Название субтитров
-            <input value={subtitle.label} onChange={(event) => onFormChange({ ...form, subtitles: [{ ...subtitle, label: event.target.value }] })} />
-          </label>
-        </div>
-        <button className="save-button" type="submit" disabled={!isAuthenticated}>Добавить источник</button>
-      </form>
-    </section>
-  );
-}
-
 function WatchSources({ anime }: { anime: AnimeTitle }) {
   return (
     <div className="sources-block">
@@ -839,22 +618,6 @@ function statusLabel(status: WatchState['status']) {
     default:
       return 'В планах';
   }
-}
-
-function getYoutubeId(url: string) {
-  try {
-    const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) {
-      return parsed.pathname.slice(1);
-    }
-    if (parsed.hostname.includes('youtube.com')) {
-      return parsed.searchParams.get('v');
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
 }
 
 function upsertDiaryEntry(entries: ServerWatchEntry[], entry: ServerWatchEntry) {
