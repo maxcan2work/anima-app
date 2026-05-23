@@ -284,6 +284,18 @@ h1 {
   opacity: 0.68;
 }
 
+.video-frame.hidden-frame {
+  display: none;
+}
+
+.video-frame video,
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #060706;
+}
+
 .play-overlay {
   position: absolute;
   inset: 0;
@@ -306,6 +318,18 @@ h1 {
   color: #17120c;
   font-size: 28px;
   font-weight: 900;
+}
+
+.external-watch-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: #f2c063;
+  color: #17120c;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .play-overlay span {
@@ -341,6 +365,69 @@ h1 {
 
 .episode-controls input {
   padding: 0 12px;
+}
+
+.source-manager {
+  display: grid;
+  gap: 14px;
+}
+
+.source-picker {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.source-picker label,
+.source-form label {
+  display: grid;
+  gap: 8px;
+  color: #bfb8ad;
+  font-size: 13px;
+}
+
+.source-picker select,
+.source-form input,
+.source-form select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fffaf2;
+  outline: none;
+  padding: 0 12px;
+}
+
+.source-picker option,
+.source-form option {
+  color: #171413;
+}
+
+.source-picker span,
+.source-form p {
+  color: #aaa196;
+  font-size: 13px;
+}
+
+.source-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.source-form h3 {
+  margin: 0;
+}
+
+.source-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .details-panel {
@@ -760,7 +847,9 @@ h2 {
   .auth-panel.signed-in,
   .editor-title,
   .form-grid,
-  .profile-stats {
+  .profile-stats,
+  .source-form-grid,
+  .source-picker {
     grid-template-columns: 1fr;
   }
 

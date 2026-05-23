@@ -1,7 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import { WatchStatus } from '@prisma/client';
+import { VideoSourceType, WatchStatus } from '@prisma/client';
 import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSession } from './auth.js';
 import { config } from './config.js';
 import { prisma } from './db.js';
@@ -72,6 +72,97 @@ app.get('/anime', async (_request, response) => {
   });
 
   response.json({ anime });
+});
+
+app.get('/anime/:animeId/episodes/:episodeNumber/sources', async (request, response) => {
+  const animeId = String(request.params.animeId);
+  const episodeNumber = Number(request.params.episodeNumber);
+
+  const episode = await prisma.episode.findUnique({
+    where: {
+      animeId_number: {
+        animeId,
+        number: episodeNumber,
+      },
+    },
+    include: {
+      sources: {
+        include: { subtitles: true },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  });
+
+  response.json({ episode, sources: episode?.sources ?? [] });
+});
+
+app.post('/anime/:animeId/episodes/:episodeNumber/sources', requireAuth, async (request, response) => {
+  const animeId = String(request.params.animeId);
+  const episodeNumber = Number(request.params.episodeNumber);
+  const anime = await prisma.anime.findUnique({ where: { id: animeId } });
+
+  if (!anime || !Number.isFinite(episodeNumber) || episodeNumber < 1 || episodeNumber > anime.episodes) {
+    response.status(404).json({ error: 'Episode not found' });
+    return;
+  }
+
+  const type = parseVideoSourceType(request.body.type);
+  const url = parseRequiredUrl(request.body.url);
+  const label = parseNullableText(request.body.label) ?? `${type} source`;
+  const audioLang = parseLanguage(request.body.audioLang, 'ja');
+  const quality = parseNullableText(request.body.quality);
+  const subtitles: unknown[] = Array.isArray(request.body.subtitles) ? request.body.subtitles : [];
+  const subtitleCreateInput = subtitles.flatMap((subtitle) => {
+    const item = isRecord(subtitle) ? subtitle : {};
+    const subtitleUrl = parseRequiredUrl(item.url);
+    if (!subtitleUrl) return [];
+
+    return [
+      {
+        url: subtitleUrl,
+        lang: parseLanguage(item.lang, 'ru'),
+        label: parseNullableText(item.label) ?? 'Русские субтитры',
+      },
+    ];
+  });
+
+  if (!url) {
+    response.status(400).json({ error: 'Source URL is required' });
+    return;
+  }
+
+  const episode = await prisma.episode.upsert({
+    where: {
+      animeId_number: {
+        animeId,
+        number: episodeNumber,
+      },
+    },
+    update: {},
+    create: {
+      animeId,
+      number: episodeNumber,
+      title: `Episode ${episodeNumber}`,
+    },
+  });
+
+  const source = await prisma.videoSource.create({
+    data: {
+      episodeId: episode.id,
+      addedById: request.userId,
+      type,
+      url,
+      label,
+      audioLang,
+      quality,
+      subtitles: {
+        create: subtitleCreateInput,
+      },
+    },
+    include: { subtitles: true },
+  });
+
+  response.status(201).json({ source });
 });
 
 app.get('/me/anime', requireAuth, async (request, response) => {
@@ -149,6 +240,15 @@ function parseWatchStatus(value: unknown) {
   return WatchStatus.PLANNED;
 }
 
+function parseVideoSourceType(value: unknown) {
+  const type = String(value ?? VideoSourceType.MP4).toUpperCase();
+  if (type in VideoSourceType) {
+    return type as VideoSourceType;
+  }
+
+  return VideoSourceType.MP4;
+}
+
 function clampEpisode(value: number, max: number) {
   if (!Number.isFinite(value)) return 1;
   return Math.min(Math.max(Math.trunc(value), 1), max);
@@ -169,4 +269,26 @@ function parseNullableText(value: unknown) {
   if (value == null) return null;
   const text = String(value).trim();
   return text.length > 0 ? text : null;
+}
+
+function parseRequiredUrl(value: unknown) {
+  const text = parseNullableText(value);
+  if (!text) return null;
+
+  try {
+    const url = new URL(text);
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function parseLanguage(value: unknown, fallback: string) {
+  const text = parseNullableText(value)?.toLowerCase();
+  if (!text) return fallback;
+  return text.slice(0, 12);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

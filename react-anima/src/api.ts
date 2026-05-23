@@ -26,6 +26,23 @@ export type ServerWatchEntry = {
   };
 };
 
+export type SubtitleTrack = {
+  id: string;
+  url: string;
+  lang: string;
+  label: string;
+};
+
+export type VideoSource = {
+  id: string;
+  type: 'MP4' | 'WEBM' | 'HLS' | 'YOUTUBE' | 'EXTERNAL';
+  url: string;
+  label: string;
+  audioLang: string;
+  quality: string | null;
+  subtitles: SubtitleTrack[];
+};
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -75,6 +92,30 @@ export type SaveAnimeProgressPayload = {
 export async function saveAnimeProgress(animeId: string, payload: SaveAnimeProgressPayload) {
   return apiFetch<{ entry: ServerWatchEntry }>(`/me/anime/${animeId}`, {
     method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getEpisodeSources(animeId: string, episodeNumber: number) {
+  return apiFetch<{ sources: VideoSource[] }>(`/anime/${animeId}/episodes/${episodeNumber}/sources`);
+}
+
+export type AddVideoSourcePayload = {
+  type: VideoSource['type'];
+  url: string;
+  label: string;
+  audioLang: string;
+  quality?: string;
+  subtitles: Array<{
+    url: string;
+    lang: string;
+    label: string;
+  }>;
+};
+
+export async function addEpisodeSource(animeId: string, episodeNumber: number, payload: AddVideoSourcePayload) {
+  return apiFetch<{ source: VideoSource }>(`/anime/${animeId}/episodes/${episodeNumber}/sources`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 }

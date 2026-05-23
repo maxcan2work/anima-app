@@ -40,6 +40,23 @@ async function main() {
       update: item,
       create: item,
     });
+
+    for (let number = 1; number <= Math.min(item.episodes, 3); number += 1) {
+      await prisma.episode.upsert({
+        where: {
+          animeId_number: {
+            animeId: item.id,
+            number,
+          },
+        },
+        update: {},
+        create: {
+          animeId: item.id,
+          number,
+          title: `Episode ${number}`,
+        },
+      });
+    }
   }
 }
 
