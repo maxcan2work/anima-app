@@ -38,6 +38,12 @@ type WatchState = {
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
 const EPISODES_PER_PAGE = 15;
+const WATCH_STATUS_OPTIONS: Array<{ value: WatchState['status']; label: string }> = [
+  { value: 'planned', label: 'В планах' },
+  { value: 'watching', label: 'Смотрю' },
+  { value: 'completed', label: 'Просмотрено' },
+  { value: 'dropped', label: 'Брошено' },
+];
 
 function loadWatchState(): Record<string, WatchState> {
   try {
@@ -972,18 +978,83 @@ function AnimeHero({
           </div>
 
           <div className="watch-tools">
-            <select value={state.status} onChange={(event) => onStateChange({ status: event.target.value as WatchState['status'] })}>
-              <option value="planned">В планах</option>
-              <option value="watching">Смотрю</option>
-              <option value="completed">Просмотрено</option>
-              <option value="dropped">Брошено</option>
-            </select>
+            <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
           </div>
           <WatchSources anime={anime} />
         </aside>
       </div>
 
     </>
+  );
+}
+
+function WatchStatusSelect({
+  value,
+  onChange,
+}: {
+  value: WatchState['status'];
+  onChange: (value: WatchState['status']) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const selected = WATCH_STATUS_OPTIONS.find((option) => option.value === value) ?? WATCH_STATUS_OPTIONS[0];
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="status-select" ref={rootRef}>
+      <button
+        className="status-select-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected.label}</span>
+        <span className="status-select-chevron" aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className="status-select-menu" role="listbox" aria-label="Статус просмотра">
+          {WATCH_STATUS_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              className={option.value === value ? 'selected' : ''}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
