@@ -28,16 +28,26 @@ button {
 }
 
 .app-shell {
+  --sidebar-width: 360px;
+  --sidebar-item-width: 100%;
+  --sidebar-label-opacity: 1;
+  --sidebar-label-shift: 0;
+  --sidebar-label-width: 220px;
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
   background:
     radial-gradient(circle at 20% 0%, rgba(203, 67, 53, 0.22), transparent 32rem),
     linear-gradient(135deg, #111413 0%, #191d1c 46%, #171616 100%);
+  transition: grid-template-columns 220ms ease;
 }
 
 .app-shell.sidebar-collapsed {
-  grid-template-columns: 104px minmax(0, 1fr);
+  --sidebar-width: 104px;
+  --sidebar-item-width: 56px;
+  --sidebar-label-opacity: 0;
+  --sidebar-label-shift: -8px;
+  --sidebar-label-width: 0px;
 }
 
 .library-panel {
@@ -62,13 +72,10 @@ button {
 
 .brand-row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, var(--sidebar-label-width));
   align-items: center;
   gap: 12px;
-}
-
-.sidebar-collapsed .brand-row {
-  grid-template-columns: 56px;
+  transition: grid-template-columns 220ms ease;
 }
 
 .sidebar-toggle {
@@ -95,10 +102,10 @@ button {
 .brand-row > div {
   grid-column: 2;
   min-width: 0;
-}
-
-.sidebar-collapsed .brand-row > div {
-  display: none;
+  overflow: hidden;
+  opacity: var(--sidebar-label-opacity);
+  transform: translateX(var(--sidebar-label-shift));
+  transition: opacity 160ms ease, transform 220ms ease;
 }
 
 .eyebrow {
@@ -131,6 +138,7 @@ h1 {
   padding: 0;
   border: 0;
   background: transparent;
+  transition: width 220ms ease;
 }
 
 .sidebar-collapsed .auth-panel {
@@ -159,6 +167,15 @@ h1 {
 .auth-panel span,
 .auth-panel small {
   display: block;
+}
+
+.auth-copy,
+.discord-button,
+.profile-link span {
+  max-width: 220px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: max-width 220ms ease, opacity 160ms ease, transform 220ms ease;
 }
 
 .profile-link strong {
@@ -193,6 +210,7 @@ h1 {
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
   text-align: left;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .auth-icon-button {
@@ -223,7 +241,10 @@ h1 {
 .sidebar-collapsed .profile-link span,
 .sidebar-collapsed .auth-copy,
 .sidebar-collapsed .discord-button {
-  display: none;
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-8px);
 }
 
 .auth-panel img,
@@ -271,6 +292,7 @@ h1 {
   display: grid;
   gap: 8px;
   width: 100%;
+  transition: width 220ms ease;
 }
 
 .side-nav button {
@@ -287,6 +309,7 @@ h1 {
   color: #f5f1e8;
   font-weight: 800;
   text-align: left;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .nav-icon {
@@ -311,6 +334,11 @@ h1 {
   display: grid;
   gap: 4px;
   min-width: 0;
+  max-width: var(--sidebar-label-width);
+  opacity: var(--sidebar-label-opacity);
+  overflow: hidden;
+  transform: translateX(var(--sidebar-label-shift));
+  transition: opacity 160ms ease, transform 220ms ease, max-width 220ms ease;
 }
 
 .nav-copy > span,
@@ -333,7 +361,7 @@ h1 {
 }
 
 .sidebar-collapsed .nav-copy {
-  display: none;
+  pointer-events: none;
 }
 
 .side-nav button.active {
