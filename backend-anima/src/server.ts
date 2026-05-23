@@ -52,6 +52,7 @@ type WatchPartyAnime = {
 };
 
 const watchPartyRooms = new Map<string, WatchPartyRoom>();
+const WATCH_PARTY_MAX_PARTICIPANTS = 16;
 
 app.use(
   cors({
@@ -359,6 +360,11 @@ io.on('connection', (socket) => {
     if (!code) return;
 
     const room = getOrCreateWatchPartyRoom(code, socket.id);
+    if (!room.participants.has(socket.id) && room.participants.size >= WATCH_PARTY_MAX_PARTICIPANTS) {
+      socket.emit('watch-party:join-rejected', { reason: 'room-full' });
+      return;
+    }
+
     const participant: WatchPartyParticipant = {
       id: socket.id,
       name: getPayloadString(payload, 'name') || 'Гость',

@@ -1124,6 +1124,11 @@ function WatchPartyPage({
       onLeaveRoom();
     });
 
+    socket.on('watch-party:join-rejected', (payload: { reason?: string }) => {
+      onToast(payload.reason === 'room-full' ? 'Комната заполнена' : 'Не удалось войти в комнату');
+      onLeaveRoom();
+    });
+
     socketRef.current = socket;
 
     return () => {
@@ -1383,7 +1388,7 @@ function WatchPartyParticipants({
 
   return (
     <>
-      <h3>Участники</h3>
+      <h3>Участники ({participants.length}/16)</h3>
       {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
       <div className="party-members">
         {participants.map((participant) => (

@@ -1035,7 +1035,27 @@ h1 {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: 10px;
+  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+.party-members::-webkit-scrollbar {
+  width: 6px;
+}
+
+.party-members::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.party-members::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(201, 166, 109, 0.48);
+}
+
+.party-members::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 166, 109, 0.72);
 }
 
 .party-member {
