@@ -26,6 +26,19 @@ export type ServerWatchEntry = {
   };
 };
 
+export type PlayerProviderResult = {
+  provider: 'anilibria';
+  providerTitleId: string;
+  title: string;
+  originalTitle: string | null;
+  posterUrl: string | null;
+  watchUrl: string;
+  episodeCount: number | null;
+  requestedEpisode: number;
+  status: 'available' | 'unknown';
+  note: string;
+};
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -77,4 +90,8 @@ export async function saveAnimeProgress(animeId: string, payload: SaveAnimeProgr
     method: 'PUT',
     body: JSON.stringify(payload),
   });
+}
+
+export async function getEpisodePlayers(animeId: string, episodeNumber: number) {
+  return apiFetch<{ providers: PlayerProviderResult[] }>(`/anime/${animeId}/episodes/${episodeNumber}/players`);
 }

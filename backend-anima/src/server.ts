@@ -6,6 +6,7 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
+import { findPlayerProviders } from './playerProviders.js';
 
 const app = express();
 
@@ -72,6 +73,24 @@ app.get('/anime', async (_request, response) => {
   });
 
   response.json({ anime });
+});
+
+app.get('/anime/:animeId/episodes/:episodeNumber/players', async (request, response) => {
+  const animeId = String(request.params.animeId);
+  const episodeNumber = Number(request.params.episodeNumber);
+
+  if (!Number.isFinite(episodeNumber) || episodeNumber < 1) {
+    response.status(400).json({ error: 'Invalid episode number' });
+    return;
+  }
+
+  const result = await findPlayerProviders(animeId, Math.trunc(episodeNumber));
+  if (!result) {
+    response.status(404).json({ error: 'Anime not found' });
+    return;
+  }
+
+  response.json(result);
 });
 
 app.get('/me/anime', requireAuth, async (request, response) => {

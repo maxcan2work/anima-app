@@ -1,11 +1,13 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   getCurrentUser,
+  getEpisodePlayers,
   getMyAnimeList,
   loginWithDiscord,
   logout,
   saveAnimeProgress,
   type CurrentUser,
+  type PlayerProviderResult,
   type ServerWatchEntry,
 } from './api';
 import { ANIME_LIBRARY, type AnimeTitle } from './data';
@@ -367,6 +369,7 @@ function ProfilePage({
               </button>
             ))
           )}
+          <ProviderPlayers players={players} status={playersStatus} />
         </section>
 
         <form className="diary-editor" onSubmit={submit}>
@@ -471,6 +474,34 @@ function AnimeHero({
   onStateChange: (patch: Partial<WatchState>) => void;
 }) {
   const progress = Math.round((state.episode / anime.episodes) * 100);
+  const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
+  const [playersStatus, setPlayersStatus] = useState('Ищем плееры провайдеров...');
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadPlayers() {
+      setPlayersStatus('Ищем плееры провайдеров...');
+      try {
+        const response = await getEpisodePlayers(anime.id, state.episode);
+        if (ignore) return;
+
+        setPlayers(response.providers);
+        setPlayersStatus(response.providers.length ? '' : 'Провайдеры пока не нашли этот тайтл.');
+      } catch {
+        if (!ignore) {
+          setPlayers([]);
+          setPlayersStatus('Не удалось загрузить провайдеров.');
+        }
+      }
+    }
+
+    loadPlayers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [anime.id, state.episode]);
 
   return (
     <>
@@ -558,6 +589,33 @@ function AnimeHero({
         </div>
       </section>
     </>
+  );
+}
+
+function ProviderPlayers({ players, status }: { players: PlayerProviderResult[]; status: string }) {
+  return (
+    <section className="provider-players">
+      <div className="section-heading">
+        <h3>Плееры провайдеров</h3>
+        {status ? <span>{status}</span> : null}
+      </div>
+      <div className="provider-grid">
+        {players.map((player) => (
+          <a key={`${player.provider}-${player.providerTitleId}`} className="provider-card" href={player.watchUrl} target="_blank" rel="noreferrer">
+            {player.posterUrl ? <img src={player.posterUrl} alt="" /> : null}
+            <span>
+              <strong>{player.title}</strong>
+              <small>{player.originalTitle ?? 'AniLibria / AniLiberty'}</small>
+              <small>
+                Серия {player.requestedEpisode}
+                {player.episodeCount ? ` из ${player.episodeCount}` : ''} · русская озвучка
+              </small>
+            </span>
+            <em>{player.status === 'available' ? 'Открыть' : 'Проверить'}</em>
+          </a>
+        ))}
+      </div>
+    </section>
   );
 }
 
