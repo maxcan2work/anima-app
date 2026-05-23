@@ -826,17 +826,6 @@ h1 {
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
 }
 
-.video-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.68;
-}
-
-.video-frame.hidden-frame {
-  display: none;
-}
-
 .video-frame video {
   width: 100%;
   height: 100%;
@@ -850,34 +839,30 @@ h1 {
   background: #060706;
 }
 
-.play-overlay {
+.player-loader {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  padding: 28px;
-  text-align: center;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+  background: #060706;
+  z-index: 1;
 }
 
-.play-overlay button {
-  width: 74px;
-  height: 74px;
+.player-loader span {
+  width: 42px;
+  height: 42px;
   border: 0;
   border-radius: 50%;
-  background: #f2c063;
-  color: #17120c;
-  font-size: 28px;
-  font-weight: 900;
+  border: 3px solid rgba(235, 226, 214, 0.16);
+  border-top-color: #caa772;
+  animation: player-loader-spin 0.8s linear infinite;
 }
 
-.play-overlay span {
-  max-width: 90%;
-  font-size: 20px;
-  font-weight: 800;
+@keyframes player-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .player-status {
@@ -1516,13 +1501,4 @@ h2 {
     display: grid;
   }
 
-  .play-overlay button {
-    width: 58px;
-    height: 58px;
-    font-size: 22px;
-  }
-
-  .play-overlay span {
-    font-size: 16px;
-  }
 }

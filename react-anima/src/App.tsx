@@ -1055,18 +1055,16 @@ function AnimeHero({
     <>
       <div className="player-layout">
         <section className="player">
-          {selectedPlayer && isPlayablePlayer(selectedPlayer) ? <VideoPlayer anime={anime} player={selectedPlayer} /> : null}
-          <div className={selectedPlayer && isPlayablePlayer(selectedPlayer) ? 'video-frame hidden-frame' : 'video-frame'}>
-            <img src={anime.backdrop} alt="" />
-            <div className="play-overlay">
-              <button aria-label="Запустить эпизод">▶</button>
-              <span>
-                Серия {state.episode}: {anime.sampleEpisodeTitle}
-              </span>
+          {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
+            <VideoPlayer anime={anime} player={selectedPlayer} />
+          ) : (
+            <div className="video-frame">
+              <PlayerLoader />
             </div>
-          </div>
-
-          {!selectedPlayer?.streamUrl && playersStatus ? <p className="player-status">{playersStatus}</p> : null}
+          )}
+          {(!selectedPlayer || !isPlayablePlayer(selectedPlayer)) && playersStatus ? (
+            <p className="player-status">{playersStatus}</p>
+          ) : null}
 
           <section className="episodes" aria-label="Серии">
             <button
@@ -1239,6 +1237,12 @@ function WatchStatusSelect({
 }
 
 function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProviderResult }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+  }, [player.embedUrl, player.streamUrl]);
+
   if (player.streamType === 'iframe' && player.embedUrl) {
     return (
       <div className="video-frame">
@@ -1247,15 +1251,35 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
           title={player.title}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
+          onLoad={() => setIsLoading(false)}
         />
+        {isLoading ? <PlayerLoader /> : null}
       </div>
     );
   }
 
-  return <HlsPlayer anime={anime} player={player} />;
+  return <HlsPlayer anime={anime} player={player} isLoading={isLoading} onReady={() => setIsLoading(false)} />;
 }
 
-function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProviderResult }) {
+function PlayerLoader() {
+  return (
+    <div className="player-loader" aria-label="Loading player">
+      <span />
+    </div>
+  );
+}
+
+function HlsPlayer({
+  anime,
+  player,
+  isLoading,
+  onReady,
+}: {
+  anime: AnimeTitle;
+  player: PlayerProviderResult;
+  isLoading: boolean;
+  onReady: () => void;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -1280,7 +1304,8 @@ function HlsPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvide
 
   return (
     <div className="video-frame">
-      <video ref={videoRef} controls poster={anime.backdrop} />
+      <video ref={videoRef} controls poster={anime.backdrop} onCanPlay={onReady} />
+      {isLoading ? <PlayerLoader /> : null}
     </div>
   );
 }
