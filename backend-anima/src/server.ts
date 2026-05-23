@@ -396,6 +396,17 @@ io.on('connection', (socket) => {
     emitWatchPartyState(room);
   });
 
+  socket.on('watch-party:kick', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const participantId = getPayloadString(payload, 'participantId');
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id || participantId === room.hostSocketId) return;
+
+    const target = io.sockets.sockets.get(participantId);
+    target?.emit('watch-party:kicked');
+    target?.disconnect(true);
+  });
+
   socket.on('disconnect', () => {
     for (const room of watchPartyRooms.values()) {
       if (!room.participants.has(socket.id)) continue;

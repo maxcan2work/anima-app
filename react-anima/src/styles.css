@@ -1039,7 +1039,8 @@ h1 {
 }
 
 .party-member {
-  display: flex;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   border-radius: 8px;
@@ -1055,20 +1056,35 @@ h1 {
   flex: 0 0 auto;
 }
 
-.party-member span {
-  min-width: 0;
-}
-
-.party-member strong,
-.party-member small {
-  display: block;
-}
-
 .party-member strong {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
   color: #f1e7dc;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.party-member-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: end;
+}
+
+.party-host-badge,
+.party-member-actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+}
+
+.party-host-badge {
+  border: 1px solid rgba(201, 166, 109, 0.36);
+  background: rgba(201, 166, 109, 0.14);
 }
 
 .party-member .party-host-icon {
@@ -1077,9 +1093,19 @@ h1 {
   flex: 0 0 auto;
 }
 
-.party-member small {
-  color: #aaa196;
-  line-height: 1.4;
+.party-member-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.party-member-actions button:hover {
+  border-color: rgba(201, 166, 109, 0.42);
+  background: rgba(201, 166, 109, 0.1);
+}
+
+.party-member-actions button img {
+  width: 16px;
+  height: 16px;
 }
 
 .watch-party-leave {

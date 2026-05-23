@@ -4,6 +4,7 @@ import { io, type Socket } from 'socket.io-client';
 import copyIcon from './assets/copy.svg';
 import crownIcon from './assets/crown.svg';
 import episodeArrowIcon from './assets/episode-arrow.svg';
+import kickIcon from './assets/kick.svg';
 import leaveRoomIcon from './assets/leave-room.svg';
 import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
@@ -1118,13 +1119,18 @@ function WatchPartyPage({
       setConnectionStatus('Не удалось подключиться к комнате.');
     });
 
+    socket.on('watch-party:kicked', () => {
+      onToast('Тебя исключили из комнаты');
+      onLeaveRoom();
+    });
+
     socketRef.current = socket;
 
     return () => {
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [code, user?.avatarUrl, user?.displayName]);
+  }, [code, onLeaveRoom, onToast, user?.avatarUrl, user?.displayName]);
 
   useEffect(() => {
     setPartyCatalogResults([]);
@@ -1270,6 +1276,9 @@ function WatchPartyPage({
                   code={code}
                   participants={participants}
                   connectionStatus={connectionStatus}
+                  canKick={isHost}
+                  ownParticipantId={ownParticipantId}
+                  onKickParticipant={(participantId) => socketRef.current?.emit('watch-party:kick', { code, participantId })}
                   onLeaveRoom={onLeaveRoom}
                   onToast={onToast}
                 />
@@ -1307,6 +1316,9 @@ function WatchPartyPage({
               code={code}
               participants={participants}
               connectionStatus={connectionStatus}
+              canKick={isHost}
+              ownParticipantId={ownParticipantId}
+              onKickParticipant={(participantId) => socketRef.current?.emit('watch-party:kick', { code, participantId })}
               onLeaveRoom={onLeaveRoom}
               onToast={onToast}
             />
@@ -1349,12 +1361,18 @@ function WatchPartyParticipants({
   code,
   participants,
   connectionStatus,
+  canKick,
+  ownParticipantId,
+  onKickParticipant,
   onLeaveRoom,
   onToast,
 }: {
   code: string;
   participants: WatchPartyParticipant[];
   connectionStatus: string;
+  canKick: boolean;
+  ownParticipantId: string;
+  onKickParticipant: (participantId: string) => void;
   onLeaveRoom: () => void;
   onToast: (message: string) => void;
 }) {
@@ -1375,11 +1393,18 @@ function WatchPartyParticipants({
             ) : (
               <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
             )}
-            <span>
-              <strong>
-                {participant.name}
-                {participant.isHost ? <img className="party-host-icon" src={crownIcon} alt="Хост" /> : null}
-              </strong>
+            <strong>{participant.name}</strong>
+            <span className="party-member-actions">
+              {participant.isHost ? (
+                <span className="party-host-badge" aria-label="Хост" title="Хост">
+                  <img className="party-host-icon" src={crownIcon} alt="" aria-hidden="true" />
+                </span>
+              ) : null}
+              {canKick && !participant.isHost && participant.id !== ownParticipantId ? (
+                <button type="button" onClick={() => onKickParticipant(participant.id)} aria-label={`Кикнуть ${participant.name}`}>
+                  <img src={kickIcon} alt="" aria-hidden="true" />
+                </button>
+              ) : null}
             </span>
           </div>
         ))}
