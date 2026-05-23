@@ -16,40 +16,38 @@ type PlayerProviderResult = {
   note: string;
 };
 
-type AniLibriaTitle = {
+type AniLibertyRelease = {
   id?: number | string;
-  code?: string;
-  names?: {
-    ru?: string;
-    en?: string;
-    alternative?: string;
+  alias?: string;
+  name?: {
+    main?: string | null;
+    english?: string | null;
+    alternative?: string | null;
   };
-  posters?: {
-    medium?: {
-      url?: string;
-    };
-  };
-  player?: {
-    host?: string;
-    episodes?: Record<string, unknown> | unknown[];
-    episodes_count?: number;
-    last_episode?: number;
-    list?: Record<
-      string,
-      {
-        hls?: {
-          fhd?: string | null;
-          hd?: string | null;
-          sd?: string | null;
-        };
-      }
-    >;
-  };
+  poster?: {
+    src?: string | null;
+    preview?: string | null;
+    thumbnail?: string | null;
+    optimized?: {
+      src?: string | null;
+      preview?: string | null;
+      thumbnail?: string | null;
+    } | null;
+  } | null;
+  episodes_total?: number | null;
+  external_player?: string | null;
+  episodes?: AniLibertyEpisode[];
 };
 
-type AniLibriaSearchResponse = {
-  list?: AniLibriaTitle[];
+type AniLibertyEpisode = {
+  ordinal?: number;
+  hls_1080?: string | null;
+  hls_720?: string | null;
+  hls_480?: string | null;
 };
+
+const ANILIBERTY_BASE_URL = 'https://anilibria.top';
+const ANILIBERTY_API_URL = `${ANILIBERTY_BASE_URL}/api/v1`;
 
 export async function findPlayerProviders(animeId: string, episodeNumber: number) {
   const anime = await prisma.anime.findUnique({
@@ -59,9 +57,39 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
   if (!anime) return null;
 
   const anilibriaMatch = anime.providerMatches.find((match) => match.provider === 'anilibria');
-  const anilibriaResults = anilibriaMatch
-    ? await fetchAniLibriaByCode(anilibriaMatch.providerTitleId, episodeNumber)
-    : await searchAniLibria(uniqueStrings([anime.originalTitle, anime.title]), episodeNumber);
+  let anilibriaResults: PlayerProviderResult[] = [];
+
+  if (anilibriaMatch) {
+    anilibriaResults = await fetchAniLibertyRelease(anilibriaMatch.providerTitleId, episodeNumber);
+  } else {
+    const autoMatch = await findAniLibriaMatch(anime.title, anime.originalTitle);
+
+    if (autoMatch) {
+      await prisma.providerMatch.upsert({
+        where: {
+          animeId_provider: {
+            animeId: anime.id,
+            provider: 'anilibria',
+          },
+        },
+        update: {
+          providerTitleId: autoMatch.providerTitleId,
+          title: autoMatch.title,
+          confidence: 'auto',
+        },
+        create: {
+          animeId: anime.id,
+          provider: 'anilibria',
+          providerTitleId: autoMatch.providerTitleId,
+          title: autoMatch.title,
+          confidence: 'auto',
+        },
+      });
+      anilibriaResults = await fetchAniLibertyRelease(autoMatch.providerTitleId, episodeNumber);
+    } else {
+      anilibriaResults = await searchAniLiberty(uniqueStrings([anime.originalTitle, anime.title]), episodeNumber);
+    }
+  }
 
   return {
     anime,
@@ -71,23 +99,49 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
 }
 
 export async function findAniLibriaMatch(title: string, originalTitle: string | null) {
-  const results = await searchAniLibria(uniqueStrings([originalTitle, title]), 1);
-  return results[0] ?? null;
+  const candidates = await searchAniLibertyCandidates(uniqueStrings([originalTitle, title]));
+  return candidates.find((candidate) => candidate.score >= 70)?.provider ?? null;
 }
 
-async function searchAniLibria(queries: string[], episodeNumber: number): Promise<PlayerProviderResult[]> {
+async function searchAniLiberty(queries: string[], episodeNumber: number): Promise<PlayerProviderResult[]> {
+  const candidates = await searchAniLibertyCandidates(queries);
+  const selected = candidates.length > 0 ? candidates.slice(0, 5) : [];
+  const detailed = await Promise.all(
+    selected.map((candidate) => fetchAniLibertyRelease(candidate.provider.providerTitleId, episodeNumber)),
+  );
+
+  return detailed.flat();
+}
+
+async function searchAniLibertyCandidates(queries: string[]) {
+  const releasesByAlias = new Map<string, { release: AniLibertyRelease; score: number; order: number }>();
+
   for (const query of queries) {
-    const results = await fetchAniLibria(query, episodeNumber);
-    if (results.length > 0) return results;
+    const releases = await fetchAniLibertySearch(query);
+    releases.forEach((release, index) => {
+      const providerTitleId = getReleaseProviderTitleId(release);
+      if (!providerTitleId) return;
+
+      const current = releasesByAlias.get(providerTitleId);
+      const score = scoreAniLibertyRelease(release, queries);
+      if (!current || score > current.score) {
+        releasesByAlias.set(providerTitleId, { release, score, order: index });
+      }
+    });
   }
 
-  return [];
+  return [...releasesByAlias.values()]
+    .sort((left, right) => right.score - left.score || left.order - right.order)
+    .map(({ release, score }) => ({
+      provider: mapAniLibertyRelease(release, 1)[0],
+      score,
+    }))
+    .filter((candidate) => candidate.provider);
 }
 
-async function fetchAniLibria(query: string, episodeNumber: number): Promise<PlayerProviderResult[]> {
-  const url = new URL('https://api.anilibria.tv/v3/title/search');
-  url.searchParams.set('search', query);
-  url.searchParams.set('limit', '5');
+async function fetchAniLibertySearch(query: string): Promise<AniLibertyRelease[]> {
+  const url = new URL(`${ANILIBERTY_API_URL}/app/search/releases`);
+  url.searchParams.set('query', query);
 
   try {
     const response = await fetch(url, {
@@ -99,86 +153,137 @@ async function fetchAniLibria(query: string, episodeNumber: number): Promise<Pla
 
     if (!response.ok) return [];
 
-    const payload = (await response.json()) as AniLibriaSearchResponse;
-    return (payload.list ?? []).flatMap((title) => mapAniLibriaTitle(title, episodeNumber));
+    return (await response.json()) as AniLibertyRelease[];
   } catch {
     return [];
   }
 }
 
-async function fetchAniLibriaByCode(code: string, episodeNumber: number): Promise<PlayerProviderResult[]> {
-  const url = new URL('https://api.anilibria.tv/v3/title');
-  url.searchParams.set('code', code);
+async function fetchAniLibertyRelease(idOrAlias: string, episodeNumber: number): Promise<PlayerProviderResult[]> {
+  const releaseUrl = new URL(`${ANILIBERTY_API_URL}/anime/releases/${encodeURIComponent(idOrAlias)}`);
+  const episodesUrl = new URL(`${ANILIBERTY_API_URL}/anime/releases/${encodeURIComponent(idOrAlias)}`);
+  episodesUrl.searchParams.set('include', 'episodes');
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'AnimaAggregator/0.1',
-      },
-    });
+    const [releaseResponse, episodesResponse] = await Promise.all([
+      fetch(releaseUrl, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'AnimaAggregator/0.1',
+        },
+      }),
+      fetch(episodesUrl, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'AnimaAggregator/0.1',
+        },
+      }),
+    ]);
 
-    if (!response.ok) return [];
+    if (!releaseResponse.ok) return [];
 
-    return mapAniLibriaTitle((await response.json()) as AniLibriaTitle, episodeNumber);
+    const release = (await releaseResponse.json()) as AniLibertyRelease;
+    const episodesPayload = episodesResponse.ok ? ((await episodesResponse.json()) as Pick<AniLibertyRelease, 'episodes'>) : {};
+
+    return mapAniLibertyRelease({ ...release, episodes: episodesPayload.episodes ?? [] }, episodeNumber);
   } catch {
     return [];
   }
 }
 
-function mapAniLibriaTitle(title: AniLibriaTitle, episodeNumber: number): PlayerProviderResult[] {
-  const code = title.code;
-  const id = title.id == null ? null : String(title.id);
-  const providerTitleId = code ?? id;
+function mapAniLibertyRelease(release: AniLibertyRelease, episodeNumber: number): PlayerProviderResult[] {
+  const providerTitleId = getReleaseProviderTitleId(release);
   if (!providerTitleId) return [];
 
-  const episodeCount = getEpisodeCount(title);
-  const stream = getEpisodeStream(title, episodeNumber);
+  const episodeCount = release.episodes_total ?? release.episodes?.length ?? null;
+  const stream = getEpisodeStream(release, episodeNumber);
 
   return [
     {
       provider: 'anilibria',
       providerTitleId,
-      title: title.names?.ru ?? title.names?.en ?? providerTitleId,
-      originalTitle: title.names?.en ?? title.names?.alternative ?? null,
-      posterUrl: title.posters?.medium?.url ? `https://anilibria.tv${title.posters.medium.url}` : null,
-      watchUrl: code ? `https://anilibria.top/release/${code}.html` : `https://anilibria.top/release/id${providerTitleId}.html`,
+      title: release.name?.main ?? release.name?.english ?? providerTitleId,
+      originalTitle: release.name?.english ?? release.name?.alternative ?? null,
+      posterUrl: buildAniLibertyUrl(
+        release.poster?.optimized?.src ?? release.poster?.src ?? release.poster?.preview ?? release.poster?.thumbnail,
+      ),
+      watchUrl: release.alias
+        ? `${ANILIBERTY_BASE_URL}/anime/releases/release/${release.alias}`
+        : `${ANILIBERTY_BASE_URL}/anime/releases/${providerTitleId}`,
       episodeCount,
       requestedEpisode: episodeNumber,
       status: stream.url || episodeCount == null || episodeNumber <= episodeCount ? 'available' : 'unknown',
       streamUrl: stream.url,
       streamType: stream.url ? 'hls' : null,
       quality: stream.quality,
-      note: 'AniLibria/AniLiberty: русская озвучка, доступность серий зависит от релиза провайдера.',
+      note: 'AniLiberty: русская озвучка, доступность серий зависит от релиза провайдера.',
     },
   ];
 }
 
-function getEpisodeStream(title: AniLibriaTitle, episodeNumber: number) {
-  const episode = title.player?.list?.[String(episodeNumber)];
-  const hls = episode?.hls;
-  const quality: 'fhd' | 'hd' | 'sd' | null = hls?.fhd ? 'fhd' : hls?.hd ? 'hd' : hls?.sd ? 'sd' : null;
-  const path = quality ? hls?.[quality] : null;
+function getEpisodeStream(release: AniLibertyRelease, episodeNumber: number) {
+  const episode = release.episodes?.find((item) => item.ordinal === episodeNumber);
+  const quality: 'fhd' | 'hd' | 'sd' | null = episode?.hls_1080
+    ? 'fhd'
+    : episode?.hls_720
+      ? 'hd'
+      : episode?.hls_480
+        ? 'sd'
+        : null;
+  const url = quality === 'fhd' ? episode?.hls_1080 : quality === 'hd' ? episode?.hls_720 : episode?.hls_480;
 
-  if (!path) {
-    return { url: null, quality: null };
-  }
-
-  const host = title.player?.host ?? 'cache.libria.fun';
-  const url = path.startsWith('http') ? path : `https://${host}${path}`;
-
-  return { url, quality };
+  return { url: url ?? null, quality };
 }
 
-function getEpisodeCount(title: AniLibriaTitle) {
-  if (typeof title.player?.episodes_count === 'number') return title.player.episodes_count;
-  if (typeof title.player?.last_episode === 'number') return title.player.last_episode;
-  if (Array.isArray(title.player?.episodes)) return title.player.episodes.length;
-  if (title.player?.episodes && typeof title.player.episodes === 'object') {
-    return Object.keys(title.player.episodes).length;
+function scoreAniLibertyRelease(release: AniLibertyRelease, queries: string[]) {
+  const names = uniqueStrings([
+    release.name?.main,
+    release.name?.english,
+    release.name?.alternative,
+    release.alias?.replaceAll('-', ' '),
+  ]).map(normalizeTitle);
+  const normalizedQueries = queries.map(normalizeTitle).filter(Boolean);
+
+  let bestScore = 0;
+  for (const query of normalizedQueries) {
+    for (const name of names) {
+      if (!query || !name) continue;
+      if (query === name) bestScore = Math.max(bestScore, 100);
+      else if (name.includes(query) || query.includes(name)) bestScore = Math.max(bestScore, 80);
+      else bestScore = Math.max(bestScore, Math.round(tokenOverlap(query, name) * 60));
+    }
   }
 
-  return null;
+  return bestScore;
+}
+
+function tokenOverlap(left: string, right: string) {
+  const leftTokens = new Set(left.split(' ').filter((token) => token.length > 2));
+  const rightTokens = new Set(right.split(' ').filter((token) => token.length > 2));
+  if (leftTokens.size === 0 || rightTokens.size === 0) return 0;
+
+  const matches = [...leftTokens].filter((token) => rightTokens.has(token)).length;
+  return matches / Math.max(leftTokens.size, rightTokens.size);
+}
+
+function normalizeTitle(value: string) {
+  return value
+    .toLowerCase()
+    .replaceAll('ё', 'е')
+    .replace(/[^a-zа-я0-9]+/gi, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function getReleaseProviderTitleId(release: AniLibertyRelease) {
+  if (release.alias) return release.alias;
+  return release.id == null ? null : String(release.id);
+}
+
+function buildAniLibertyUrl(path: string | null | undefined) {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${ANILIBERTY_BASE_URL}${path}`;
 }
 
 function uniqueStrings(values: Array<string | null | undefined>) {
