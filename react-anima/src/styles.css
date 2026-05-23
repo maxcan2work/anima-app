@@ -160,6 +160,12 @@ h1 {
   display: block;
 }
 
+.profile-link strong {
+  color: #fffaf2;
+  font-size: 15px;
+  font-weight: 900;
+}
+
 .auth-panel span,
 .auth-panel small {
   margin-top: 4px;
