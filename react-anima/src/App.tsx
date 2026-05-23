@@ -539,6 +539,7 @@ function AnimeHero({
               <i style={{ width: `${progress}%` }} />
             </div>
           </div>
+          <WatchSources anime={anime} />
         </aside>
       </div>
 
@@ -557,6 +558,23 @@ function AnimeHero({
         </div>
       </section>
     </>
+  );
+}
+
+function WatchSources({ anime }: { anime: AnimeTitle }) {
+  return (
+    <div className="sources-block">
+      <h3>Источники просмотра</h3>
+      {anime.watchSources.map((source) => (
+        <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className="source-link">
+          <span>
+            <strong>{source.name}</strong>
+            <small>{source.note}</small>
+          </span>
+          <em>{source.subtitles.join(', ')}</em>
+        </a>
+      ))}
+    </div>
   );
 }
 

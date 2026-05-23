@@ -435,6 +435,53 @@ h2 {
   background: #f2c063;
 }
 
+.sources-block {
+  display: grid;
+  gap: 10px;
+}
+
+.sources-block h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.source-link {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-decoration: none;
+}
+
+.source-link:hover {
+  border-color: rgba(242, 192, 99, 0.55);
+}
+
+.source-link strong,
+.source-link small {
+  display: block;
+}
+
+.source-link small {
+  margin-top: 5px;
+  color: #aaa196;
+  line-height: 1.35;
+}
+
+.source-link em {
+  color: #f2c063;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  text-align: right;
+}
+
 .episodes {
   margin-top: 28px;
 }

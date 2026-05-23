@@ -11,6 +11,15 @@ export type AnimeTitle = {
   poster: string;
   backdrop: string;
   sampleEpisodeTitle: string;
+  watchSources: WatchSource[];
+};
+
+export type WatchSource = {
+  name: string;
+  url: string;
+  kind: 'streaming' | 'youtube';
+  subtitles: string[];
+  note: string;
 };
 
 export const ANIME_LIBRARY: AnimeTitle[] = [
@@ -28,6 +37,22 @@ export const ANIME_LIBRARY: AnimeTitle[] = [
     poster: 'https://cdn.myanimelist.net/images/anime/1015/138006.jpg',
     backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80',
     sampleEpisodeTitle: 'Начало пути',
+    watchSources: [
+      {
+        name: 'Crunchyroll',
+        url: 'https://www.crunchyroll.com/search?q=Frieren',
+        kind: 'streaming',
+        subtitles: ['EN', 'RU зависит от региона'],
+        note: 'Официальный стриминг, доступность зависит от региона и подписки.',
+      },
+      {
+        name: 'YouTube official search',
+        url: 'https://www.youtube.com/results?search_query=Frieren+official+anime+episode',
+        kind: 'youtube',
+        subtitles: ['зависит от видео'],
+        note: 'Ищем только официальные каналы правообладателей.',
+      },
+    ],
   },
   {
     id: 'dungeon-meshi',
@@ -43,6 +68,22 @@ export const ANIME_LIBRARY: AnimeTitle[] = [
     poster: 'https://cdn.myanimelist.net/images/anime/1711/142957.jpg',
     backdrop: 'https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1600&q=80',
     sampleEpisodeTitle: 'Горячий суп из монстров',
+    watchSources: [
+      {
+        name: 'Netflix',
+        url: 'https://www.netflix.com/search?q=Dungeon%20Meshi',
+        kind: 'streaming',
+        subtitles: ['зависит от региона'],
+        note: 'Официальный стриминг, открывается во внешнем сервисе.',
+      },
+      {
+        name: 'YouTube official search',
+        url: 'https://www.youtube.com/results?search_query=Dungeon+Meshi+official+anime+episode',
+        kind: 'youtube',
+        subtitles: ['зависит от видео'],
+        note: 'Ищем только официальные каналы правообладателей.',
+      },
+    ],
   },
   {
     id: 'apothecary',
@@ -58,6 +99,22 @@ export const ANIME_LIBRARY: AnimeTitle[] = [
     poster: 'https://cdn.myanimelist.net/images/anime/1708/138033.jpg',
     backdrop: 'https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1600&q=80',
     sampleEpisodeTitle: 'Запах яда',
+    watchSources: [
+      {
+        name: 'Crunchyroll',
+        url: 'https://www.crunchyroll.com/search?q=The%20Apothecary%20Diaries',
+        kind: 'streaming',
+        subtitles: ['EN', 'RU зависит от региона'],
+        note: 'Официальный стриминг, доступность зависит от региона и подписки.',
+      },
+      {
+        name: 'YouTube official search',
+        url: 'https://www.youtube.com/results?search_query=The+Apothecary+Diaries+official+anime+episode',
+        kind: 'youtube',
+        subtitles: ['зависит от видео'],
+        note: 'Ищем только официальные каналы правообладателей.',
+      },
+    ],
   },
   {
     id: 'chainsaw-man',
@@ -73,5 +130,21 @@ export const ANIME_LIBRARY: AnimeTitle[] = [
     poster: 'https://cdn.myanimelist.net/images/anime/1806/126216.jpg',
     backdrop: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80',
     sampleEpisodeTitle: 'Пес и бензопила',
+    watchSources: [
+      {
+        name: 'Crunchyroll',
+        url: 'https://www.crunchyroll.com/search?q=Chainsaw%20Man',
+        kind: 'streaming',
+        subtitles: ['EN', 'RU зависит от региона'],
+        note: 'Официальный стриминг, доступность зависит от региона и подписки.',
+      },
+      {
+        name: 'YouTube official search',
+        url: 'https://www.youtube.com/results?search_query=Chainsaw+Man+official+anime+episode',
+        kind: 'youtube',
+        subtitles: ['зависит от видео'],
+        note: 'Ищем только официальные каналы правообладателей.',
+      },
+    ],
   },
 ];
