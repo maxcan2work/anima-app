@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject, type ReactNode } from 'react';
 import Hls from 'hls.js';
 import { io, type Socket } from 'socket.io-client';
+import copyIcon from './assets/copy.svg';
 import episodeArrowIcon from './assets/episode-arrow.svg';
+import leaveRoomIcon from './assets/leave-room.svg';
 import loginIcon from './assets/login.svg';
 import musicNoteIcon from './assets/music-note.svg';
 import nekoIcon from './assets/neko.svg';
@@ -1169,7 +1171,7 @@ function WatchPartyPage({
 
   if (code) {
     return (
-      <section className="watch-party-page">
+      <section className={selectedAnime ? 'watch-party-page' : 'watch-party-page room-selecting'}>
         <div className="watch-party-room">
           {selectedAnime ? (
             <AnimeHero
@@ -1307,15 +1309,15 @@ function WatchPartyParticipants({
           </span>
         </div>
       ))}
-      <div className="watch-party-code compact">
-        <span>{code}</span>
-        <button type="button" onClick={() => navigator.clipboard?.writeText(code)}>
-          Скопировать
+      <div className="watch-party-actions-row">
+        <button className="watch-party-code compact" type="button" onClick={() => navigator.clipboard?.writeText(code)}>
+          <span>{code}</span>
+          <img src={copyIcon} alt="" aria-hidden="true" />
+        </button>
+        <button className="watch-party-leave" type="button" onClick={onLeaveRoom} aria-label="Выйти из комнаты">
+          <img src={leaveRoomIcon} alt="" aria-hidden="true" />
         </button>
       </div>
-      <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
-        Выйти из комнаты
-      </button>
     </>
   );
 }

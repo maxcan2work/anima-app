@@ -811,6 +811,10 @@ h1 {
   align-items: center;
 }
 
+.watch-party-page.room-selecting {
+  align-items: start;
+}
+
 .watch-party-entry,
 .watch-party-stage {
   max-width: 680px;
@@ -875,8 +879,7 @@ h1 {
   border-color: rgba(201, 166, 109, 0.58);
 }
 
-.watch-party-join button,
-.watch-party-code button {
+.watch-party-join button {
   border: 0;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.09);
@@ -894,7 +897,7 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 24px;
-  align-items: center;
+  align-items: start;
 }
 
 .watch-party-code {
@@ -917,12 +920,43 @@ h1 {
 
 .watch-party-code.compact {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
   margin-top: 0;
+  border: 1px solid rgba(201, 166, 109, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  padding: 10px 12px;
+  text-align: left;
 }
 
 .watch-party-code.compact span {
   min-width: 0;
-  text-align: center;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watch-party-code.compact img {
+  width: 22px;
+  height: 22px;
+}
+
+.watch-party-code.compact:hover {
+  border-color: rgba(201, 166, 109, 0.52);
+  background: rgba(201, 166, 109, 0.1);
+}
+
+.watch-party-actions-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 50px;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .watch-party-catalog {
@@ -985,17 +1019,26 @@ h1 {
 }
 
 .watch-party-leave {
-  min-height: 44px;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  min-height: 50px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   color: #f1e7dc;
-  font-weight: 800;
 }
 
 .watch-party-leave:hover {
   border-color: rgba(201, 166, 109, 0.42);
   background: rgba(201, 166, 109, 0.1);
+}
+
+.watch-party-leave img {
+  width: 22px;
+  height: 22px;
 }
 
 .player-layout {
