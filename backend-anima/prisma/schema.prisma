@@ -54,6 +54,7 @@ model Anime {
   shikimoriId   Int?        @unique
   malId         Int?
   kind          String?
+  genres        String?
   score         String?
   status        String?
   sourceUrl     String?

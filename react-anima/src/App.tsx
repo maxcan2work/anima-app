@@ -1090,7 +1090,7 @@ function mapServerAnime(anime: ServerAnime): AnimeTitle {
     episodes: anime.episodes || 1,
     studio: anime.sourceUrl ? 'Shikimori' : 'Anima',
     rating: anime.score ?? '-',
-    genres: [anime.kind ?? 'Аниме'],
+    genres: parseAnimeGenres(anime.genres, anime.kind),
     description: '',
     poster: anime.posterUrl ?? 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
     backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80',
@@ -1107,6 +1107,22 @@ function mapServerAnime(anime: ServerAnime): AnimeTitle {
         ]
       : [],
   };
+}
+
+function parseAnimeGenres(value: string | null | undefined, fallback: string | null | undefined) {
+  if (value) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        const genres = parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+        if (genres.length > 0) return genres;
+      }
+    } catch {
+      return [fallback ?? 'Аниме'];
+    }
+  }
+
+  return [fallback ?? 'Аниме'];
 }
 
 function mapRandomHistoryEntry(entry: ServerRandomHistoryEntry): CatalogSearchResult {

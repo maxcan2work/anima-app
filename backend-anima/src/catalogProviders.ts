@@ -21,6 +21,10 @@ type ShikimoriAnime = {
   status?: string | null;
   episodes?: number | null;
   aired_on?: string | null;
+  genres?: Array<{
+    name?: string | null;
+    russian?: string | null;
+  }>;
 };
 
 export type CatalogSearchResult = {
@@ -31,6 +35,7 @@ export type CatalogSearchResult = {
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
+  genres: string[];
   score: string | null;
   status: string | null;
   malId: number | null;
@@ -119,6 +124,7 @@ export async function importShikimoriAnime(providerId: number) {
       shikimoriId: anime.providerId,
       malId: anime.malId,
       kind: anime.kind,
+      genres: JSON.stringify(anime.genres),
       score: anime.score,
       status: anime.status,
       sourceUrl: anime.sourceUrl,
@@ -133,6 +139,7 @@ export async function importShikimoriAnime(providerId: number) {
       shikimoriId: anime.providerId,
       malId: anime.malId,
       kind: anime.kind,
+      genres: JSON.stringify(anime.genres),
       score: anime.score,
       status: anime.status,
       sourceUrl: anime.sourceUrl,
@@ -176,12 +183,25 @@ function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
     episodes: anime.episodes && anime.episodes > 0 ? anime.episodes : 1,
     posterUrl: buildShikimoriImageUrl(anime.image),
     kind: anime.kind ?? null,
+    genres: mapShikimoriGenres(anime.genres),
     score: anime.score ?? null,
     status: anime.status ?? null,
     malId: anime.mal_id ?? null,
     sourceUrl: anime.url ? `${SHIKIMORI_BASE_URL}${anime.url}` : `${SHIKIMORI_BASE_URL}/animes/${anime.id}`,
     airedOn: anime.aired_on ?? null,
   };
+}
+
+function mapShikimoriGenres(genres: ShikimoriAnime['genres']) {
+  return uniqueStrings(
+    (genres ?? [])
+      .map((genre) => genre.russian || genre.name)
+      .filter(Boolean),
+  );
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  return [...new Set(values.map((value) => value?.trim()).filter(Boolean))] as string[];
 }
 
 function buildShikimoriImageUrl(image: ShikimoriImage | null | undefined) {

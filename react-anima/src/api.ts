@@ -51,6 +51,7 @@ export type ServerAnime = {
   shikimoriId: number | null;
   malId: number | null;
   kind: string | null;
+  genres: string | null;
   score: string | null;
   status: string | null;
   sourceUrl: string | null;

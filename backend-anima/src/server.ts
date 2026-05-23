@@ -77,13 +77,17 @@ app.get('/anime', async (_request, response) => {
 });
 
 app.get('/anime/:animeId', async (request, response) => {
-  const anime = await prisma.anime.findUnique({
+  let anime = await prisma.anime.findUnique({
     where: { id: String(request.params.animeId) },
   });
 
   if (!anime) {
     response.status(404).json({ error: 'Anime not found' });
     return;
+  }
+
+  if (!anime.genres && anime.shikimoriId) {
+    anime = await importShikimoriAnime(anime.shikimoriId);
   }
 
   response.json({ anime });
