@@ -362,7 +362,6 @@ h1 {
   transform: translate(0, -50%);
 }
 
-.episode-controls input,
 .watch-tools select {
   width: 100%;
   min-height: 44px;
@@ -730,35 +729,6 @@ h1 {
   font-weight: 800;
 }
 
-.episode-controls,
-.watch-tools {
-  display: grid;
-  grid-template-columns: 120px 1fr 120px;
-  gap: 12px;
-  align-items: end;
-}
-
-.episode-controls button,
-.watch-tools button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 8px;
-  background: #d94d38;
-  color: white;
-  font-weight: 800;
-}
-
-.episode-controls label {
-  display: grid;
-  gap: 8px;
-  color: #bfb8ad;
-  font-size: 13px;
-}
-
-.episode-controls input {
-  padding: 0 12px;
-}
-
 .player-status {
   margin: 0;
   color: #aaa196;
@@ -781,11 +751,6 @@ h2 {
   margin-bottom: 10px;
   font-size: 32px;
   line-height: 1.08;
-}
-
-.description {
-  color: #cec5b8;
-  line-height: 1.62;
 }
 
 .meta-grid {
@@ -824,37 +789,12 @@ h2 {
   font-size: 13px;
 }
 
-.watch-tools {
-  grid-template-columns: 1fr 140px;
-}
-
 .watch-tools select {
   padding: 0 12px;
 }
 
 .watch-tools option {
   color: #171413;
-}
-
-.progress-block {
-  display: grid;
-  gap: 9px;
-  color: #cfc7ba;
-  font-size: 13px;
-}
-
-.progress-block div {
-  overflow: hidden;
-  height: 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.progress-block i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #f2c063;
 }
 
 .sources-block {
@@ -1181,11 +1121,6 @@ h2 {
 
   h2 {
     font-size: 25px;
-  }
-
-  .episode-controls,
-  .watch-tools {
-    grid-template-columns: 1fr;
   }
 
   .auth-panel.signed-in,

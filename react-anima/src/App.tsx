@@ -859,7 +859,6 @@ function AnimeHero({
   state: WatchState;
   onStateChange: (patch: Partial<WatchState>) => void;
 }) {
-  const progress = Math.round((state.episode / anime.episodes) * 100);
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('Ищем плееры провайдеров...');
   const playablePlayers = players.filter((player) => player.streamUrl);
@@ -906,20 +905,6 @@ function AnimeHero({
             </div>
           </div>
 
-          <div className="episode-controls">
-            <button onClick={() => onStateChange({ episode: state.episode - 1 })}>Назад</button>
-            <label>
-              Серия
-              <input
-                type="number"
-                min="1"
-                max={anime.episodes}
-                value={state.episode}
-                onChange={(event) => onStateChange({ episode: Number(event.target.value) })}
-              />
-            </label>
-            <button onClick={() => onStateChange({ episode: state.episode + 1 })}>Дальше</button>
-          </div>
           {!selectedPlayer?.streamUrl && playersStatus ? <p className="player-status">{playersStatus}</p> : null}
         </section>
 
@@ -928,7 +913,11 @@ function AnimeHero({
           <div>
             <p className="eyebrow">{anime.originalTitle}</p>
             <h2>{anime.title}</h2>
-            <p className="description">{anime.description}</p>
+            <div className="genres">
+              {anime.genres.map((genre) => (
+                <span key={genre}>{genre}</span>
+              ))}
+            </div>
           </div>
 
           <div className="meta-grid">
@@ -938,12 +927,6 @@ function AnimeHero({
             <span>Рейтинг<strong>{anime.rating}</strong></span>
           </div>
 
-          <div className="genres">
-            {anime.genres.map((genre) => (
-              <span key={genre}>{genre}</span>
-            ))}
-          </div>
-
           <div className="watch-tools">
             <select value={state.status} onChange={(event) => onStateChange({ status: event.target.value as WatchState['status'] })}>
               <option value="planned">В планах</option>
@@ -951,14 +934,6 @@ function AnimeHero({
               <option value="completed">Просмотрено</option>
               <option value="dropped">Брошено</option>
             </select>
-            <button onClick={() => onStateChange({ status: 'watching' })}>Продолжить</button>
-          </div>
-
-          <div className="progress-block">
-            <span>Прогресс {progress}%</span>
-            <div>
-              <i style={{ width: `${progress}%` }} />
-            </div>
           </div>
           <WatchSources anime={anime} />
         </aside>
@@ -1116,7 +1091,7 @@ function mapServerAnime(anime: ServerAnime): AnimeTitle {
     studio: anime.sourceUrl ? 'Shikimori' : 'Anima',
     rating: anime.score ?? '-',
     genres: [anime.kind ?? 'Аниме'],
-    description: anime.sourceUrl ? `Импортировано из Shikimori${anime.malId ? ` · MAL ${anime.malId}` : ''}` : 'Импортированный тайтл.',
+    description: '',
     poster: anime.posterUrl ?? 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
     backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80',
     sampleEpisodeTitle: 'Просмотр',
