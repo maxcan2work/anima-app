@@ -960,14 +960,14 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  gap: 10px;
-  min-height: 50px;
+  gap: 12px;
+  min-height: 56px;
   margin-top: 0;
   border: 1px solid rgba(201, 166, 109, 0.24);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
-  padding: 10px 12px;
+  padding: 6px 10px 6px 12px;
   text-align: left;
 }
 
@@ -992,9 +992,10 @@ h1 {
 
 .watch-party-actions-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 50px;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  gap: 12px;
   align-items: stretch;
+  margin-top: auto;
 }
 
 .watch-party-catalog {
@@ -1005,9 +1006,13 @@ h1 {
 }
 
 .watch-party-panel {
-  display: grid;
+  position: sticky;
+  top: 28px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
   gap: 12px;
-  align-content: start;
 }
 
 .watch-party-panel h3 {
@@ -1059,10 +1064,9 @@ h1 {
 .watch-party-leave {
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  min-height: 50px;
-  padding: 0;
+  width: 56px;
+  min-height: 56px;
+  padding: 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -1075,8 +1079,8 @@ h1 {
 }
 
 .watch-party-leave img {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .player-layout {
@@ -1754,6 +1758,12 @@ h2 {
   .random-page,
   .watch-party-room {
     grid-template-columns: 1fr;
+  }
+
+  .watch-party-panel {
+    position: static;
+    min-height: auto;
+    max-height: none;
   }
 
   .random-stage {
