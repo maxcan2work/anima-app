@@ -967,6 +967,20 @@ h1 {
   line-height: 1.4;
 }
 
+.watch-party-leave {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1e7dc;
+  font-weight: 800;
+}
+
+.watch-party-leave:hover {
+  border-color: rgba(201, 166, 109, 0.42);
+  background: rgba(201, 166, 109, 0.1);
+}
+
 .player-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;

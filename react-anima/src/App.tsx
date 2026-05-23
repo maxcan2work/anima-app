@@ -191,6 +191,19 @@ export function App() {
     setView('watchParty');
   }
 
+  function leaveWatchParty() {
+    const path = '/watch-party';
+    setWatchPartyCode('');
+    setCurrentPath((current) => {
+      scrollByPathRef.current[current] = window.scrollY;
+      if (window.location.pathname !== path) {
+        window.history.replaceState(null, '', path);
+      }
+      return path;
+    });
+    setView('watchParty');
+  }
+
   useEffect(() => {
     let ignore = false;
 
@@ -615,6 +628,7 @@ export function App() {
             user={user}
             onCreateRoom={(code) => openWatchParty(`/watch-party/${code}`)}
             onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
+            onLeaveRoom={leaveWatchParty}
           />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
@@ -962,11 +976,13 @@ function WatchPartyPage({
   user,
   onCreateRoom,
   onJoinRoom,
+  onLeaveRoom,
 }: {
   code: string;
   user: CurrentUser | null;
   onCreateRoom: (code: string) => void;
   onJoinRoom: (code: string) => void;
+  onLeaveRoom: () => void;
 }) {
   const [joinCode, setJoinCode] = useState(code);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
@@ -1057,6 +1073,9 @@ function WatchPartyPage({
                 </span>
               </div>
             ))}
+            <button className="watch-party-leave" type="button" onClick={onLeaveRoom}>
+              Выйти из комнаты
+            </button>
           </aside>
         </div>
       </section>
