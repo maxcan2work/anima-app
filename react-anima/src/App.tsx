@@ -49,6 +49,7 @@ export function App() {
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
   const [browsePage, setBrowsePage] = useState(1);
   const [browseHasNext, setBrowseHasNext] = useState(true);
+  const [browseLoading, setBrowseLoading] = useState(false);
   const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
   const [catalogStatus, setCatalogStatus] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
@@ -87,18 +88,31 @@ export function App() {
     let ignore = false;
 
     async function loadBrowse() {
-      setBrowseStatus('Загружаем каталог Shikimori...');
+      setBrowseLoading(true);
+      setBrowseStatus(browsePage === 1 ? 'Загружаем каталог Shikimori...' : '');
       try {
         const response = await browseCatalog(browsePage);
         if (ignore) return;
 
-        setBrowseResults(response.results);
+        setBrowseResults((current) => {
+          const next = browsePage === 1 ? response.results : [...current, ...response.results];
+          const seen = new Set<number>();
+          return next.filter((item) => {
+            if (seen.has(item.providerId)) return false;
+            seen.add(item.providerId);
+            return true;
+          });
+        });
         setBrowseHasNext(response.hasNextPage);
         setBrowseStatus('');
       } catch {
         if (!ignore) {
           setBrowseResults([]);
           setBrowseStatus('Не удалось загрузить каталог Shikimori.');
+        }
+      } finally {
+        if (!ignore) {
+          setBrowseLoading(false);
         }
       }
     }
@@ -338,6 +352,7 @@ export function App() {
             browseResults={browseResults}
             browsePage={browsePage}
             browseHasNext={browseHasNext}
+            browseLoading={browseLoading}
             browseStatus={browseStatus}
             onPageChange={setBrowsePage}
             onImport={handleImportCatalogAnime}
@@ -431,6 +446,7 @@ function WatchHome({
   browseResults,
   browsePage,
   browseHasNext,
+  browseLoading,
   browseStatus,
   onPageChange,
   onImport,
@@ -440,11 +456,34 @@ function WatchHome({
   browseResults: CatalogSearchResult[];
   browsePage: number;
   browseHasNext: boolean;
+  browseLoading: boolean;
   browseStatus: string;
   onPageChange: (page: number) => void;
   onImport: (result: CatalogSearchResult) => void;
   renderSelected: () => ReactNode;
 }) {
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && browseHasNext && !browseLoading) {
+          onPageChange(browsePage + 1);
+        }
+      },
+      { rootMargin: '500px' },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [browseHasNext, browseLoading, browsePage, onPageChange]);
+
   return (
     <section className="watch-home">
       <header className="browse-header">
@@ -452,11 +491,7 @@ function WatchHome({
           <p className="eyebrow">Shikimori</p>
           <h2>Каталог аниме</h2>
         </div>
-        <div className="browse-pager">
-          <button disabled={browsePage <= 1} onClick={() => onPageChange(browsePage - 1)}>Назад</button>
-          <span>Страница {browsePage}</span>
-          <button disabled={!browseHasNext} onClick={() => onPageChange(browsePage + 1)}>Дальше</button>
-        </div>
+        <span className="browse-counter">Страница {browsePage}</span>
       </header>
 
       {browseStatus ? <p className="catalog-status">{browseStatus}</p> : null}
@@ -475,6 +510,10 @@ function WatchHome({
             <button onClick={() => onImport(result)}>Добавить</button>
           </article>
         ))}
+      </div>
+
+      <div ref={sentinelRef} className="scroll-sentinel">
+        {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
       </div>
 
       {selected ? (

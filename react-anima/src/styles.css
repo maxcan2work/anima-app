@@ -350,13 +350,6 @@ h1 {
   margin-bottom: 0;
 }
 
-.browse-pager {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.browse-pager button,
 .browse-card button {
   min-height: 38px;
   border: 0;
@@ -366,16 +359,7 @@ h1 {
   font-weight: 900;
 }
 
-.browse-pager button {
-  padding: 0 14px;
-}
-
-.browse-pager button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.browse-pager span {
+.browse-counter {
   color: #cfc7ba;
   font-size: 13px;
 }
@@ -412,6 +396,14 @@ h1 {
 .browse-card small {
   margin-top: 4px;
   color: #aaa196;
+}
+
+.scroll-sentinel {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  color: #aaa196;
+  font-size: 13px;
 }
 
 .selected-watch-block {
@@ -1028,10 +1020,6 @@ h2 {
 
   .browse-header {
     display: grid;
-  }
-
-  .browse-pager {
-    justify-content: space-between;
   }
 
   .play-overlay button {
