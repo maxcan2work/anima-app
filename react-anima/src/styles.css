@@ -173,6 +173,10 @@ h1 {
   font-size: 12px;
 }
 
+.auth-panel .profile-link span {
+  margin-top: 0;
+}
+
 .profile-link {
   position: relative;
   display: grid;
