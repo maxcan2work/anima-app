@@ -42,6 +42,35 @@ export type PlayerProviderResult = {
   note: string;
 };
 
+export type ServerAnime = {
+  id: string;
+  title: string;
+  originalTitle: string | null;
+  episodes: number;
+  posterUrl: string | null;
+  shikimoriId: number | null;
+  malId: number | null;
+  kind: string | null;
+  score: string | null;
+  status: string | null;
+  sourceUrl: string | null;
+  airedOn: string | null;
+};
+
+export type CatalogSearchResult = {
+  provider: 'shikimori';
+  providerId: number;
+  title: string;
+  originalTitle: string;
+  episodes: number;
+  posterUrl: string | null;
+  kind: string | null;
+  score: string | null;
+  status: string | null;
+  malId: number | null;
+  sourceUrl: string;
+};
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -77,6 +106,21 @@ export async function getCurrentUser() {
 
 export async function getMyAnimeList() {
   return apiFetch<{ list: ServerWatchEntry[] }>('/me/anime');
+}
+
+export async function getAnimeCatalog() {
+  return apiFetch<{ anime: ServerAnime[] }>('/anime');
+}
+
+export async function searchCatalog(query: string) {
+  return apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function importCatalogAnime(provider: CatalogSearchResult['provider'], providerId: number) {
+  return apiFetch<{ anime: ServerAnime }>('/catalog/import', {
+    method: 'POST',
+    body: JSON.stringify({ provider, providerId }),
+  });
 }
 
 export type SaveAnimeProgressPayload = {

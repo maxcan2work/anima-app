@@ -2,13 +2,18 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
   getCurrentUser,
+  getAnimeCatalog,
   getEpisodePlayers,
   getMyAnimeList,
+  importCatalogAnime,
   loginWithDiscord,
   logout,
   saveAnimeProgress,
+  searchCatalog,
+  type CatalogSearchResult,
   type CurrentUser,
   type PlayerProviderResult,
+  type ServerAnime,
   type ServerWatchEntry,
 } from './api';
 import { ANIME_LIBRARY, type AnimeTitle } from './data';
@@ -35,15 +40,41 @@ function saveWatchState(value: Record<string, WatchState>) {
 
 export function App() {
   const [query, setQuery] = useState('');
+  const [library, setLibrary] = useState<AnimeTitle[]>(ANIME_LIBRARY);
   const [selectedId, setSelectedId] = useState(ANIME_LIBRARY[0].id);
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
+  const [catalogResults, setCatalogResults] = useState<CatalogSearchResult[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState('');
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [syncStatus, setSyncStatus] = useState('');
   const [view, setView] = useState<'watch' | 'profile'>('watch');
 
-  const selected = ANIME_LIBRARY.find((anime) => anime.id === selectedId) ?? ANIME_LIBRARY[0];
+  const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? ANIME_LIBRARY[0];
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCatalog() {
+      try {
+        const response = await getAnimeCatalog();
+        if (ignore) return;
+
+        setLibrary(mergeAnimeLibrary(ANIME_LIBRARY, response.anime.map(mapServerAnime)));
+      } catch {
+        if (!ignore) {
+          setCatalogStatus('Не удалось загрузить локальный каталог.');
+        }
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -81,19 +112,56 @@ export function App() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return ANIME_LIBRARY;
+    if (!needle) return library;
 
-    return ANIME_LIBRARY.filter((anime) => {
+    return library.filter((anime) => {
       return [anime.title, anime.originalTitle, anime.genres.join(' '), anime.studio]
         .join(' ')
         .toLowerCase()
         .includes(needle);
     });
-  }, [query]);
+  }, [library, query]);
+
+  async function handleCatalogSearch() {
+    const needle = query.trim();
+    if (needle.length < 2) {
+      setCatalogStatus('Введите минимум 2 символа.');
+      return;
+    }
+
+    setCatalogStatus('Ищем в Shikimori...');
+    try {
+      const response = await searchCatalog(needle);
+      setCatalogResults(response.results);
+      setCatalogStatus(response.results.length ? '' : 'Во внешнем каталоге ничего не найдено.');
+    } catch {
+      setCatalogResults([]);
+      setCatalogStatus('Не удалось выполнить поиск.');
+    }
+  }
+
+  async function handleImportCatalogAnime(result: CatalogSearchResult) {
+    if (!user) {
+      setCatalogStatus('Для импорта и дневника нужно войти через Discord.');
+      return;
+    }
+
+    setCatalogStatus('Добавляем в каталог...');
+    try {
+      const response = await importCatalogAnime(result.provider, result.providerId);
+      const anime = mapServerAnime(response.anime);
+      setLibrary((current) => mergeAnimeLibrary(current, [anime]));
+      setSelectedId(anime.id);
+      setView('watch');
+      setCatalogStatus('Тайтл добавлен в каталог.');
+    } catch {
+      setCatalogStatus('Не удалось добавить тайтл.');
+    }
+  }
 
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
-      const anime = ANIME_LIBRARY.find((item) => item.id === id);
+      const anime = library.find((item) => item.id === id);
       const previous = current[id] ?? { episode: 1, status: 'planned' };
       const nextEpisode = Math.min(Math.max(patch.episode ?? previous.episode, 1), anime?.episodes ?? 1);
       const nextEntry = {
@@ -135,7 +203,7 @@ export function App() {
   }
 
   async function handleDiarySave(animeId: string, entry: DiaryFormState) {
-    const anime = ANIME_LIBRARY.find((item) => item.id === animeId);
+    const anime = library.find((item) => item.id === animeId);
     const currentEpisode = Math.min(Math.max(Number(entry.currentEpisode) || 1, 1), anime?.episodes ?? 1);
 
     setSyncStatus('Сохраняем дневник...');
@@ -167,7 +235,7 @@ export function App() {
             <p className="eyebrow">Anima</p>
             <h1>Просмотр</h1>
           </div>
-          <span className="counter">{ANIME_LIBRARY.length}</span>
+          <span className="counter">{library.length}</span>
         </div>
 
         <AuthPanel
@@ -192,6 +260,9 @@ export function App() {
           />
         </label>
 
+        <button className="catalog-search-button" onClick={handleCatalogSearch}>Искать в Shikimori</button>
+        {catalogStatus ? <p className="catalog-status">{catalogStatus}</p> : null}
+
         <div className="title-list">
           {filtered.map((anime) => (
             <AnimeListItem
@@ -203,6 +274,26 @@ export function App() {
             />
           ))}
         </div>
+
+        {catalogResults.length > 0 ? (
+          <div className="catalog-results">
+            <h3>Shikimori</h3>
+            {catalogResults.map((result) => (
+              <button key={`${result.provider}-${result.providerId}`} className="catalog-result" onClick={() => handleImportCatalogAnime(result)}>
+                {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
+                <span>
+                  <strong>{result.title}</strong>
+                  <small>
+                    {result.originalTitle} · {result.episodes} сер.
+                  </small>
+                  <small>
+                    MAL {result.malId ?? '-'} · {result.score ?? 'без оценки'}
+                  </small>
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </aside>
 
       <section className="watch-area">
@@ -216,6 +307,7 @@ export function App() {
           <ProfilePage
             user={user}
             authStatus={authStatus}
+            library={library}
             entries={diaryEntries}
             selectedAnime={selected}
             watchState={watchState}
@@ -286,6 +378,7 @@ function ProfilePage({
   user,
   authStatus,
   entries,
+  library,
   selectedAnime,
   watchState,
   onLogin,
@@ -294,6 +387,7 @@ function ProfilePage({
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
+  library: AnimeTitle[];
   entries: ServerWatchEntry[];
   selectedAnime: AnimeTitle;
   watchState: Record<string, WatchState>;
@@ -302,7 +396,7 @@ function ProfilePage({
   onSave: (animeId: string, entry: DiaryFormState) => Promise<void>;
 }) {
   const [editingId, setEditingId] = useState(selectedAnime.id);
-  const editingAnime = ANIME_LIBRARY.find((anime) => anime.id === editingId) ?? selectedAnime;
+  const editingAnime = library.find((anime) => anime.id === editingId) ?? selectedAnime;
   const editingEntry = entries.find((entry) => entry.animeId === editingAnime.id);
   const currentState = watchState[editingAnime.id] ?? { episode: 1, status: 'planned' };
   const [form, setForm] = useState<DiaryFormState>(() => createDiaryForm(editingEntry, currentState));
@@ -361,7 +455,7 @@ function ProfilePage({
           ) : (
             entries.map((entry) => (
               <button key={entry.id} className={entry.animeId === editingAnime.id ? 'diary-row active' : 'diary-row'} onClick={() => setEditingId(entry.animeId)}>
-                <img src={entry.anime?.posterUrl ?? ANIME_LIBRARY.find((anime) => anime.id === entry.animeId)?.poster} alt="" />
+                <img src={entry.anime?.posterUrl ?? library.find((anime) => anime.id === entry.animeId)?.poster} alt="" />
                 <span>
                   <strong>{entry.anime?.title ?? entry.animeId}</strong>
                   <small>{statusLabel(fromServerStatus(entry.status))} · серия {entry.currentEpisode}</small>
@@ -748,6 +842,45 @@ function qualityLabel(quality: PlayerProviderResult['quality']) {
     default:
       return 'HLS';
   }
+}
+
+function mapServerAnime(anime: ServerAnime): AnimeTitle {
+  const year = anime.airedOn ? Number(anime.airedOn.slice(0, 4)) : 0;
+
+  return {
+    id: anime.id,
+    title: anime.title,
+    originalTitle: anime.originalTitle ?? anime.title,
+    year: Number.isFinite(year) && year > 0 ? year : new Date().getFullYear(),
+    episodes: anime.episodes || 1,
+    studio: anime.sourceUrl ? 'Shikimori' : 'Anima',
+    rating: anime.score ?? '-',
+    genres: [anime.kind ?? 'Аниме'],
+    description: anime.sourceUrl ? `Импортировано из Shikimori${anime.malId ? ` · MAL ${anime.malId}` : ''}` : 'Импортированный тайтл.',
+    poster: anime.posterUrl ?? 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
+    backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80',
+    sampleEpisodeTitle: 'Просмотр',
+    watchSources: anime.sourceUrl
+      ? [
+          {
+            name: 'Shikimori',
+            url: anime.sourceUrl,
+            kind: 'streaming',
+            subtitles: ['метаданные'],
+            note: 'Страница тайтла в каталоге Shikimori.',
+          },
+        ]
+      : [],
+  };
+}
+
+function mergeAnimeLibrary(current: AnimeTitle[], incoming: AnimeTitle[]) {
+  const byId = new Map(current.map((anime) => [anime.id, anime]));
+  for (const anime of incoming) {
+    byId.set(anime.id, anime);
+  }
+
+  return [...byId.values()].sort((a, b) => a.title.localeCompare(b.title, 'ru'));
 }
 
 function upsertDiaryEntry(entries: ServerWatchEntry[], entry: ServerWatchEntry) {

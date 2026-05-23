@@ -50,6 +50,13 @@ model Anime {
   originalTitle String?
   episodes      Int
   posterUrl     String?
+  shikimoriId   Int?        @unique
+  malId         Int?
+  kind          String?
+  score         String?
+  status        String?
+  sourceUrl     String?
+  airedOn       String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   userEntries   UserAnime[]
