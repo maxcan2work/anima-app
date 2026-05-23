@@ -66,7 +66,7 @@ type KodikRelease = {
 
 const ANILIBERTY_BASE_URL = 'https://anilibria.top';
 const ANILIBERTY_API_URL = `${ANILIBERTY_BASE_URL}/api/v1`;
-const KODIK_API_URL = 'https://kodikapi.com';
+const KODIK_API_URL = 'https://kodik-api.com';
 
 export async function findPlayerProviders(animeId: string, episodeNumber: number) {
   const anime = await prisma.anime.findUnique({
