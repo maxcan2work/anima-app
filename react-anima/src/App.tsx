@@ -1366,19 +1366,21 @@ function WatchPartyParticipants({
     <>
       <h3>Участники</h3>
       {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
-      {participants.map((participant) => (
-        <div className="party-member" key={participant.id}>
-          {participant.avatarUrl ? (
-            <img src={participant.avatarUrl} alt="" />
-          ) : (
-            <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
-          )}
-          <span>
-            <strong>{participant.name}</strong>
-            <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
-          </span>
-        </div>
-      ))}
+      <div className="party-members">
+        {participants.map((participant) => (
+          <div className="party-member" key={participant.id}>
+            {participant.avatarUrl ? (
+              <img src={participant.avatarUrl} alt="" />
+            ) : (
+              <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
+            )}
+            <span>
+              <strong>{participant.name}</strong>
+              <small>{participant.isHost ? 'Хост' : 'Гость'}</small>
+            </span>
+          </div>
+        ))}
+      </div>
       <div className="watch-party-actions-row">
         <button className="watch-party-code compact" type="button" onClick={handleCopyCode}>
           <span>{code}</span>

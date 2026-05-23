@@ -1010,9 +1010,10 @@ h1 {
   top: 28px;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 56px);
-  max-height: calc(100vh - 56px);
+  min-height: calc(100vh - 84px);
+  max-height: calc(100vh - 84px);
   gap: 12px;
+  min-width: 0;
 }
 
 .watch-party-panel h3 {
@@ -1021,9 +1022,20 @@ h1 {
 }
 
 .party-status {
+  flex: 0 0 auto;
   margin: 0;
   color: #aaa196;
   font-size: 13px;
+}
+
+.party-members {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .party-member {
@@ -1096,14 +1108,28 @@ h1 {
 
 .watch-party-player-layout {
   grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
 }
 
 .watch-party-player-layout .details-panel {
-  align-content: center;
+  position: sticky;
+  top: 28px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+  overflow: hidden;
+  align-content: initial;
 }
 
 .watch-party-panel.in-player {
+  position: static;
+  top: auto;
+  flex: 1 1 auto;
   margin-top: 2px;
+  min-height: 0;
+  max-height: none;
+  height: auto;
 }
 
 .player {
@@ -1764,6 +1790,18 @@ h2 {
     position: static;
     min-height: auto;
     max-height: none;
+  }
+
+  .watch-party-player-layout .details-panel {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .watch-party-panel.in-player {
+    height: auto;
+    min-height: auto;
   }
 
   .random-stage {
