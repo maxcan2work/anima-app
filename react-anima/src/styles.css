@@ -1,4 +1,9 @@
 :root {
+  --ui-control-size: 44px;
+  --ui-grid-gap: 12px;
+  --ui-radius: 8px;
+  --ui-row-height: 56px;
+  --ui-row-padding: 6px;
   color: #f5f1e8;
   background: #121413;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -203,15 +208,15 @@ h1 {
 .profile-link {
   position: relative;
   display: grid;
-  grid-template-columns: 44px 1fr;
+  grid-template-columns: var(--ui-control-size) 1fr;
   align-items: center;
-  gap: 12px;
+  gap: var(--ui-grid-gap);
   width: 100%;
-  min-height: 56px;
+  min-height: var(--ui-row-height);
   min-width: 0;
-  padding: 6px;
+  padding: var(--ui-row-padding);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
   text-align: left;
@@ -222,10 +227,10 @@ h1 {
   position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: var(--ui-control-size);
+  height: var(--ui-control-size);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: white;
   font-weight: 900;
@@ -237,10 +242,10 @@ h1 {
 }
 
 .sidebar-collapsed .profile-link {
-  grid-template-columns: 44px;
+  grid-template-columns: var(--ui-control-size);
   justify-content: center;
   width: 56px;
-  padding: 6px;
+  padding: var(--ui-row-padding);
 }
 
 .sidebar-collapsed .profile-link span,
@@ -960,14 +965,14 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  gap: 12px;
-  min-height: 56px;
+  gap: var(--ui-grid-gap);
+  min-height: var(--ui-row-height);
   margin-top: 0;
   border: 1px solid rgba(201, 166, 109, 0.24);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
-  padding: 6px 10px 6px 12px;
+  padding: var(--ui-row-padding) 10px var(--ui-row-padding) 12px;
   text-align: left;
 }
 
@@ -992,8 +997,8 @@ h1 {
 
 .watch-party-actions-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 56px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) var(--ui-row-height);
+  gap: var(--ui-grid-gap);
   align-items: stretch;
   margin-top: auto;
 }
@@ -1131,11 +1136,11 @@ h1 {
 .watch-party-leave {
   display: grid;
   place-items: center;
-  width: 56px;
-  min-height: 56px;
-  padding: 6px;
+  width: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  padding: var(--ui-row-padding);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.04);
   color: #f1e7dc;
 }
@@ -1162,8 +1167,27 @@ h1 {
 }
 
 .watch-party-player-layout {
+  --watch-party-video-max-height: calc(100vh - 156px);
   grid-template-columns: minmax(0, 1fr) 300px;
-  align-items: start;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: stretch;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+}
+
+.watch-party-player-layout .player {
+  align-self: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.watch-party-player-layout .video-frame {
+  width: min(100%, calc(var(--watch-party-video-max-height) * 16 / 9));
+  max-height: var(--watch-party-video-max-height);
 }
 
 .watch-party-player-layout .details-panel {
@@ -1171,10 +1195,28 @@ h1 {
   top: 28px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px);
-  max-height: calc(100vh - 56px);
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   overflow: hidden;
   align-content: initial;
+}
+
+.watch-party-player-footer {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.watch-party-player-footer .episodes,
+.watch-party-player-footer .watch-party-actions-row {
+  margin-top: 0;
+}
+
+.watch-party-player-actions {
+  min-width: 0;
 }
 
 .watch-party-panel.in-player {
@@ -1514,9 +1556,9 @@ h2 {
 
 .episodes {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-columns: var(--ui-row-height) minmax(0, 1fr) var(--ui-row-height);
   align-items: center;
-  gap: 8px;
+  gap: var(--ui-grid-gap);
   margin-top: 4px;
   overflow: hidden;
   width: 100%;
@@ -1525,12 +1567,12 @@ h2 {
 .episode-scroll {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: var(--ui-row-height);
+  height: var(--ui-row-height);
   min-height: 0;
-  padding: 0;
+  padding: var(--ui-row-padding);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: #f2c063;
   line-height: 1;
@@ -1763,7 +1805,7 @@ h2 {
 .episode-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--ui-grid-gap);
 }
 
 .episode-grid.page-next {
@@ -1776,11 +1818,11 @@ h2 {
 
 .episode-grid button {
   width: 100%;
-  height: 44px;
+  height: var(--ui-row-height);
   min-height: 0;
-  padding: 0;
+  padding: var(--ui-row-padding);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: #f9f1e6;
   font-weight: 800;
@@ -1847,11 +1889,21 @@ h2 {
     max-height: none;
   }
 
+  .watch-party-player-layout {
+    height: auto;
+    max-height: none;
+    grid-template-rows: auto;
+  }
+
   .watch-party-player-layout .details-panel {
     position: static;
     height: auto;
     max-height: none;
     overflow: visible;
+  }
+
+  .watch-party-player-footer {
+    grid-template-columns: 1fr;
   }
 
   .watch-party-panel.in-player {

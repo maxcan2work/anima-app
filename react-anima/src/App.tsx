@@ -1286,6 +1286,14 @@ function WatchPartyPage({
                   onKickParticipant={(participantId) => socketRef.current?.emit('watch-party:kick', { code, participantId })}
                   onLeaveRoom={onLeaveRoom}
                   onToast={onToast}
+                  showActions={false}
+                />
+              }
+              footerExtra={
+                <WatchPartyRoomActions
+                  code={code}
+                  onLeaveRoom={onLeaveRoom}
+                  onToast={onToast}
                 />
               }
             />
@@ -1362,6 +1370,33 @@ function WatchPartyPage({
   );
 }
 
+function WatchPartyRoomActions({
+  code,
+  onLeaveRoom,
+  onToast,
+}: {
+  code: string;
+  onLeaveRoom: () => void;
+  onToast: (message: string) => void;
+}) {
+  async function handleCopyCode() {
+    await navigator.clipboard?.writeText(code);
+    onToast('Код скопирован');
+  }
+
+  return (
+    <div className="watch-party-actions-row">
+      <button className="watch-party-code compact" type="button" onClick={handleCopyCode}>
+        <span>{code}</span>
+        <img src={copyIcon} alt="" aria-hidden="true" />
+      </button>
+      <button className="watch-party-leave" type="button" onClick={onLeaveRoom} aria-label="Выйти из комнаты">
+        <img src={leaveRoomIcon} alt="" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 function WatchPartyParticipants({
   code,
   participants,
@@ -1371,6 +1406,7 @@ function WatchPartyParticipants({
   onKickParticipant,
   onLeaveRoom,
   onToast,
+  showActions = true,
 }: {
   code: string;
   participants: WatchPartyParticipant[];
@@ -1380,12 +1416,8 @@ function WatchPartyParticipants({
   onKickParticipant: (participantId: string) => void;
   onLeaveRoom: () => void;
   onToast: (message: string) => void;
+  showActions?: boolean;
 }) {
-  async function handleCopyCode() {
-    await navigator.clipboard?.writeText(code);
-    onToast('Код скопирован');
-  }
-
   return (
     <>
       <h3>Участники ({participants.length}/16)</h3>
@@ -1414,15 +1446,9 @@ function WatchPartyParticipants({
           </div>
         ))}
       </div>
-      <div className="watch-party-actions-row">
-        <button className="watch-party-code compact" type="button" onClick={handleCopyCode}>
-          <span>{code}</span>
-          <img src={copyIcon} alt="" aria-hidden="true" />
-        </button>
-        <button className="watch-party-leave" type="button" onClick={onLeaveRoom} aria-label="Выйти из комнаты">
-          <img src={leaveRoomIcon} alt="" aria-hidden="true" />
-        </button>
-      </div>
+      {showActions ? (
+        <WatchPartyRoomActions code={code} onLeaveRoom={onLeaveRoom} onToast={onToast} />
+      ) : null}
     </>
   );
 }
@@ -1501,12 +1527,14 @@ function AnimeHero({
   onStateChange,
   mode = 'default',
   sidebarExtra,
+  footerExtra,
 }: {
   anime: AnimeTitle;
   state: WatchState;
   onStateChange: (patch: Partial<WatchState>) => void;
   mode?: 'default' | 'watchParty';
   sidebarExtra?: ReactNode;
+  footerExtra?: ReactNode;
 }) {
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
@@ -1571,6 +1599,40 @@ function AnimeHero({
     };
   }, [anime.id, state.episode]);
 
+  const episodeControls = (
+    <section className="episodes" aria-label="Серии">
+      <button
+        className="episode-scroll"
+        type="button"
+        onClick={() => changeEpisodePage(episodePage - 1)}
+        disabled={episodePage === 0}
+        aria-label="Предыдущие серии"
+      >
+        <img src={episodeArrowIcon} alt="" aria-hidden="true" />
+      </button>
+      <div key={episodePage} className={`episode-grid page-${episodePageDirection}`}>
+        {visibleEpisodes.map((episode) => (
+          <button
+            key={episode}
+            className={episode === state.episode ? 'current' : ''}
+            onClick={() => onStateChange({ episode, status: 'watching' })}
+          >
+            {episode}
+          </button>
+        ))}
+      </div>
+      <button
+        className="episode-scroll"
+        type="button"
+        onClick={() => changeEpisodePage(episodePage + 1)}
+        disabled={episodePage >= episodePages - 1}
+        aria-label="Следующие серии"
+      >
+        <img src={episodeArrowIcon} alt="" aria-hidden="true" />
+      </button>
+    </section>
+  );
+
   return (
     <>
       <div className={mode === 'watchParty' ? 'player-layout watch-party-player-layout' : 'player-layout'}>
@@ -1586,38 +1648,7 @@ function AnimeHero({
             <p className="player-status">{playersStatus}</p>
           ) : null}
 
-          <section className="episodes" aria-label="Серии">
-            <button
-              className="episode-scroll"
-              type="button"
-              onClick={() => changeEpisodePage(episodePage - 1)}
-              disabled={episodePage === 0}
-              aria-label="Предыдущие серии"
-            >
-              <img src={episodeArrowIcon} alt="" aria-hidden="true" />
-            </button>
-            <div key={episodePage} className={`episode-grid page-${episodePageDirection}`}>
-              {visibleEpisodes.map((episode) => (
-                <button
-                  key={episode}
-                  className={episode === state.episode ? 'current' : ''}
-                  onClick={() => onStateChange({ episode, status: 'watching' })}
-                >
-                  {episode}
-                </button>
-              ))}
-            </div>
-            <button
-              className="episode-scroll"
-              type="button"
-              onClick={() => changeEpisodePage(episodePage + 1)}
-              disabled={episodePage >= episodePages - 1}
-              aria-label="Следующие серии"
-            >
-              <img src={episodeArrowIcon} alt="" aria-hidden="true" />
-            </button>
-
-          </section>
+          {mode === 'default' ? episodeControls : null}
         </section>
 
         <aside className="details-panel">
@@ -1656,6 +1687,12 @@ function AnimeHero({
           ) : null}
           {sidebarExtra ? <div className="watch-party-panel in-player">{sidebarExtra}</div> : null}
         </aside>
+        {mode === 'watchParty' ? (
+          <div className="watch-party-player-footer">
+            {episodeControls}
+            {footerExtra ? <div className="watch-party-player-actions">{footerExtra}</div> : null}
+          </div>
+        ) : null}
       </div>
 
     </>
