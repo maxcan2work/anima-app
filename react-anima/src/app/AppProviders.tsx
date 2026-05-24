@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../features/auth/AuthProvider';
 import { CatalogProvider } from '../features/catalog/CatalogProvider';
 import { NavigationProvider } from '../features/navigation/NavigationProvider';
@@ -8,18 +9,20 @@ import { ToastProvider } from '../shared/ui/ToastProvider';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ModalProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <NavigationProvider>
-            <CatalogProvider>
-              <WatchLibraryProvider>
-                {children}
-              </WatchLibraryProvider>
-            </CatalogProvider>
-          </NavigationProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </ModalProvider>
+    <BrowserRouter>
+      <ModalProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <NavigationProvider>
+              <CatalogProvider>
+                <WatchLibraryProvider>
+                  {children}
+                </WatchLibraryProvider>
+              </CatalogProvider>
+            </NavigationProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ModalProvider>
+    </BrowserRouter>
   );
 }
