@@ -17,10 +17,9 @@ import { loadWatchState, type WatchState } from '../shared/storage';
 type UseAuthSessionOptions = {
   setWatchState: (value: Record<string, WatchState> | ((current: Record<string, WatchState>) => Record<string, WatchState>)) => void;
   setLibrary: (value: AnimeTitle[] | ((current: AnimeTitle[]) => AnimeTitle[])) => void;
-  onLogoutCleanup: () => void;
 };
 
-export function useAuthSession({ setWatchState, setLibrary, onLogoutCleanup }: UseAuthSessionOptions) {
+export function useAuthSession({ setWatchState, setLibrary }: UseAuthSessionOptions) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
@@ -67,7 +66,6 @@ export function useAuthSession({ setWatchState, setLibrary, onLogoutCleanup }: U
     setUser(null);
     setAuthStatus('guest');
     setDiaryEntries([]);
-    onLogoutCleanup();
     setWatchState(loadWatchState());
   }
 

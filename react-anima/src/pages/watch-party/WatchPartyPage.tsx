@@ -8,7 +8,6 @@ import {
   importCatalogAnime,
   searchCatalog,
   type CatalogSearchResult,
-  type CurrentUser,
   type ServerAnime,
 } from '../../api';
 import copyIcon from '../../assets/copy.svg';
@@ -18,6 +17,7 @@ import leaveRoomIcon from '../../assets/leave-room.svg';
 import watchPartyIcon from '../../assets/watch-party.svg';
 import { CatalogBrowser } from '../../features/catalog/CatalogBrowser';
 import type { AnimeTitle } from '../../data';
+import { useAuth } from '../../features/auth/AuthProvider';
 import { useToast } from '../../shared/ui/ToastProvider';
 
 type WatchState = {
@@ -41,7 +41,6 @@ type WatchPartyRoomState = {
 type WatchPartyPageProps = {
   code: string;
   createRoom: boolean;
-  user: CurrentUser | null;
   onCreateRoom: (code: string) => void;
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
@@ -60,7 +59,6 @@ type WatchPartyPageProps = {
 export function WatchPartyPage({
   code,
   createRoom,
-  user,
   onCreateRoom,
   onJoinRoom,
   onLeaveRoom,
@@ -69,6 +67,7 @@ export function WatchPartyPage({
   renderAnimeHero,
 }: WatchPartyPageProps) {
   const toast = useToast();
+  const { user } = useAuth();
   const [joinCode, setJoinCode] = useState(code);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
   const [ownParticipantId, setOwnParticipantId] = useState('');

@@ -21,6 +21,7 @@ export function useRandomAnime(user: CurrentUser | null) {
   useEffect(() => {
     if (!user) {
       setRandomHistory([]);
+      setRandomAnime(null);
       return;
     }
 

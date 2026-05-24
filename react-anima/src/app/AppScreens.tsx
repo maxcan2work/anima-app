@@ -1,4 +1,4 @@
-import type { CatalogSearchResult, CurrentUser, ServerWatchEntry } from '../api';
+import type { CatalogSearchResult } from '../api';
 import { AnimeHero } from '../pages/anime/AnimeHero';
 import { ProfilePage } from '../pages/profile/ProfilePage';
 import { RandomAnimePage } from '../pages/random/RandomAnimePage';
@@ -17,9 +17,6 @@ type AppScreensProps = {
   displayedSelected: AnimeTitle | null;
   watchState: Record<string, WatchState>;
   watchPartyCreateCode: string;
-  user: CurrentUser | null;
-  authStatus: 'loading' | 'guest' | 'ready';
-  diaryEntries: ServerWatchEntry[];
   browseResults: CatalogSearchResult[];
   browsePage: number;
   browseHasNext: boolean;
@@ -46,17 +43,6 @@ type AppScreensProps = {
   onSearchChange: (query: string) => void;
   onBrowsePageChange: (page: number) => void;
   onWatchStateChange: (animeId: string, patch: Partial<WatchState>) => void;
-  onLogin: () => void;
-  onLogout: () => void;
-  onConnectShikimori: () => void;
-  onDisconnectShikimori: () => Promise<void>;
-  onImportShikimori: () => Promise<{
-    imported: number;
-    updated: number;
-    skipped: number;
-    total: number;
-    errors?: Array<{ shikimoriId: number | null; reason: string }>;
-  }>;
 };
 
 export function AppScreens({
@@ -66,9 +52,6 @@ export function AppScreens({
   displayedSelected,
   watchState,
   watchPartyCreateCode,
-  user,
-  authStatus,
-  diaryEntries,
   browseResults,
   browsePage,
   browseHasNext,
@@ -95,11 +78,6 @@ export function AppScreens({
   onSearchChange,
   onBrowsePageChange,
   onWatchStateChange,
-  onLogin,
-  onLogout,
-  onConnectShikimori,
-  onDisconnectShikimori,
-  onImportShikimori,
 }: AppScreensProps) {
   if (displayedView === 'random') {
     return (
@@ -125,7 +103,6 @@ export function AppScreens({
       <WatchPartyPage
         code={code}
         createRoom={watchPartyCreateCode === code}
-        user={user}
         onCreateRoom={onCreateWatchParty}
         onJoinRoom={onJoinWatchParty}
         onLeaveRoom={onLeaveWatchParty}
@@ -173,16 +150,5 @@ export function AppScreens({
     );
   }
 
-  return (
-    <ProfilePage
-      user={user}
-      authStatus={authStatus}
-      entries={diaryEntries}
-      onLogin={onLogin}
-      onLogout={onLogout}
-      onConnectShikimori={onConnectShikimori}
-      onDisconnectShikimori={onDisconnectShikimori}
-      onImportShikimori={onImportShikimori}
-    />
-  );
+  return <ProfilePage />;
 }

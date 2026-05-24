@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { fromServerWatchStatus, watchStatusLabel, type WatchStatus } from '@anima/core';
-import type { CurrentUser, ServerWatchEntry } from '../../api';
 import detachIcon from '../../assets/detach.svg';
 import importIcon from '../../assets/import.svg';
 import profileCheckIcon from '../../assets/profile-check.svg';
@@ -9,39 +8,11 @@ import profileNoteIcon from '../../assets/profile-note.svg';
 import settingsIcon from '../../assets/settings.svg';
 import shikimoriIcon from '../../assets/shikimori.png';
 import trashIcon from '../../assets/trash.svg';
+import { useAuth } from '../../features/auth/AuthProvider';
 import { useToast } from '../../shared/ui/ToastProvider';
 
-type AuthStatus = 'loading' | 'guest' | 'ready';
-
-type ShikimoriImportResult = {
-  imported: number;
-  updated: number;
-  skipped: number;
-  total: number;
-  errors?: Array<{ shikimoriId: number | null; reason: string }>;
-};
-
-type ProfilePageProps = {
-  user: CurrentUser | null;
-  authStatus: AuthStatus;
-  entries: ServerWatchEntry[];
-  onLogin: () => void;
-  onLogout: () => void;
-  onConnectShikimori: () => void;
-  onDisconnectShikimori: () => Promise<void>;
-  onImportShikimori: () => Promise<ShikimoriImportResult>;
-};
-
-export function ProfilePage({
-  user,
-  authStatus,
-  entries,
-  onLogin,
-  onLogout,
-  onConnectShikimori,
-  onDisconnectShikimori,
-  onImportShikimori,
-}: ProfilePageProps) {
+export function ProfilePage() {
+  const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
     { status: 'watching', label: 'Смотрю', count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
     { status: 'completed', label: 'Просмотрено', count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
@@ -70,7 +41,7 @@ export function ProfilePage({
       <section className="profile-page empty-state">
         <h2>Профиль</h2>
         <p>Войди через Discord, чтобы вести дневник просмотра, оценки и рецензии.</p>
-        <button className="discord-button" onClick={onLogin}>Войти через Discord</button>
+        <button className="discord-button" onClick={login}>Войти через Discord</button>
       </section>
     );
   }
@@ -157,13 +128,7 @@ export function ProfilePage({
 
               <section className="profile-sidebar-section profile-integration-section" aria-labelledby="profile-integrations-section">
                 <h3 id="profile-integrations-section">Интеграции</h3>
-                <ShikimoriIntegration
-                  authStatus={authStatus}
-                  user={user}
-                  onConnectShikimori={onConnectShikimori}
-                  onDisconnectShikimori={onDisconnectShikimori}
-                  onImportShikimori={onImportShikimori}
-                />
+                <ShikimoriIntegration />
               </section>
             </>
           )}
@@ -178,7 +143,7 @@ export function ProfilePage({
           >
             <img src={settingsIcon} alt="" aria-hidden="true" />
           </button>
-          <button className="profile-logout" type="button" onClick={onLogout}>
+          <button className="profile-logout" type="button" onClick={logout}>
             Выйти
           </button>
         </div>
@@ -187,19 +152,14 @@ export function ProfilePage({
   );
 }
 
-function ShikimoriIntegration({
-  authStatus,
-  user,
-  onConnectShikimori,
-  onDisconnectShikimori,
-  onImportShikimori,
-}: {
-  authStatus: AuthStatus;
-  user: CurrentUser | null;
-  onConnectShikimori: () => void;
-  onDisconnectShikimori: () => Promise<void>;
-  onImportShikimori: () => Promise<ShikimoriImportResult>;
-}) {
+function ShikimoriIntegration() {
+  const {
+    authStatus,
+    user,
+    connectShikimori,
+    disconnectShikimori,
+    importShikimoriList,
+  } = useAuth();
   const toast = useToast();
   const canConnect = authStatus === 'ready' && Boolean(user);
   const shikimori = user?.integrations.shikimori ?? null;
@@ -212,7 +172,7 @@ function ShikimoriIntegration({
 
     setDisconnecting(true);
     try {
-      await onDisconnectShikimori();
+      await disconnectShikimori();
     } finally {
       setDisconnecting(false);
     }
@@ -225,7 +185,7 @@ function ShikimoriIntegration({
     toast('Импортируем список Shikimori. Не закрывай страницу.');
 
     try {
-      const result = await onImportShikimori();
+      const result = await importShikimoriList();
       const firstError = result.errors?.[0];
       const changed = result.imported + result.updated;
 
@@ -281,7 +241,7 @@ function ShikimoriIntegration({
   return (
     <div className="profile-integration-empty">
       <p>Подключи Shikimori, чтобы импортировать список просмотра.</p>
-      <button className="settings-connect-button" type="button" onClick={onConnectShikimori} disabled={!canConnect}>
+      <button className="settings-connect-button" type="button" onClick={connectShikimori} disabled={!canConnect}>
         {canConnect ? 'Подключить' : 'Нужен вход'}
       </button>
     </div>

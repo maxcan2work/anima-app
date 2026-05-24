@@ -1,4 +1,3 @@
-import type { CurrentUser } from '../../api';
 import discordIcon from '../../assets/discord.svg';
 import musicNoteIcon from '../../assets/music-note.svg';
 import nekoIcon from '../../assets/neko.svg';
@@ -7,33 +6,28 @@ import sidebarExpandIcon from '../../assets/sidebar-expand.svg';
 import sidebarShrinkIcon from '../../assets/sidebar-shrink.svg';
 import settingsIcon from '../../assets/settings.svg';
 import watchPartyIcon from '../../assets/watch-party.svg';
+import { useAuth } from '../../features/auth/AuthProvider';
 import type { AppView } from '../../shared/navigation';
 
 type AppSidebarProps = {
   view: AppView;
   collapsed: boolean;
-  user: CurrentUser | null;
-  authStatus: 'loading' | 'guest' | 'ready';
   onToggleCollapsed: () => void;
   onOpenWatch: () => void;
   onOpenRandom: () => void;
   onOpenWatchParty: () => void;
   onOpenSettings: () => void;
-  onLogin: () => void;
   onOpenProfile: () => void;
 };
 
 export function AppSidebar({
   view,
   collapsed,
-  user,
-  authStatus,
   onToggleCollapsed,
   onOpenWatch,
   onOpenRandom,
   onOpenWatchParty,
   onOpenSettings,
-  onLogin,
   onOpenProfile,
 }: AppSidebarProps) {
   return (
@@ -104,10 +98,7 @@ export function AppSidebar({
           </span>
         </button>
         <AuthPanel
-          user={user}
-          authStatus={authStatus}
           collapsed={collapsed}
-          onLogin={onLogin}
           onProfile={onOpenProfile}
         />
       </div>
@@ -116,18 +107,14 @@ export function AppSidebar({
 }
 
 function AuthPanel({
-  user,
-  authStatus,
   collapsed,
-  onLogin,
   onProfile,
 }: {
-  user: CurrentUser | null;
-  authStatus: 'loading' | 'guest' | 'ready';
   collapsed: boolean;
-  onLogin: () => void;
   onProfile: () => void;
 }) {
+  const { user, authStatus, login } = useAuth();
+
   if (authStatus === 'loading') {
     return (
       <div className={collapsed ? 'auth-panel auth-placeholder collapsed-auth' : 'auth-panel auth-placeholder'} aria-hidden="true">
@@ -141,7 +128,7 @@ function AuthPanel({
     if (collapsed) {
       return (
         <div className="auth-panel collapsed-auth">
-          <button className="auth-icon-button" onClick={onLogin} data-tooltip="Войти через Discord" type="button">
+          <button className="auth-icon-button" onClick={login} data-tooltip="Войти через Discord" type="button">
             <img src={discordIcon} alt="" aria-hidden="true" />
           </button>
         </div>
@@ -150,7 +137,7 @@ function AuthPanel({
 
     return (
       <div className="auth-panel">
-        <button className="discord-button" onClick={onLogin}>
+        <button className="discord-button" onClick={login}>
           <img src={discordIcon} alt="" aria-hidden="true" />
           <span>Войти через Discord</span>
         </button>
