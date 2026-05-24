@@ -12,14 +12,8 @@ import { useRandomAnime } from './hooks/useRandomAnime';
 import { useScreenTransition } from './hooks/useScreenTransition';
 import { useWatchProgress } from './hooks/useWatchProgress';
 import { useWatchPartyLeaveGuard } from './hooks/useWatchPartyLeaveGuard';
-import { AnimeHero } from './pages/anime/AnimeHero';
-import { ProfilePage } from './pages/profile/ProfilePage';
-import { RandomAnimePage } from './pages/random/RandomAnimePage';
-import { SettingsPage } from './pages/settings/SettingsPage';
-import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
-import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
-import { mapServerAnime } from './shared/animeMappers';
-import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
+import { AppScreens } from './app/AppScreens';
+import { getRouteAnimeId, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
 import { useToast } from './shared/ui/ToastProvider';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
@@ -157,73 +151,52 @@ function AppContent() {
 
       <section className="watch-area">
         <div className={`screen-transition ${screenAnimation}`}>
-        {displayedView === 'random' ? (
-          <RandomAnimePage
-            randomAnime={randomAnime}
-            history={randomHistory}
-            loading={randomLoading}
-            status={randomStatus}
-            clearing={randomClearing}
-            deletingKey={deletingRandomKey}
-            onOpenAnime={openCatalogAnime}
-            onRandomize={handleRandomAnime}
-            onClearHistory={handleClearRandomHistory}
-            onDeleteHistoryEntry={handleDeleteRandomHistoryEntry}
-          />
-        ) : displayedView === 'watchParty' ? (
-          <WatchPartyPage
-            code={getWatchPartyCodeFromPath(displayedPath)}
-            createRoom={watchPartyCreateCode === getWatchPartyCodeFromPath(displayedPath)}
+          <AppScreens
+            displayedView={displayedView}
+            displayedPath={displayedPath}
+            displayedRouteAnimeId={displayedRouteAnimeId}
+            displayedSelected={displayedSelected}
+            watchState={watchState}
+            watchPartyCreateCode={watchPartyCreateCode}
             user={user}
-            onCreateRoom={(code) => {
-              setWatchPartyCreateCode(code);
-              openWatchParty(`/watch-party/${code}`);
-            }}
-            onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
-            onLeaveRoom={leaveWatchParty}
-            onCreateRoomConsumed={consumeWatchPartyCreate}
-            onToast={toast}
-            mapServerAnime={mapServerAnime}
-            renderAnimeHero={(props) => <AnimeHero {...props} />}
-          />
-        ) : displayedView === 'settings' ? (
-          <SettingsPage />
-        ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
-          <WatchHome
+            authStatus={authStatus}
+            diaryEntries={diaryEntries}
             browseResults={browseResults}
             browsePage={browsePage}
             browseHasNext={browseHasNext}
             browseLoading={browseLoading}
             browseStatus={browseStatus}
-            searchQuery={catalogSearchQuery}
-            searchResults={catalogSearchResults}
-            searchLoading={catalogSearchLoading}
-            searchStatus={catalogSearchStatus}
-            onSearchChange={setCatalogSearchQuery}
+            catalogSearchQuery={catalogSearchQuery}
+            catalogSearchResults={catalogSearchResults}
+            catalogSearchLoading={catalogSearchLoading}
+            catalogSearchStatus={catalogSearchStatus}
+            randomAnime={randomAnime}
+            randomHistory={randomHistory}
+            randomLoading={randomLoading}
+            randomStatus={randomStatus}
+            randomClearing={randomClearing}
+            deletingRandomKey={deletingRandomKey}
             onOpenAnime={openCatalogAnime}
-            onPageChange={setBrowsePage}
-          />
-        ) : !displayedSelected ? (
-          <EmptyCatalog />
-        ) : displayedView === 'watch' ? (
-          <AnimeHero
-            anime={displayedSelected}
-            state={watchState[displayedSelected.id] ?? { episode: 1, status: 'planned' }}
-            onStateChange={(patch) => updateState(displayedSelected.id, patch)}
-          />
-        ) : (
-          <ProfilePage
-            user={user}
-            authStatus={authStatus}
-            entries={diaryEntries}
+            onRandomize={handleRandomAnime}
+            onClearRandomHistory={handleClearRandomHistory}
+            onDeleteRandomHistoryEntry={handleDeleteRandomHistoryEntry}
+            onCreateWatchParty={(code) => {
+              setWatchPartyCreateCode(code);
+              openWatchParty(`/watch-party/${code}`);
+            }}
+            onJoinWatchParty={(code) => openWatchParty(`/watch-party/${code}`)}
+            onLeaveWatchParty={leaveWatchParty}
+            onCreateWatchPartyConsumed={consumeWatchPartyCreate}
+            onToast={toast}
+            onSearchChange={setCatalogSearchQuery}
+            onBrowsePageChange={setBrowsePage}
+            onWatchStateChange={updateState}
             onLogin={loginWithDiscord}
             onLogout={handleLogout}
             onConnectShikimori={connectShikimori}
             onDisconnectShikimori={handleDisconnectShikimori}
             onImportShikimori={handleImportShikimoriList}
-            onToast={toast}
           />
-        )}
         </div>
       </section>
     </main>
