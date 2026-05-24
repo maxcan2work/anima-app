@@ -23,6 +23,7 @@ import {
   type ServerWatchEntry,
 } from './api';
 import { type AnimeTitle } from './data';
+import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
@@ -56,15 +57,19 @@ export function App() {
   const [selectedId, setSelectedId] = useState('');
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
-  const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
-  const [browsePage, setBrowsePage] = useState(1);
-  const [browseHasNext, setBrowseHasNext] = useState(true);
-  const [browseLoading, setBrowseLoading] = useState(false);
-  const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
-  const [catalogSearchQuery, setCatalogSearchQuery] = useState('');
-  const [catalogSearchResults, setCatalogSearchResults] = useState<CatalogSearchResult[]>([]);
-  const [catalogSearchLoading, setCatalogSearchLoading] = useState(false);
-  const [catalogSearchStatus, setCatalogSearchStatus] = useState('');
+  const {
+    browseResults,
+    browsePage,
+    browseHasNext,
+    browseLoading,
+    browseStatus,
+    catalogSearchQuery,
+    catalogSearchResults,
+    catalogSearchLoading,
+    catalogSearchStatus,
+    setBrowsePage,
+    setCatalogSearchQuery,
+  } = useCatalogBrowse();
   const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);
   const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
   const [randomLoading, setRandomLoading] = useState(false);
@@ -321,85 +326,6 @@ export function App() {
       ignore = true;
     };
   }, [browseResults, catalogSearchResults, library, randomHistory, routeAnimeId]);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadBrowse() {
-      setBrowseLoading(true);
-      setBrowseStatus(browsePage === 1 ? 'Загружаем каталог Shikimori...' : '');
-      try {
-        const response = await browseCatalog(browsePage);
-        if (ignore) return;
-
-        setBrowseResults((current) => {
-          const next = browsePage === 1 ? response.results : [...current, ...response.results];
-          const seen = new Set<number>();
-          return next.filter((item) => {
-            if (seen.has(item.providerId)) return false;
-            seen.add(item.providerId);
-            return true;
-          });
-        });
-        setBrowseHasNext(response.hasNextPage);
-        setBrowseStatus('');
-      } catch {
-        if (!ignore) {
-          setBrowseResults([]);
-          setBrowseStatus('Не удалось загрузить каталог Shikimori.');
-        }
-      } finally {
-        if (!ignore) {
-          setBrowseLoading(false);
-        }
-      }
-    }
-
-    loadBrowse();
-
-    return () => {
-      ignore = true;
-    };
-  }, [browsePage]);
-
-  useEffect(() => {
-    const query = catalogSearchQuery.trim();
-
-    if (query.length < 2) {
-      setCatalogSearchResults([]);
-      setCatalogSearchLoading(false);
-      setCatalogSearchStatus('');
-      return;
-    }
-
-    let ignore = false;
-    setCatalogSearchLoading(true);
-    setCatalogSearchStatus('');
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        const response = await searchCatalog(query);
-        if (ignore) return;
-
-        setCatalogSearchResults(response.results);
-        setCatalogSearchStatus(response.results.length ? '' : 'Ничего не найдено.');
-      } catch {
-        if (!ignore) {
-          setCatalogSearchResults([]);
-          setCatalogSearchStatus('Не удалось выполнить поиск.');
-        }
-      } finally {
-        if (!ignore) {
-          setCatalogSearchLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      ignore = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [catalogSearchQuery]);
 
   useEffect(() => {
     let ignore = false;
