@@ -7,11 +7,10 @@ import sidebarExpandIcon from '../../assets/sidebar-expand.svg';
 import sidebarShrinkIcon from '../../assets/sidebar-shrink.svg';
 import settingsIcon from '../../assets/settings.svg';
 import watchPartyIcon from '../../assets/watch-party.svg';
-
-type AppSidebarView = 'watch' | 'profile' | 'random' | 'settings' | 'watchParty';
+import type { AppView } from '../../shared/navigation';
 
 type AppSidebarProps = {
-  view: AppSidebarView;
+  view: AppView;
   collapsed: boolean;
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';

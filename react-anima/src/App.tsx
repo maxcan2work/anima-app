@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { fromServerWatchStatus, type WatchStatus as CoreWatchStatus } from '@anima/core';
 import {
   browseCatalog,
@@ -31,6 +31,18 @@ import { RandomAnimePage } from './pages/random/RandomAnimePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
+import {
+  animeRouteFromCatalog,
+  animeRouteSlug,
+  findAnimeByRoute,
+  findCatalogResultByRoute,
+  getRouteAnimeId,
+  getViewFromPath,
+  getWatchPartyCodeFromPath,
+  navigateToRemembered,
+  parseShikimoriRouteId,
+  type AppView,
+} from './shared/navigation';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 type WatchState = {
@@ -38,7 +50,6 @@ type WatchState = {
   status: CoreWatchStatus;
 };
 
-type AppView = 'watch' | 'profile' | 'random' | 'settings' | 'watchParty';
 const STORAGE_KEY = 'anima.watchState.v1';
 const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
 function loadWatchState(): Record<string, WatchState> {
@@ -723,58 +734,6 @@ export function App() {
   );
 }
 
-function getRouteAnimeId(pathname: string) {
-  if (pathname === '/anime') return '';
-  const match = pathname.match(/^\/anime\/([^/]+)$/);
-  return match?.[1] ? decodeURIComponent(match[1]) : '';
-}
-
-function getViewFromPath(pathname: string): AppView {
-  if (pathname === '/profile') return 'profile';
-  if (pathname === '/random') return 'random';
-  if (pathname === '/settings') return 'settings';
-  if (pathname === '/watch-party' || pathname.startsWith('/watch-party/')) return 'watchParty';
-  return 'watch';
-}
-
-function getWatchPartyCodeFromPath(pathname: string) {
-  const match = pathname.match(/^\/watch-party\/([^/]+)$/);
-  return match?.[1] ? normalizeWatchPartyCode(decodeURIComponent(match[1])) : '';
-}
-
-function createWatchPartyCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
-function normalizeWatchPartyCode(value: string) {
-  return value.replace(/[^a-z0-9]/gi, '').slice(0, 12).toUpperCase();
-}
-
-function parseShikimoriRouteId(animeId: string) {
-  const match = animeId.match(/^shikimori-(\d+)$/);
-  return match ? Number(match[1]) : null;
-}
-
-function animeRouteFromCatalog(result: CatalogSearchResult) {
-  return `/anime/${catalogRouteSlug(result)}`;
-}
-
-function animeRouteSlug(anime: AnimeTitle) {
-  return slugifyAnimeTitle(anime.originalTitle || anime.title || anime.id);
-}
-
-function catalogRouteSlug(result: CatalogSearchResult) {
-  return slugifyAnimeTitle(result.originalTitle || result.title || `${result.provider}-${result.providerId}`);
-}
-
-function findAnimeByRoute(library: AnimeTitle[], routeId: string) {
-  return library.find((anime) => anime.id === routeId || animeRouteSlug(anime) === routeId) ?? null;
-}
-
-function findCatalogResultByRoute(results: CatalogSearchResult[], routeId: string) {
-  return results.find((result) => catalogRouteSlug(result) === routeId) ?? null;
-}
-
 async function findCatalogResultBySearch(routeId: string) {
   const query = routeId.replace(/-/g, ' ');
   try {
@@ -783,29 +742,6 @@ async function findCatalogResultBySearch(routeId: string) {
   } catch {
     return null;
   }
-}
-
-function slugifyAnimeTitle(title: string) {
-  return title
-    .trim()
-    .toLowerCase()
-    .replace(/['’]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-function navigateToRemembered(
-  path: string,
-  setCurrentPath: (path: string | ((current: string) => string)) => void,
-  scrollByPathRef: MutableRefObject<Record<string, number>>,
-) {
-  setCurrentPath((current) => {
-    scrollByPathRef.current[current] = window.scrollY;
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
-    return path;
-  });
 }
 
 function mapServerAnime(anime: ServerAnime): AnimeTitle {
