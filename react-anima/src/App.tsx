@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   connectShikimori,
   loginWithDiscord,
-  saveAnimeProgress,
 } from './api';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import { useAnimeLibrary } from './hooks/useAnimeLibrary';
@@ -11,15 +10,16 @@ import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
 import { useScreenTransition } from './hooks/useScreenTransition';
 import { useToast } from './hooks/useToast';
+import { useWatchProgress } from './hooks/useWatchProgress';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
-import { mapServerAnime, upsertDiaryEntry } from './shared/animeMappers';
+import { mapServerAnime } from './shared/animeMappers';
 import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
-import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, saveWatchState, type WatchState } from './shared/storage';
+import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
@@ -106,7 +106,7 @@ export function App() {
     handleDeleteRandomHistoryEntry,
     clearRandomState,
   } = useRandomAnime(user);
-  const [syncStatus, setSyncStatus] = useState('');
+  const { updateState } = useWatchProgress({ library, user, setWatchState, setDiaryEntries });
   const { toast, setToast } = useToast();
 
   useEffect(() => {
@@ -121,42 +121,6 @@ export function App() {
   useEffect(() => {
     restoreScroll(displayedPath);
   }, [displayedPath, restoreScroll]);
-
-  function updateState(id: string, patch: Partial<WatchState>) {
-    setWatchState((current) => {
-      const anime = library.find((item) => item.id === id);
-      if (!anime) return current;
-      const previous = current[id] ?? { episode: 1, status: 'planned' };
-      const nextEpisode = Math.min(Math.max(patch.episode ?? previous.episode, 1), anime?.episodes ?? 1);
-      const nextEntry = {
-        ...previous,
-        ...patch,
-        episode: nextEpisode,
-      };
-      const next = {
-        ...current,
-        [id]: nextEntry,
-      };
-
-      if (user) {
-        setSyncStatus('Сохраняем...');
-        saveAnimeProgress(id, {
-          status: nextEntry.status,
-          currentEpisode: nextEntry.episode,
-        })
-          .then(({ entry }) => {
-            setDiaryEntries((entries) => upsertDiaryEntry(entries, entry));
-            setSyncStatus('Сохранено в профиле');
-          })
-          .catch(() => setSyncStatus('Не удалось сохранить'));
-      } else {
-        saveWatchState(next);
-        setSyncStatus('Сохранено локально');
-      }
-
-      return next;
-    });
-  }
 
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
