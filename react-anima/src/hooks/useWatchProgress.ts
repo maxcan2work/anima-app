@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { saveAnimeProgress, type CurrentUser, type ServerWatchEntry } from '../api';
-import type { AnimeTitle } from '../data';
-import { upsertDiaryEntry } from '../shared/animeMappers';
-import { saveWatchState, type WatchState } from '../shared/storage';
+import { saveAnimeProgress, type CurrentUser, type ServerWatchEntry } from '@/api';
+import type { AnimeTitle } from '@/data';
+import { upsertDiaryEntry } from '@shared/animeMappers';
+import { saveWatchState, type WatchState } from '@shared/storage';
 
 type UseWatchProgressOptions = {
   library: AnimeTitle[];

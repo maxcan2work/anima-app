@@ -1,5 +1,5 @@
-import type { ServerAnime } from '../../api';
-import type { AnimeTitle } from '../../data';
+import type { ServerAnime } from '@/api';
+import type { AnimeTitle } from '@/data';
 
 export type WatchPartyParticipant = {
   id: string;

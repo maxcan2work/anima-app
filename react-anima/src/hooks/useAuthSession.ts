@@ -7,7 +7,7 @@ import {
   logout,
   type CurrentUser,
   type ServerWatchEntry,
-} from '../api';
+} from '@/api';
 
 export function useAuthSession() {
   const [user, setUser] = useState<CurrentUser | null>(null);

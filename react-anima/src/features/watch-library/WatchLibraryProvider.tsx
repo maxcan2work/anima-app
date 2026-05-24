@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { fromServerWatchStatus } from '@anima/core';
-import type { CatalogSearchResult } from '../../api';
-import type { AnimeTitle } from '../../data';
-import { useAuth } from '../auth/AuthProvider';
-import { useCatalog } from '../catalog/CatalogProvider';
-import { useNavigation } from '../navigation/NavigationProvider';
-import { useAnimeLibrary } from '../../hooks/useAnimeLibrary';
-import { useWatchProgress } from '../../hooks/useWatchProgress';
-import { loadWatchState, type WatchState } from '../../shared/storage';
+import type { CatalogSearchResult } from '@/api';
+import type { AnimeTitle } from '@/data';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useCatalog } from '@features/catalog/CatalogProvider';
+import { useNavigation } from '@features/navigation/NavigationProvider';
+import { useAnimeLibrary } from '@hooks/useAnimeLibrary';
+import { useWatchProgress } from '@hooks/useWatchProgress';
+import { loadWatchState, type WatchState } from '@shared/storage';
 
 type WatchLibraryContextValue = {
   library: AnimeTitle[];

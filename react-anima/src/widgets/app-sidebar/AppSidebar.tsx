@@ -1,13 +1,13 @@
-import discordIcon from '../../assets/discord.svg';
-import musicNoteIcon from '../../assets/music-note.svg';
-import nekoIcon from '../../assets/neko.svg';
-import randomDiceIcon from '../../assets/random-dice.svg';
-import sidebarExpandIcon from '../../assets/sidebar-expand.svg';
-import sidebarShrinkIcon from '../../assets/sidebar-shrink.svg';
-import settingsIcon from '../../assets/settings.svg';
-import watchPartyIcon from '../../assets/watch-party.svg';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { useNavigation } from '../../features/navigation/NavigationProvider';
+import discordIcon from '@assets/discord.svg';
+import musicNoteIcon from '@assets/music-note.svg';
+import nekoIcon from '@assets/neko.svg';
+import randomDiceIcon from '@assets/random-dice.svg';
+import sidebarExpandIcon from '@assets/sidebar-expand.svg';
+import sidebarShrinkIcon from '@assets/sidebar-shrink.svg';
+import settingsIcon from '@assets/settings.svg';
+import watchPartyIcon from '@assets/watch-party.svg';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useNavigation } from '@features/navigation/NavigationProvider';
 
 type AppSidebarProps = {
   collapsed: boolean;

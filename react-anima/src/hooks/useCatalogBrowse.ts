@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { browseCatalog, searchCatalog, type CatalogSearchResult } from '../api';
+import { browseCatalog, searchCatalog, type CatalogSearchResult } from '@/api';
 
 export function useCatalogBrowse() {
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);

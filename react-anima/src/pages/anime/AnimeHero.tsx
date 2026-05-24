@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import Hls from 'hls.js';
-import { getEpisodePlayers, type PlayerProviderResult } from '../../api';
-import episodeArrowIcon from '../../assets/episode-arrow.svg';
-import type { AnimeTitle } from '../../data';
+import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
+import episodeArrowIcon from '@assets/episode-arrow.svg';
+import type { AnimeTitle } from '@/data';
 
 type PlayerProvider = PlayerProviderResult['provider'];
 

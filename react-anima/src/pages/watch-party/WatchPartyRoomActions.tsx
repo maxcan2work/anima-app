@@ -1,6 +1,6 @@
-import copyIcon from '../../assets/copy.svg';
-import leaveRoomIcon from '../../assets/leave-room.svg';
-import { useToast } from '../../shared/ui/ToastProvider';
+import copyIcon from '@assets/copy.svg';
+import leaveRoomIcon from '@assets/leave-room.svg';
+import { useToast } from '@shared/ui/ToastProvider';
 
 export function WatchPartyRoomActions({
   code,

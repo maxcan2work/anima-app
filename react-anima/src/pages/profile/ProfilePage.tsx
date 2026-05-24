@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { fromServerWatchStatus, watchStatusLabel, type WatchStatus } from '@anima/core';
-import detachIcon from '../../assets/detach.svg';
-import importIcon from '../../assets/import.svg';
-import profileCheckIcon from '../../assets/profile-check.svg';
-import profileEyeIcon from '../../assets/profile-eye.svg';
-import profileNoteIcon from '../../assets/profile-note.svg';
-import settingsIcon from '../../assets/settings.svg';
-import shikimoriIcon from '../../assets/shikimori.png';
-import trashIcon from '../../assets/trash.svg';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { useToast } from '../../shared/ui/ToastProvider';
+import detachIcon from '@assets/detach.svg';
+import importIcon from '@assets/import.svg';
+import profileCheckIcon from '@assets/profile-check.svg';
+import profileEyeIcon from '@assets/profile-eye.svg';
+import profileNoteIcon from '@assets/profile-note.svg';
+import settingsIcon from '@assets/settings.svg';
+import shikimoriIcon from '@assets/shikimori.png';
+import trashIcon from '@assets/trash.svg';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useToast } from '@shared/ui/ToastProvider';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();

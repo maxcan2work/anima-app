@@ -5,7 +5,7 @@ import {
   searchCatalog,
   type CatalogSearchResult,
   type ServerAnime,
-} from '../../api';
+} from '@/api';
 
 type UseWatchPartyCatalogOptions = {
   code: string;

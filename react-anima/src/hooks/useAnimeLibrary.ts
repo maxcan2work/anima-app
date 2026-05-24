@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getAnimeById, getAnimeCatalog, importCatalogAnime, searchCatalog, type CatalogSearchResult } from '../api';
-import type { AnimeTitle } from '../data';
-import { mapServerAnime, mergeAnimeLibrary } from '../shared/animeMappers';
+import { getAnimeById, getAnimeCatalog, importCatalogAnime, searchCatalog, type CatalogSearchResult } from '@/api';
+import type { AnimeTitle } from '@/data';
+import { mapServerAnime, mergeAnimeLibrary } from '@shared/animeMappers';
 import {
   animeRouteFromCatalog,
   findAnimeByRoute,
   findCatalogResultByRoute,
   parseShikimoriRouteId,
   type AppView,
-} from '../shared/navigation';
+} from '@shared/navigation';
 
 type UseAnimeLibraryOptions = {
   routeAnimeId: string;

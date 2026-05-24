@@ -1,12 +1,12 @@
-import { AnimeHero, AnimeHeroSkeleton } from '../pages/anime/AnimeHero';
-import { ProfilePage } from '../pages/profile/ProfilePage';
-import { RandomAnimePage } from '../pages/random/RandomAnimePage';
-import { SettingsPage } from '../pages/settings/SettingsPage';
-import { WatchPartyPage } from '../pages/watch-party/WatchPartyPage';
-import { EmptyCatalog, WatchHome } from '../pages/watch/WatchHome';
-import { useNavigation } from '../features/navigation/NavigationProvider';
-import { useWatchLibrary } from '../features/watch-library/WatchLibraryProvider';
-import { getWatchPartyCodeFromPath } from '../shared/navigation';
+import { AnimeHero, AnimeHeroSkeleton } from '@pages/anime/AnimeHero';
+import { ProfilePage } from '@pages/profile/ProfilePage';
+import { RandomAnimePage } from '@pages/random/RandomAnimePage';
+import { SettingsPage } from '@pages/settings/SettingsPage';
+import { WatchPartyPage } from '@pages/watch-party/WatchPartyPage';
+import { EmptyCatalog, WatchHome } from '@pages/watch/WatchHome';
+import { useNavigation } from '@features/navigation/NavigationProvider';
+import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
+import { getWatchPartyCodeFromPath } from '@shared/navigation';
 
 export function AppScreens() {
   const {

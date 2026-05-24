@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import { useAppNavigation } from '../../hooks/useAppNavigation';
-import { useScreenTransition } from '../../hooks/useScreenTransition';
-import { useWatchPartyLeaveGuard } from '../../hooks/useWatchPartyLeaveGuard';
-import { getRouteAnimeId, type AppView } from '../../shared/navigation';
+import { useAppNavigation } from '@hooks/useAppNavigation';
+import { useScreenTransition } from '@hooks/useScreenTransition';
+import { useWatchPartyLeaveGuard } from '@hooks/useWatchPartyLeaveGuard';
+import { getRouteAnimeId, type AppView } from '@shared/navigation';
 
 type NavigationContextValue = ReturnType<typeof useAppNavigation> & {
   displayedView: AppView;

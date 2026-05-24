@@ -1,5 +1,5 @@
-import crownIcon from '../../assets/crown.svg';
-import kickIcon from '../../assets/kick.svg';
+import crownIcon from '@assets/crown.svg';
+import kickIcon from '@assets/kick.svg';
 import type { WatchPartyParticipant } from './types';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
 

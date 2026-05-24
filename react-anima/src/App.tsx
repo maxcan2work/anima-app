@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { AppProviders } from './app/AppProviders';
-import { AppScreens } from './app/AppScreens';
-import { useAuth } from './features/auth/AuthProvider';
-import { useNavigation } from './features/navigation/NavigationProvider';
-import { loadSidebarCollapsed, saveSidebarCollapsed } from './shared/storage';
-import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
+import { AppProviders } from '@app/AppProviders';
+import { AppScreens } from '@app/AppScreens';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useNavigation } from '@features/navigation/NavigationProvider';
+import { loadSidebarCollapsed, saveSidebarCollapsed } from '@shared/storage';
+import { AppSidebar } from '@widgets/app-sidebar/AppSidebar';
 
 export function App() {
   return (

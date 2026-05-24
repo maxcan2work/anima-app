@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useConfirmModal } from '../shared/ui/ModalProvider';
+import { useConfirmModal } from '@shared/ui/ModalProvider';
 
 type UseWatchPartyLeaveGuardOptions = {
   active: boolean;

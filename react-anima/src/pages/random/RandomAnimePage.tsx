@@ -1,8 +1,8 @@
-import randomDiceIcon from '../../assets/random-dice.svg';
-import trashIcon from '../../assets/trash.svg';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { useWatchLibrary } from '../../features/watch-library/WatchLibraryProvider';
-import { useRandomAnime } from '../../hooks/useRandomAnime';
+import randomDiceIcon from '@assets/random-dice.svg';
+import trashIcon from '@assets/trash.svg';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
+import { useRandomAnime } from '@hooks/useRandomAnime';
 
 export function RandomAnimePage() {
   const { user } = useAuth();

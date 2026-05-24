@@ -7,8 +7,8 @@ import {
   saveRandomHistoryEntry,
   type CatalogSearchResult,
   type CurrentUser,
-} from '../api';
-import { mapRandomHistoryEntry } from '../shared/animeMappers';
+} from '@/api';
+import { mapRandomHistoryEntry } from '@shared/animeMappers';
 
 export function useRandomAnime(user: CurrentUser | null) {
   const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);

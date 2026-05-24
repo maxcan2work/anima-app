@@ -5,7 +5,7 @@ import {
   getViewFromPath,
   getWatchPartyCodeFromPath,
   type AppView,
-} from '../shared/navigation';
+} from '@shared/navigation';
 
 export function useAppNavigation() {
   const location = useLocation();

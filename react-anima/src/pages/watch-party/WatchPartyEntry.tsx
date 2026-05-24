@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { checkWatchPartyRoom } from '../../api';
-import watchPartyIcon from '../../assets/watch-party.svg';
-import { normalizeWatchPartyCode } from '../../shared/navigation';
-import { useToast } from '../../shared/ui/ToastProvider';
+import { checkWatchPartyRoom } from '@/api';
+import watchPartyIcon from '@assets/watch-party.svg';
+import { normalizeWatchPartyCode } from '@shared/navigation';
+import { useToast } from '@shared/ui/ToastProvider';
 
 type WatchPartyEntryProps = {
   code: string;

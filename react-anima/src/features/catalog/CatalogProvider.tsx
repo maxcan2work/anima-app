@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { type CatalogSearchResult } from '../../api';
-import { useCatalogBrowse } from '../../hooks/useCatalogBrowse';
+import { type CatalogSearchResult } from '@/api';
+import { useCatalogBrowse } from '@hooks/useCatalogBrowse';
 
 type CatalogContextValue = {
   browseResults: CatalogSearchResult[];

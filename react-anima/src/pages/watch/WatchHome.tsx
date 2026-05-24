@@ -1,6 +1,6 @@
-import { useCatalog } from '../../features/catalog/CatalogProvider';
-import { CatalogBrowser } from '../../features/catalog/CatalogBrowser';
-import { useWatchLibrary } from '../../features/watch-library/WatchLibraryProvider';
+import { useCatalog } from '@features/catalog/CatalogProvider';
+import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
+import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 
 export function EmptyCatalog() {
   return (

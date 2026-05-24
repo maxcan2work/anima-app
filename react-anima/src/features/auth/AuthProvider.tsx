@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { connectShikimori, loginWithDiscord, type CurrentUser, type ServerWatchEntry } from '../../api';
-import { useAuthSession } from '../../hooks/useAuthSession';
+import { connectShikimori, loginWithDiscord, type CurrentUser, type ServerWatchEntry } from '@/api';
+import { useAuthSession } from '@hooks/useAuthSession';
 
 type AuthStatus = 'loading' | 'guest' | 'ready';
 

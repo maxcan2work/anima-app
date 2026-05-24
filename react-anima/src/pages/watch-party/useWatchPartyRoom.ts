@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { API_URL, type ServerAnime } from '../../api';
-import type { AnimeTitle } from '../../data';
-import { useAuth } from '../../features/auth/AuthProvider';
-import { useToast } from '../../shared/ui/ToastProvider';
-import type { WatchState } from '../../shared/storage';
+import { API_URL, type ServerAnime } from '@/api';
+import type { AnimeTitle } from '@/data';
+import { useAuth } from '@features/auth/AuthProvider';
+import { useToast } from '@shared/ui/ToastProvider';
+import type { WatchState } from '@shared/storage';
 import type { WatchPartyParticipant, WatchPartyRoomState } from './types';
 
 type UseWatchPartyRoomOptions = {

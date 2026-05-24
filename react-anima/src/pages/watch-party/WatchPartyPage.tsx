@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { AnimeHero } from '../anime/AnimeHero';
-import watchPartyIcon from '../../assets/watch-party.svg';
-import { CatalogBrowser } from '../../features/catalog/CatalogBrowser';
-import { mapServerAnime } from '../../shared/animeMappers';
-import type { WatchState } from '../../shared/storage';
+import { AnimeHero } from '@pages/anime/AnimeHero';
+import watchPartyIcon from '@assets/watch-party.svg';
+import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
+import { mapServerAnime } from '@shared/animeMappers';
+import type { WatchState } from '@shared/storage';
 import { WatchPartyEntry } from './WatchPartyEntry';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';

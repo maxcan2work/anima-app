@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { CatalogSearchResult } from '../../api';
+import type { CatalogSearchResult } from '@/api';
 
 type CatalogBrowserProps = {
   className: string;

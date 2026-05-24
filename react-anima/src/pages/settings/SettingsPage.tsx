@@ -1,4 +1,4 @@
-import settingsIcon from '../../assets/settings.svg';
+import settingsIcon from '@assets/settings.svg';
 
 export function SettingsPage() {
   return (
