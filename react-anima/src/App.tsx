@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   connectShikimori,
   getAnimeById,
@@ -10,6 +10,7 @@ import {
   type CatalogSearchResult,
 } from './api';
 import { type AnimeTitle } from './data';
+import { useAppNavigation } from './hooks/useAppNavigation';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
@@ -28,9 +29,7 @@ import {
   findAnimeByRoute,
   findCatalogResultByRoute,
   getRouteAnimeId,
-  getViewFromPath,
   getWatchPartyCodeFromPath,
-  navigateToRemembered,
   parseShikimoriRouteId,
   type AppView,
 } from './shared/navigation';
@@ -81,150 +80,53 @@ export function App() {
   } = useRandomAnime(user);
   const [syncStatus, setSyncStatus] = useState('');
   const { toast, setToast } = useToast();
-  const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
-  const [watchPartyCreateCode, setWatchPartyCreateCode] = useState('');
-  const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<{ path: string; view: AppView } | null>(null);
-  const [watchPartyLeaveModalClosing, setWatchPartyLeaveModalClosing] = useState(false);
-  const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const {
+    watchPartyCode,
+    watchPartyCreateCode,
+    watchPartyLeaveTarget,
+    watchPartyLeaveModalClosing,
+    view,
+    currentPath,
+    routeAnimeId,
+    setView,
+    setWatchPartyCreateCode,
+    requestRoute,
+    requestAnimeRoute,
+    openWatchParty,
+    consumeWatchPartyCreate,
+    leaveWatchParty,
+    requestWatchView,
+    closeWatchPartyLeaveModal,
+    confirmLeaveWatchParty,
+    redirectToWatchRoot,
+    restoreScroll,
+  } = useAppNavigation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
-  const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
-  const scrollByPathRef = useRef<Record<string, number>>({});
   const screenKey = `${view}:${currentPath}`;
   const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
   const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
   const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
   const displayedRouteAnimeId = getRouteAnimeId(displayedPath);
-  const routeAnimeId = getRouteAnimeId(currentPath);
 
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
   const displayedSelected = displayedRouteAnimeId ? findAnimeByRoute(library, displayedRouteAnimeId) ?? selected : selected;
-
-  useEffect(() => {
-    function handlePopState() {
-      setCurrentPath((current) => {
-        scrollByPathRef.current[current] = window.scrollY;
-        return window.location.pathname;
-      });
-      const nextView = getViewFromPath(window.location.pathname);
-      if (nextView === 'watch') {
-        lastWatchPathRef.current = window.location.pathname;
-      }
-      setWatchPartyCode(getWatchPartyCodeFromPath(window.location.pathname));
-      setView(nextView);
-    }
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
 
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed]);
 
   useEffect(() => {
-    if (currentPath.startsWith('/anime')) {
-      lastWatchPathRef.current = currentPath;
-    }
-
-  }, [currentPath]);
-
-  useEffect(() => {
     if (authStatus === 'loading' || user || currentPath !== '/profile') return;
-
-    const path = '/anime';
-    setCurrentPath((current) => {
-      scrollByPathRef.current[current] = window.scrollY;
-      if (window.location.pathname !== path) {
-        window.history.replaceState(null, '', path);
-      }
-      return path;
-    });
-    setView('watch');
-  }, [authStatus, currentPath, user]);
+    redirectToWatchRoot();
+  }, [authStatus, currentPath, redirectToWatchRoot, user]);
 
   useEffect(() => {
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollByPathRef.current[displayedPath] ?? 0 });
-    });
-  }, [displayedPath]);
-
-  function requestRoute(path: string, nextView: AppView) {
-    if (watchPartyCode && nextView !== 'watchParty') {
-      setWatchPartyLeaveTarget({ path, view: nextView });
-      return;
-    }
-
-    navigateToRemembered(path, setCurrentPath, scrollByPathRef);
-    setView(nextView);
-  }
-
-  function requestAnimeRoute(path: string) {
-    requestRoute(path, 'watch');
-  }
+    restoreScroll(displayedPath);
+  }, [displayedPath, restoreScroll]);
 
   function openCatalogAnime(result: CatalogSearchResult) {
     requestAnimeRoute(animeRouteFromCatalog(result));
-  }
-
-  const openWatchParty = useCallback((path: string) => {
-    setWatchPartyCode(getWatchPartyCodeFromPath(path));
-    navigateToRemembered(path, setCurrentPath, scrollByPathRef);
-    setView('watchParty');
-  }, []);
-
-  const consumeWatchPartyCreate = useCallback(() => {
-    setWatchPartyCreateCode('');
-  }, []);
-
-  const leaveWatchParty = useCallback(() => {
-    const path = '/watch-party';
-    setWatchPartyCode('');
-    setWatchPartyCreateCode('');
-    setWatchPartyLeaveTarget(null);
-    setWatchPartyLeaveModalClosing(false);
-    setCurrentPath((current) => {
-      scrollByPathRef.current[current] = window.scrollY;
-      if (window.location.pathname !== path) {
-        window.history.replaceState(null, '', path);
-      }
-      return path;
-    });
-    setView('watchParty');
-  }, []);
-
-  function requestWatchView() {
-    const nextPath = view === 'watch' && routeAnimeId ? '/anime' : lastWatchPathRef.current;
-    requestAnimeRoute(nextPath);
-  }
-
-  function closeWatchPartyLeaveModal() {
-    if (watchPartyLeaveModalClosing) return;
-    setWatchPartyLeaveModalClosing(true);
-    window.setTimeout(() => {
-      setWatchPartyLeaveTarget(null);
-      setWatchPartyLeaveModalClosing(false);
-    }, 140);
-  }
-
-  function confirmLeaveWatchParty() {
-    if (watchPartyLeaveModalClosing) return;
-    const target = watchPartyLeaveTarget ?? { path: '/anime', view: 'watch' as AppView };
-    setWatchPartyLeaveTarget(null);
-    setWatchPartyLeaveModalClosing(false);
-    setWatchPartyCode('');
-    setCurrentPath((current) => {
-      scrollByPathRef.current[current] = window.scrollY;
-      if (window.location.pathname !== target.path) {
-        window.history.replaceState(null, '', target.path);
-      }
-      return target.path;
-    });
-    setView(target.view);
   }
 
   useEffect(() => {
