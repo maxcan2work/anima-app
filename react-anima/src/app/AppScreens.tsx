@@ -6,7 +6,6 @@ import { WatchPartyPage } from '../pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from '../pages/watch/WatchHome';
 import { useNavigation } from '../features/navigation/NavigationProvider';
 import { useWatchLibrary } from '../features/watch-library/WatchLibraryProvider';
-import { mapServerAnime } from '../shared/animeMappers';
 import { getWatchPartyCodeFromPath } from '../shared/navigation';
 
 export function AppScreens() {
@@ -40,8 +39,6 @@ export function AppScreens() {
         onJoinRoom={(roomCode) => openWatchParty(`/watch-party/${roomCode}`)}
         onLeaveRoom={leaveWatchParty}
         onCreateRoomConsumed={consumeWatchPartyCreate}
-        mapServerAnime={mapServerAnime}
-        renderAnimeHero={(props) => <AnimeHero {...props} />}
       />
     );
   }
