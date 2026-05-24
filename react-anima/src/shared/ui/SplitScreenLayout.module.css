@@ -1,0 +1,32 @@
+.layout {
+  --split-sidebar-width: 300px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--split-sidebar-width);
+  gap: 24px;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.fixed {
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.main,
+.sidebar {
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fixed {
+    height: auto;
+    min-height: calc(100vh - 56px);
+    overflow: visible;
+  }
+}

@@ -14,12 +14,16 @@ export function useRandomAnime(user: CurrentUser | null) {
   const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);
   const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
   const [randomLoading, setRandomLoading] = useState(false);
+  const [randomHistoryLoading, setRandomHistoryLoading] = useState(false);
+  const [randomHistoryLoaded, setRandomHistoryLoaded] = useState(false);
   const [randomStatus, setRandomStatus] = useState('');
   const [randomClearing, setRandomClearing] = useState(false);
   const [deletingRandomKey, setDeletingRandomKey] = useState('');
 
   useEffect(() => {
     if (!user) {
+      setRandomHistoryLoading(false);
+      setRandomHistoryLoaded(false);
       setRandomHistory([]);
       setRandomAnime(null);
       return;
@@ -28,6 +32,8 @@ export function useRandomAnime(user: CurrentUser | null) {
     let ignore = false;
 
     async function loadRandomHistory() {
+      setRandomHistoryLoading(true);
+      setRandomHistoryLoaded(false);
       try {
         const { history } = await getMyRandomHistory();
         if (!ignore) {
@@ -36,6 +42,11 @@ export function useRandomAnime(user: CurrentUser | null) {
       } catch {
         if (!ignore) {
           setRandomHistory([]);
+        }
+      } finally {
+        if (!ignore) {
+          setRandomHistoryLoading(false);
+          setRandomHistoryLoaded(true);
         }
       }
     }
@@ -133,6 +144,7 @@ export function useRandomAnime(user: CurrentUser | null) {
     randomAnime,
     randomHistory,
     randomLoading,
+    randomHistoryLoading: Boolean(user) && (!randomHistoryLoaded || randomHistoryLoading),
     randomStatus,
     randomClearing,
     deletingRandomKey,
