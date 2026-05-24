@@ -1,28 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fromServerWatchStatus } from '@anima/core';
 import {
   browseCatalog,
   connectShikimori,
   clearMyRandomHistory,
-  disconnectShikimori,
   deleteRandomHistoryEntry,
   getAnimeById,
-  getCurrentUser,
   getAnimeCatalog,
-  getMyAnimeList,
   getMyRandomHistory,
-  importShikimoriList,
   importCatalogAnime,
   loginWithDiscord,
-  logout,
   saveRandomHistoryEntry,
   saveAnimeProgress,
   searchCatalog,
   type CatalogSearchResult,
-  type CurrentUser,
-  type ServerWatchEntry,
 } from './api';
 import { type AnimeTitle } from './data';
+import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
@@ -33,7 +26,6 @@ import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
 import {
   mapRandomHistoryEntry,
   mapServerAnime,
-  mapServerAnimeToTitle,
   mergeAnimeLibrary,
   upsertDiaryEntry,
 } from './shared/animeMappers';
@@ -56,7 +48,6 @@ export function App() {
   const [library, setLibrary] = useState<AnimeTitle[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
-  const [diaryEntries, setDiaryEntries] = useState<ServerWatchEntry[]>([]);
   const {
     browseResults,
     browsePage,
@@ -76,8 +67,22 @@ export function App() {
   const [randomStatus, setRandomStatus] = useState('');
   const [randomClearing, setRandomClearing] = useState(false);
   const [deletingRandomKey, setDeletingRandomKey] = useState('');
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [authStatus, setAuthStatus] = useState<'loading' | 'guest' | 'ready'>('loading');
+  const {
+    user,
+    authStatus,
+    diaryEntries,
+    setDiaryEntries,
+    handleLogout,
+    handleDisconnectShikimori,
+    handleImportShikimoriList,
+  } = useAuthSession({
+    setWatchState,
+    setLibrary,
+    onLogoutCleanup: () => {
+      setRandomHistory([]);
+      setRandomAnime(null);
+    },
+  });
   const [syncStatus, setSyncStatus] = useState('');
   const [toast, setToast] = useState('');
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
@@ -169,6 +174,30 @@ export function App() {
     });
     setView('watch');
   }, [authStatus, currentPath, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    let ignore = false;
+
+    async function loadRandomHistory() {
+      try {
+        const { history } = await getMyRandomHistory();
+        if (!ignore) {
+          setRandomHistory(history.map(mapRandomHistoryEntry));
+        }
+      } catch {
+        if (!ignore) {
+          setRandomHistory([]);
+        }
+      }
+    }
+
+    loadRandomHistory();
+
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     window.requestAnimationFrame(() => {
@@ -327,45 +356,6 @@ export function App() {
     };
   }, [browseResults, catalogSearchResults, library, randomHistory, routeAnimeId]);
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadSession() {
-      try {
-        const [{ user: currentUser }, { list }, { history }] = await Promise.all([
-          getCurrentUser(),
-          getMyAnimeList(),
-          getMyRandomHistory(),
-        ]);
-        if (ignore) return;
-
-        const serverState = list.reduce<Record<string, WatchState>>((acc, entry) => {
-          acc[entry.animeId] = {
-            episode: entry.currentEpisode,
-            status: fromServerWatchStatus(entry.status),
-          };
-          return acc;
-        }, {});
-
-        setUser(currentUser);
-        setWatchState(serverState);
-        setDiaryEntries(list);
-        setRandomHistory(history.map(mapRandomHistoryEntry));
-        setAuthStatus('ready');
-      } catch {
-        if (!ignore) {
-          setAuthStatus('guest');
-        }
-      }
-    }
-
-    loadSession();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
   async function handleImportCatalogAnime(result: CatalogSearchResult) {
     try {
       const response = await importCatalogAnime(result.provider, result.providerId);
@@ -489,39 +479,6 @@ export function App() {
 
       return next;
     });
-  }
-
-  async function handleLogout() {
-    await logout();
-    setUser(null);
-    setAuthStatus('guest');
-    setDiaryEntries([]);
-    setRandomHistory([]);
-    setRandomAnime(null);
-    setWatchState(loadWatchState());
-  }
-
-  async function handleDisconnectShikimori() {
-    await disconnectShikimori();
-    setUser((current) =>
-      current
-        ? {
-            ...current,
-            integrations: {
-              ...current.integrations,
-              shikimori: null,
-            },
-          }
-        : current,
-    );
-  }
-
-  async function handleImportShikimoriList() {
-    const result = await importShikimoriList();
-    const [{ list }, { anime }] = await Promise.all([getMyAnimeList(), getAnimeCatalog()]);
-    setDiaryEntries(list);
-    setLibrary(anime.map(mapServerAnimeToTitle));
-    return result;
   }
 
   return (
