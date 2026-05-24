@@ -842,7 +842,12 @@ function AuthPanel({
   onProfile: () => void;
 }) {
   if (authStatus === 'loading') {
-    return <div className="auth-panel muted">{collapsed ? '...' : 'Проверяем сессию...'}</div>;
+    return (
+      <div className={collapsed ? 'auth-panel auth-placeholder collapsed-auth' : 'auth-panel auth-placeholder'} aria-hidden="true">
+        <span className="auth-placeholder-avatar" />
+        {collapsed ? null : <span className="auth-placeholder-copy" />}
+      </div>
+    );
   }
 
   if (!user) {

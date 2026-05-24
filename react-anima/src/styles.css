@@ -200,6 +200,55 @@ h1 {
   font-size: 14px;
 }
 
+.auth-placeholder {
+  grid-template-columns: var(--ui-control-size) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--ui-grid-gap);
+  width: 100%;
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  padding: var(--ui-row-padding);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-placeholder span {
+  margin: 0;
+  line-height: 0;
+}
+
+.auth-placeholder.collapsed-auth {
+  grid-template-columns: var(--ui-control-size);
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+}
+
+.auth-placeholder-avatar,
+.auth-placeholder-copy {
+  display: block;
+  margin-top: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  animation: settings-placeholder-pulse 1.2s linear infinite;
+}
+
+.auth-placeholder-avatar {
+  width: var(--ui-control-size);
+  height: var(--ui-control-size);
+  align-self: center;
+  justify-self: center;
+}
+
+.auth-placeholder-copy {
+  align-self: center;
+  width: 128px;
+  max-width: 72%;
+  height: 12px;
+}
+
 .auth-panel strong,
 .auth-panel span,
 .auth-panel small {
@@ -228,6 +277,11 @@ h1 {
   font-size: 12px;
 }
 
+.auth-panel .auth-placeholder-avatar,
+.auth-panel .auth-placeholder-copy {
+  margin-top: 0;
+}
+
 .auth-panel .profile-link span {
   margin-top: 0;
 }
@@ -239,6 +293,7 @@ h1 {
   align-items: center;
   gap: var(--ui-grid-gap);
   width: 100%;
+  height: var(--ui-row-height);
   min-height: var(--ui-row-height);
   min-width: 0;
   padding: var(--ui-row-padding);
@@ -326,22 +381,24 @@ h1 {
 
 .discord-button {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: var(--ui-control-size) minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  gap: var(--ui-grid-gap);
   width: 100%;
   max-width: none;
-  min-height: 50px;
-  padding: 0 14px;
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  padding: var(--ui-row-padding);
   background: #5865f2;
   color: white;
+  text-align: center;
 }
 
 .discord-button img {
   width: 24px;
   height: 24px;
   border-radius: 0;
+  justify-self: center;
   color: white;
   object-fit: contain;
 }
@@ -353,6 +410,7 @@ h1 {
   color: white;
   font-size: 14px;
   font-weight: 900;
+  justify-self: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
