@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "prebuild": "npm run build --prefix ../packages/core",
+    "predev": "npm run build --prefix ../packages/core",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
@@ -13,6 +15,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anima/core": "file:../packages/core",
     "@prisma/client": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

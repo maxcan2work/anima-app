@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MutableRefObject, type ReactNode } from 'react';
+import { WATCH_STATUS_OPTIONS, fromServerWatchStatus, watchStatusLabel, type WatchStatus as CoreWatchStatus } from '@anima/core';
 import Hls from 'hls.js';
 import { io, type Socket } from 'socket.io-client';
 import copyIcon from './assets/copy.svg';
@@ -53,7 +54,7 @@ import { type AnimeTitle } from './data';
 
 type WatchState = {
   episode: number;
-  status: 'planned' | 'watching' | 'completed' | 'dropped';
+  status: CoreWatchStatus;
 };
 
 type PlayerProvider = PlayerProviderResult['provider'];
@@ -77,13 +78,6 @@ const PLAYER_PROVIDER_OPTIONS: Array<{ value: PlayerProvider; label: string }> =
   { value: 'kodik', label: 'Kodik' },
   { value: 'anilibria', label: 'AniLiberty' },
 ];
-const WATCH_STATUS_OPTIONS: Array<{ value: WatchState['status']; label: string }> = [
-  { value: 'planned', label: 'В планах' },
-  { value: 'watching', label: 'Смотрю' },
-  { value: 'completed', label: 'Просмотрено' },
-  { value: 'dropped', label: 'Брошено' },
-];
-
 function loadWatchState(): Record<string, WatchState> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -470,7 +464,7 @@ export function App() {
         const serverState = list.reduce<Record<string, WatchState>>((acc, entry) => {
           acc[entry.animeId] = {
             episode: entry.currentEpisode,
-            status: fromServerStatus(entry.status),
+            status: fromServerWatchStatus(entry.status),
           };
           return acc;
         }, {});
@@ -1695,7 +1689,7 @@ function ProfilePage({
   const [selectedStatus, setSelectedStatus] = useState<WatchState['status']>('watching');
   const [sidebarMode, setSidebarMode] = useState<'overview' | 'settings'>('overview');
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
-  const filteredEntries = entries.filter((entry) => fromServerStatus(entry.status) === selectedStatus);
+  const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
 
   if (authStatus === 'loading') {
     return <section className="profile-page empty-state">Загружаем профиль...</section>;
@@ -1725,7 +1719,7 @@ function ProfilePage({
                 {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className="poster-fallback" />}
                 <span>
                   <strong>{entry.anime?.title ?? entry.animeId}</strong>
-                  <small>{statusLabel(fromServerStatus(entry.status))} · серия {entry.currentEpisode}</small>
+                  <small>{watchStatusLabel(fromServerWatchStatus(entry.status))} · серия {entry.currentEpisode}</small>
                   {entry.review ? <small className="diary-review">{entry.review}</small> : null}
                 </span>
                 {entry.score ? <em>{entry.score}/10</em> : null}
@@ -2342,32 +2336,6 @@ function WatchSources({ anime }: { anime: AnimeTitle }) {
       ))}
     </div>
   );
-}
-
-function fromServerStatus(status: string): WatchState['status'] {
-  switch (status) {
-    case 'WATCHING':
-      return 'watching';
-    case 'COMPLETED':
-      return 'completed';
-    case 'DROPPED':
-      return 'dropped';
-    default:
-      return 'planned';
-  }
-}
-
-function statusLabel(status: WatchState['status']) {
-  switch (status) {
-    case 'watching':
-      return 'Смотрю';
-    case 'completed':
-      return 'Просмотрено';
-    case 'dropped':
-      return 'Брошено';
-    default:
-      return 'В планах';
-  }
 }
 
 function getRouteAnimeId(pathname: string) {

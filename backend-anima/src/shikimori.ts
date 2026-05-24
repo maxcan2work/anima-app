@@ -1,3 +1,4 @@
+import { fromShikimoriWatchStatus } from '@anima/core';
 import { AuthProvider, WatchStatus } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { config } from './config.js';
@@ -219,7 +220,7 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
         },
       });
       const data = {
-        status: mapShikimoriWatchStatus(rate.status),
+        status: toPrismaWatchStatus(fromShikimoriWatchStatus(rate.status)),
         currentEpisode: Math.max(Math.trunc(rate.episodes ?? 1), 1),
         score: rate.score && rate.score > 0 ? Math.trunc(rate.score) : null,
         review: rate.text?.trim() || null,
@@ -417,17 +418,15 @@ async function fetchShikimoriAnimeRatesGraphql(accessToken: string, userId: numb
   return rates;
 }
 
-function mapShikimoriWatchStatus(status: ShikimoriUserRate['status']) {
+function toPrismaWatchStatus(status: ReturnType<typeof fromShikimoriWatchStatus>) {
   switch (status) {
     case 'watching':
-    case 'rewatching':
       return WatchStatus.WATCHING;
     case 'completed':
       return WatchStatus.COMPLETED;
     case 'dropped':
       return WatchStatus.DROPPED;
     case 'planned':
-    case 'on_hold':
     default:
       return WatchStatus.PLANNED;
   }

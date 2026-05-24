@@ -1,0 +1,15 @@
+{
+  "name": "anima",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend-anima",
+    "react-anima",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:core": "npm run build -w @anima/core",
+    "build:web": "npm run build -w react-anima",
+    "build:backend": "npm run build -w backend-anima"
+  }
+}
