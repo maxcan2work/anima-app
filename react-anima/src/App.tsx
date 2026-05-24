@@ -5,14 +5,17 @@ import { AppScreens } from '@app/AppScreens';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { loadSidebarCollapsed, saveSidebarCollapsed } from '@shared/storage';
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { AppSidebar } from '@widgets/app-sidebar/AppSidebar';
 import styles from './App.module.css';
 
 export function App() {
   return (
-    <AppProviders>
-      <AppContent />
-    </AppProviders>
+    <ErrorBoundary>
+      <AppProviders>
+        <AppContent />
+      </AppProviders>
+    </ErrorBoundary>
   );
 }
 

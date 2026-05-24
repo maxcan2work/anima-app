@@ -1,0 +1,64 @@
+.fallback {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 28px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(203, 67, 53, 0.22), transparent 32rem),
+    linear-gradient(135deg, #111413 0%, #191d1c 46%, #171616 100%);
+  color: #fff7ec;
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.panel h1,
+.panel p {
+  margin: 0;
+}
+
+.panel h1 {
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.panel p {
+  color: #cfc7ba;
+  line-height: 1.55;
+}
+
+.details {
+  overflow: auto;
+  max-height: 180px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  color: #ef9d73;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: end;
+}
+
+.reload {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #d94d38;
+  color: white;
+  font-weight: 900;
+}

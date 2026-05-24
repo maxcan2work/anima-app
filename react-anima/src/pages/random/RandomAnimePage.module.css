@@ -225,6 +225,13 @@
 
 .historyRow {
   position: relative;
+  transform-origin: center right;
+  animation: historyRowEnter 220ms ease-out both;
+}
+
+.historyRowRemoving {
+  pointer-events: none;
+  animation: historyRowRemove 240ms ease-in both;
 }
 
 .historyOpen {
@@ -242,6 +249,10 @@
   font: inherit;
   text-decoration: none;
   text-align: left;
+}
+
+.historyOpen:disabled {
+  cursor: default;
 }
 
 .historyDelete {
@@ -289,6 +300,37 @@
 
   to {
     background-position: -120% 0;
+  }
+}
+
+@keyframes historyRowRemove {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+}
+
+@keyframes historyRowEnter {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .historyRow,
+  .historyRowRemoving {
+    animation-duration: 1ms;
   }
 }
 

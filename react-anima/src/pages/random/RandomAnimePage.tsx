@@ -1,10 +1,16 @@
+import clsx from 'clsx';
+import { useState } from 'react';
 import randomDiceIcon from '@assets/random-dice.svg';
 import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 import { useRandomAnime } from '@hooks/useRandomAnime';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
+import type { CatalogSearchResult } from '@/api';
 import styles from './RandomAnimePage.module.css';
+
+const HISTORY_REMOVE_DURATION = 240;
+const HISTORY_CLEAR_STAGGER = 55;
 
 export function RandomAnimePage() {
   const { user, authStatus } = useAuth();
@@ -21,7 +27,46 @@ export function RandomAnimePage() {
     handleClearRandomHistory,
     handleDeleteRandomHistoryEntry,
   } = useRandomAnime(user);
+  const [removingHistoryKeys, setRemovingHistoryKeys] = useState<string[]>([]);
+  const [clearAnimating, setClearAnimating] = useState(false);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
+  const historyBusy = randomClearing || clearAnimating;
+
+  async function handleDeleteHistoryEntry(item: CatalogSearchResult) {
+    const key = getRandomHistoryKey(item);
+    if (historyBusy || deletingRandomKey || removingHistoryKeys.includes(key)) return;
+
+    setRemovingHistoryKeys((current) => [...current, key]);
+    await wait(HISTORY_REMOVE_DURATION);
+
+    try {
+      await handleDeleteRandomHistoryEntry(item);
+    } finally {
+      setRemovingHistoryKeys((current) => current.filter((itemKey) => itemKey !== key));
+    }
+  }
+
+  async function handleClearHistory() {
+    if (historyBusy || randomHistory.length === 0) return;
+
+    setClearAnimating(true);
+    const keys = randomHistory.map(getRandomHistoryKey);
+
+    keys.forEach((key, index) => {
+      window.setTimeout(() => {
+        setRemovingHistoryKeys((current) => (current.includes(key) ? current : [...current, key]));
+      }, index * HISTORY_CLEAR_STAGGER);
+    });
+
+    await wait(HISTORY_REMOVE_DURATION + Math.max(0, keys.length - 1) * HISTORY_CLEAR_STAGGER);
+
+    try {
+      await handleClearRandomHistory();
+    } finally {
+      setRemovingHistoryKeys([]);
+      setClearAnimating(false);
+    }
+  }
 
   return (
     <SplitScreenLayout
@@ -34,8 +79,8 @@ export function RandomAnimePage() {
           <div className={styles.historyHeader}>
             <h3>История</h3>
             {randomHistory.length > 0 ? (
-              <button type="button" onClick={handleClearRandomHistory} disabled={randomClearing}>
-                {randomClearing ? 'Очищаем...' : 'Очистить'}
+              <button type="button" onClick={handleClearHistory} disabled={historyBusy}>
+                {historyBusy ? 'Очищаем...' : 'Очистить'}
               </button>
             ) : (
               <span className={styles.historyHeaderActionPlaceholder} aria-hidden="true" />
@@ -59,10 +104,11 @@ export function RandomAnimePage() {
               <p className={styles.mutedCopy}>Здесь появятся последние варианты.</p>
             ) : (
               randomHistory.map((item) => {
-                const key = `${item.provider}-${item.providerId}`;
+                const key = getRandomHistoryKey(item);
+                const removing = removingHistoryKeys.includes(key);
                 return (
-                  <div key={key} className={styles.historyRow}>
-                    <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button">
+                  <div key={key} className={clsx(styles.historyRow, removing && styles.historyRowRemoving)}>
+                    <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button" disabled={removing || historyBusy}>
                       {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
                       <span>
                         <strong>{item.title}</strong>
@@ -73,8 +119,8 @@ export function RandomAnimePage() {
                       className={styles.historyDelete}
                       type="button"
                       aria-label={`Удалить ${item.title} из истории`}
-                      disabled={deletingRandomKey === key}
-                      onClick={() => handleDeleteRandomHistoryEntry(item)}
+                      disabled={removing || historyBusy || deletingRandomKey === key}
+                      onClick={() => handleDeleteHistoryEntry(item)}
                     >
                       <img src={trashIcon} alt="" aria-hidden="true" />
                     </button>
@@ -111,4 +157,14 @@ export function RandomAnimePage() {
       </button>
     </SplitScreenLayout>
   );
+}
+
+function getRandomHistoryKey(item: CatalogSearchResult) {
+  return `${item.provider}-${item.providerId}`;
+}
+
+function wait(duration: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, duration);
+  });
 }

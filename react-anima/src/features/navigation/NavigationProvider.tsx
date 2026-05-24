@@ -11,7 +11,14 @@ type NavigationContextValue = ReturnType<typeof useAppNavigation> & {
   screenAnimation: 'idle' | 'leaving' | 'entering';
 };
 
-const NavigationContext = createContext<NavigationContextValue | null>(null);
+const navigationContextKey = '__ANIMA_NAVIGATION_CONTEXT__';
+const globalWithNavigationContext = globalThis as typeof globalThis & {
+  [navigationContextKey]?: ReturnType<typeof createContext<NavigationContextValue | null>>;
+};
+
+const NavigationContext =
+  globalWithNavigationContext[navigationContextKey] ??
+  (globalWithNavigationContext[navigationContextKey] = createContext<NavigationContextValue | null>(null));
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const navigation = useAppNavigation();
