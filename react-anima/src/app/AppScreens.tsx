@@ -6,17 +6,14 @@ import { SettingsPage } from '../pages/settings/SettingsPage';
 import { WatchPartyPage } from '../pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from '../pages/watch/WatchHome';
 import type { AnimeTitle } from '../data';
+import { useNavigation } from '../features/navigation/NavigationProvider';
 import { mapServerAnime } from '../shared/animeMappers';
-import { getWatchPartyCodeFromPath, type AppView } from '../shared/navigation';
+import { getWatchPartyCodeFromPath } from '../shared/navigation';
 import type { WatchState } from '../shared/storage';
 
 type AppScreensProps = {
-  displayedView: AppView;
-  displayedPath: string;
-  displayedRouteAnimeId: string;
   displayedSelected: AnimeTitle | null;
   watchState: Record<string, WatchState>;
-  watchPartyCreateCode: string;
   browseResults: CatalogSearchResult[];
   browsePage: number;
   browseHasNext: boolean;
@@ -36,22 +33,14 @@ type AppScreensProps = {
   onRandomize: () => void;
   onClearRandomHistory: () => void;
   onDeleteRandomHistoryEntry: (anime: CatalogSearchResult) => void;
-  onCreateWatchParty: (code: string) => void;
-  onJoinWatchParty: (code: string) => void;
-  onLeaveWatchParty: () => void;
-  onCreateWatchPartyConsumed: () => void;
   onSearchChange: (query: string) => void;
   onBrowsePageChange: (page: number) => void;
   onWatchStateChange: (animeId: string, patch: Partial<WatchState>) => void;
 };
 
 export function AppScreens({
-  displayedView,
-  displayedPath,
-  displayedRouteAnimeId,
   displayedSelected,
   watchState,
-  watchPartyCreateCode,
   browseResults,
   browsePage,
   browseHasNext,
@@ -71,14 +60,21 @@ export function AppScreens({
   onRandomize,
   onClearRandomHistory,
   onDeleteRandomHistoryEntry,
-  onCreateWatchParty,
-  onJoinWatchParty,
-  onLeaveWatchParty,
-  onCreateWatchPartyConsumed,
   onSearchChange,
   onBrowsePageChange,
   onWatchStateChange,
 }: AppScreensProps) {
+  const {
+    displayedView,
+    displayedPath,
+    displayedRouteAnimeId,
+    watchPartyCreateCode,
+    setWatchPartyCreateCode,
+    openWatchParty,
+    leaveWatchParty,
+    consumeWatchPartyCreate,
+  } = useNavigation();
+
   if (displayedView === 'random') {
     return (
       <RandomAnimePage
@@ -103,10 +99,13 @@ export function AppScreens({
       <WatchPartyPage
         code={code}
         createRoom={watchPartyCreateCode === code}
-        onCreateRoom={onCreateWatchParty}
-        onJoinRoom={onJoinWatchParty}
-        onLeaveRoom={onLeaveWatchParty}
-        onCreateRoomConsumed={onCreateWatchPartyConsumed}
+        onCreateRoom={(roomCode) => {
+          setWatchPartyCreateCode(roomCode);
+          openWatchParty(`/watch-party/${roomCode}`);
+        }}
+        onJoinRoom={(roomCode) => openWatchParty(`/watch-party/${roomCode}`)}
+        onLeaveRoom={leaveWatchParty}
+        onCreateRoomConsumed={consumeWatchPartyCreate}
         mapServerAnime={mapServerAnime}
         renderAnimeHero={(props) => <AnimeHero {...props} />}
       />

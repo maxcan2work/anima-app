@@ -7,29 +7,25 @@ import sidebarShrinkIcon from '../../assets/sidebar-shrink.svg';
 import settingsIcon from '../../assets/settings.svg';
 import watchPartyIcon from '../../assets/watch-party.svg';
 import { useAuth } from '../../features/auth/AuthProvider';
-import type { AppView } from '../../shared/navigation';
+import { useNavigation } from '../../features/navigation/NavigationProvider';
 
 type AppSidebarProps = {
-  view: AppView;
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  onOpenWatch: () => void;
-  onOpenRandom: () => void;
-  onOpenWatchParty: () => void;
-  onOpenSettings: () => void;
-  onOpenProfile: () => void;
 };
 
 export function AppSidebar({
-  view,
   collapsed,
   onToggleCollapsed,
-  onOpenWatch,
-  onOpenRandom,
-  onOpenWatchParty,
-  onOpenSettings,
-  onOpenProfile,
 }: AppSidebarProps) {
+  const {
+    view,
+    watchPartyCode,
+    requestWatchView,
+    requestRoute,
+    openWatchParty,
+  } = useNavigation();
+
   return (
     <aside className="library-panel" aria-label="Каталог аниме">
       <div className="brand-row">
@@ -54,7 +50,7 @@ export function AppSidebar({
           title="Просмотр"
           description="Список аниме"
           collapsed={collapsed}
-          onClick={onOpenWatch}
+          onClick={requestWatchView}
         />
         <SideNavButton
           active={view === 'random'}
@@ -62,7 +58,7 @@ export function AppSidebar({
           title="Случайное аниме"
           description="Подборка наугад"
           collapsed={collapsed}
-          onClick={onOpenRandom}
+          onClick={() => requestRoute('/random', 'random')}
         />
         <SideNavButton
           active={view === 'watchParty'}
@@ -70,7 +66,7 @@ export function AppSidebar({
           title="Совместный просмотр"
           description="Комнаты и коды"
           collapsed={collapsed}
-          onClick={onOpenWatchParty}
+          onClick={() => openWatchParty(watchPartyCode ? `/watch-party/${watchPartyCode}` : '/watch-party')}
         />
         <SideNavButton
           disabled
@@ -87,7 +83,7 @@ export function AppSidebar({
           className={view === 'settings' ? 'sidebar-action active' : 'sidebar-action'}
           type="button"
           data-tooltip={collapsed ? 'Настройки' : undefined}
-          onClick={onOpenSettings}
+          onClick={() => requestRoute('/settings', 'settings')}
         >
           <span className="nav-icon" aria-hidden="true">
             <img src={settingsIcon} alt="" />
@@ -99,7 +95,7 @@ export function AppSidebar({
         </button>
         <AuthPanel
           collapsed={collapsed}
-          onProfile={onOpenProfile}
+          onProfile={() => requestRoute('/profile', 'profile')}
         />
       </div>
     </aside>

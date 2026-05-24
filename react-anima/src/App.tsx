@@ -3,14 +3,11 @@ import { fromServerWatchStatus } from '@anima/core';
 import { AppProviders } from './app/AppProviders';
 import { AppScreens } from './app/AppScreens';
 import { useAuth } from './features/auth/AuthProvider';
-import { useAppNavigation } from './hooks/useAppNavigation';
+import { useNavigation } from './features/navigation/NavigationProvider';
 import { useAnimeLibrary } from './hooks/useAnimeLibrary';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
-import { useScreenTransition } from './hooks/useScreenTransition';
 import { useWatchProgress } from './hooks/useWatchProgress';
-import { useWatchPartyLeaveGuard } from './hooks/useWatchPartyLeaveGuard';
-import { getRouteAnimeId, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
@@ -45,32 +42,15 @@ function AppContent() {
     setCatalogSearchQuery,
   } = useCatalogBrowse();
   const {
-    watchPartyCode,
-    watchPartyCreateCode,
-    watchPartyLeaveTarget,
-    view,
     currentPath,
     routeAnimeId,
     setView,
-    setWatchPartyCreateCode,
-    requestRoute,
     requestAnimeRoute,
-    openWatchParty,
-    consumeWatchPartyCreate,
-    leaveWatchParty,
-    requestWatchView,
-    closeWatchPartyLeaveModal,
-    confirmLeaveWatchParty,
     redirectToWatchRoot,
-    restoreScroll,
-  } = useAppNavigation();
+    displayedRouteAnimeId,
+    screenAnimation,
+  } = useNavigation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
-  const screenKey = `${view}:${currentPath}`;
-  const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
-  const displayedScreenDivider = displayedScreenKey.indexOf(':');
-  const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
-  const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
-  const displayedRouteAnimeId = getRouteAnimeId(displayedPath);
   const catalogCandidates = useMemo(
     () => [...catalogSearchResults, ...browseResults],
     [browseResults, catalogSearchResults],
@@ -133,40 +113,18 @@ function AppContent() {
     redirectToWatchRoot();
   }, [authStatus, currentPath, redirectToWatchRoot, user]);
 
-  useEffect(() => {
-    restoreScroll(displayedPath);
-  }, [displayedPath, restoreScroll]);
-
-  useWatchPartyLeaveGuard({
-    active: Boolean(watchPartyLeaveTarget),
-    onConfirm: confirmLeaveWatchParty,
-    onCancel: closeWatchPartyLeaveModal,
-  });
-
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
       <AppSidebar
-        view={view}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
-        onOpenWatch={requestWatchView}
-        onOpenRandom={() => requestRoute('/random', 'random')}
-        onOpenWatchParty={() => openWatchParty(watchPartyCode ? `/watch-party/${watchPartyCode}` : '/watch-party')}
-        onOpenSettings={() => requestRoute('/settings', 'settings')}
-        onOpenProfile={() => {
-          requestRoute('/profile', 'profile');
-        }}
       />
 
       <section className="watch-area">
         <div className={`screen-transition ${screenAnimation}`}>
           <AppScreens
-            displayedView={displayedView}
-            displayedPath={displayedPath}
-            displayedRouteAnimeId={displayedRouteAnimeId}
             displayedSelected={displayedSelected}
             watchState={watchState}
-            watchPartyCreateCode={watchPartyCreateCode}
             browseResults={browseResults}
             browsePage={browsePage}
             browseHasNext={browseHasNext}
@@ -186,13 +144,6 @@ function AppContent() {
             onRandomize={handleRandomAnime}
             onClearRandomHistory={handleClearRandomHistory}
             onDeleteRandomHistoryEntry={handleDeleteRandomHistoryEntry}
-            onCreateWatchParty={(code) => {
-              setWatchPartyCreateCode(code);
-              openWatchParty(`/watch-party/${code}`);
-            }}
-            onJoinWatchParty={(code) => openWatchParty(`/watch-party/${code}`)}
-            onLeaveWatchParty={leaveWatchParty}
-            onCreateWatchPartyConsumed={consumeWatchPartyCreate}
             onSearchChange={setCatalogSearchQuery}
             onBrowsePageChange={setBrowsePage}
             onWatchStateChange={updateState}
