@@ -683,6 +683,49 @@ h1 {
   white-space: nowrap;
 }
 
+.settings-account-placeholder {
+  grid-template-columns: 48px minmax(0, 1fr);
+  min-height: 70px;
+}
+
+.settings-placeholder-avatar,
+.settings-placeholder-copy span,
+.settings-placeholder-copy strong {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  animation: settings-placeholder-pulse 1.2s linear infinite;
+}
+
+.settings-placeholder-avatar {
+  width: 48px;
+  height: 48px;
+}
+
+.settings-placeholder-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-placeholder-copy span {
+  width: 180px;
+  max-width: 70%;
+  height: 12px;
+}
+
+.settings-placeholder-copy strong {
+  width: 120px;
+  max-width: 52%;
+  height: 18px;
+}
+
+@keyframes settings-placeholder-pulse {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 .settings-icon-button {
   position: relative;
   display: grid;
@@ -700,6 +743,15 @@ h1 {
   width: 16px;
   height: 16px;
   object-fit: contain;
+}
+
+.settings-button-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(242, 192, 99, 0.28);
+  border-top-color: #f2c063;
+  border-radius: 999px;
+  animation: search-spin 0.8s linear infinite;
 }
 
 .settings-icon-button::after {

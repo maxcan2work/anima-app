@@ -30,8 +30,8 @@ type ShikimoriProfileResponse = {
 
 type ShikimoriUserRate = {
   id: number;
-  target_id: number;
-  target_type: string;
+  target_id?: number;
+  target_type?: string;
   status: 'planned' | 'watching' | 'rewatching' | 'completed' | 'on_hold' | 'dropped';
   score?: number | null;
   episodes?: number | null;
@@ -39,6 +39,9 @@ type ShikimoriUserRate = {
   created_at?: string | null;
   updated_at?: string | null;
   target?: {
+    id: number;
+  } | null;
+  anime?: {
     id: number;
   } | null;
 };
@@ -183,16 +186,30 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
   let imported = 0;
   let updated = 0;
   let skipped = 0;
+  const errors: Array<{ shikimoriId: number | null; reason: string }> = [];
+  const seenAnimeIds = new Set<number>();
 
   for (const rate of rates) {
-    const shikimoriId = rate.target?.id ?? rate.target_id;
-    if (!shikimoriId || rate.target_type !== 'Anime') {
+    const shikimoriId = Number(rate.target?.id ?? rate.anime?.id ?? rate.target_id);
+    if (!Number.isFinite(shikimoriId) || shikimoriId <= 0 || (rate.target_type && rate.target_type !== 'Anime')) {
       skipped += 1;
+      if (errors.length < 10) {
+        errors.push({
+          shikimoriId: Number.isFinite(shikimoriId) ? shikimoriId : null,
+          reason: `Invalid anime rate payload: target_type=${rate.target_type ?? 'missing'}`,
+        });
+      }
       continue;
     }
 
+    if (seenAnimeIds.has(shikimoriId)) {
+      skipped += 1;
+      continue;
+    }
+    seenAnimeIds.add(shikimoriId);
+
     try {
-      const anime = await importShikimoriAnime(shikimoriId);
+      const anime = await importShikimoriAnimeWithRetry(shikimoriId);
       const existing = await prisma.userAnime.findUnique({
         where: {
           userId_animeId: {
@@ -228,8 +245,14 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
       } else {
         imported += 1;
       }
-    } catch {
+    } catch (error) {
       skipped += 1;
+      if (errors.length < 10) {
+        errors.push({
+          shikimoriId,
+          reason: error instanceof Error ? error.message : 'Anime import or diary update failed',
+        });
+      }
     }
   }
 
@@ -238,7 +261,36 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
     updated,
     skipped,
     total: rates.length,
+    errors,
   };
+}
+
+async function importShikimoriAnimeWithRetry(shikimoriId: number) {
+  const delays = [0, 1500, 3500, 7000];
+  let lastError: unknown;
+
+  for (const delay of delays) {
+    if (delay > 0) {
+      await sleep(delay);
+    }
+
+    try {
+      return await importShikimoriAnime(shikimoriId);
+    } catch (error) {
+      lastError = error;
+      if (!(error instanceof Error) || !error.message.includes('429')) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Shikimori import failed');
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function getShikimoriProfileUrl(nickname: string) {
@@ -285,10 +337,76 @@ async function fetchShikimoriAnimeRates(accessToken: string, userId: number) {
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return fetchShikimoriAnimeRatesGraphql(accessToken, userId);
+      }
+
       throw new Error(`Shikimori user rates request failed: ${response.status}`);
     }
 
     const pageRates = (await response.json()) as ShikimoriUserRate[];
+    rates.push(...pageRates);
+
+    if (pageRates.length < limit) {
+      break;
+    }
+  }
+
+  return rates;
+}
+
+async function fetchShikimoriAnimeRatesGraphql(accessToken: string, userId: number) {
+  const rates: ShikimoriUserRate[] = [];
+  const limit = 50;
+
+  for (let page = 1; page <= 100; page += 1) {
+    const response = await fetch(`${config.SHIKIMORI_BASE_URL}/api/graphql`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Anima',
+      },
+      body: JSON.stringify({
+        query: `
+          query {
+            userRates(userId: ${userId}, targetType: Anime, page: ${page}, limit: ${limit}) {
+              id
+              status
+              score
+              episodes
+              text
+              target {
+                ... on Anime {
+                  id
+                }
+              }
+              anime {
+                id
+              }
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Shikimori user rates GraphQL request failed: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as {
+      data?: {
+        userRates?: ShikimoriUserRate[];
+      };
+      errors?: Array<{ message?: string }>;
+    };
+
+    if (payload.errors?.length) {
+      throw new Error(`Shikimori user rates GraphQL failed: ${payload.errors[0]?.message ?? 'unknown error'}`);
+    }
+
+    const pageRates = payload.data?.userRates ?? [];
     rates.push(...pageRates);
 
     if (pageRates.length < limit) {

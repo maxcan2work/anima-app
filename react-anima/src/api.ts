@@ -121,7 +121,13 @@ export async function disconnectShikimori() {
 }
 
 export async function importShikimoriList() {
-  return apiFetch<{ imported: number; updated: number; skipped: number; total: number }>('/me/integrations/shikimori/import', {
+  return apiFetch<{
+    imported: number;
+    updated: number;
+    skipped: number;
+    total: number;
+    errors?: Array<{ shikimoriId: number | null; reason: string }>;
+  }>('/me/integrations/shikimori/import', {
     method: 'POST',
   });
 }

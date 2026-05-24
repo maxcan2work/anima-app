@@ -767,6 +767,7 @@ export function App() {
             onConnectShikimori={connectShikimori}
             onDisconnectShikimori={handleDisconnectShikimori}
             onImportShikimori={handleImportShikimoriList}
+            onToast={setToast}
           />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
@@ -1774,19 +1775,26 @@ function SettingsPage({
   onConnectShikimori,
   onDisconnectShikimori,
   onImportShikimori,
+  onToast,
 }: {
   authStatus: 'loading' | 'guest' | 'ready';
   user: CurrentUser | null;
   onConnectShikimori: () => void;
   onDisconnectShikimori: () => Promise<void>;
-  onImportShikimori: () => Promise<{ imported: number; updated: number; skipped: number; total: number }>;
+  onImportShikimori: () => Promise<{
+    imported: number;
+    updated: number;
+    skipped: number;
+    total: number;
+    errors?: Array<{ shikimoriId: number | null; reason: string }>;
+  }>;
+  onToast: (message: string) => void;
 }) {
   const canConnect = authStatus === 'ready' && Boolean(user);
   const shikimori = user?.integrations.shikimori ?? null;
+  const isAuthLoading = authStatus === 'loading';
   const [disconnecting, setDisconnecting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; updated: number; skipped: number; total: number } | null>(null);
-  const [importError, setImportError] = useState('');
 
   async function handleDisconnect() {
     if (disconnecting) return;
@@ -1803,14 +1811,21 @@ function SettingsPage({
     if (importing) return;
 
     setImporting(true);
-    setImportResult(null);
-    setImportError('');
+    onToast('Импортируем список Shikimori. Не закрывай страницу.');
 
     try {
       const result = await onImportShikimori();
-      setImportResult(result);
+      const firstError = result.errors?.[0];
+      const changed = result.imported + result.updated;
+
+      if (changed > 0) {
+        onToast(`Импорт завершён: ${result.imported} новых, ${result.updated} обновлено, ${result.skipped} пропущено`);
+      } else {
+        const reason = firstError ? ` Причина: ${firstError.reason}` : '';
+        onToast(`Не удалось импортировать список Shikimori.${reason}`);
+      }
     } catch {
-      setImportError('Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.');
+      onToast('Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.');
     } finally {
       setImporting(false);
     }
@@ -1830,7 +1845,15 @@ function SettingsPage({
       </header>
 
       <section className="settings-panel">
-        {shikimori ? (
+        {isAuthLoading ? (
+          <div className="connected-account settings-account-placeholder" aria-hidden="true">
+            <span className="settings-placeholder-avatar" />
+            <span className="settings-placeholder-copy">
+              <span />
+              <strong />
+            </span>
+          </div>
+        ) : shikimori ? (
           <>
             <div className="connected-account">
               <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
@@ -1842,20 +1865,12 @@ function SettingsPage({
               </a>
               <div className="connected-account-actions">
                 <button className="settings-icon-button" type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
-                  <img src={importIcon} alt="" aria-hidden="true" />
+                  {importing ? <span className="settings-button-loader" aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
                 </button>
                 <button className="settings-icon-button" type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
                   <img src={detachIcon} alt="" aria-hidden="true" />
                 </button>
               </div>
-            </div>
-            <div className="settings-import-actions">
-              {importResult ? (
-                <p>
-                  Импортировано: {importResult.imported}, обновлено: {importResult.updated}, пропущено: {importResult.skipped}
-                </p>
-              ) : null}
-              {importError ? <p className="settings-error">{importError}</p> : null}
             </div>
           </>
         ) : (
