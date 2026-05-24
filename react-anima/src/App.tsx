@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { fromServerWatchStatus, type WatchStatus as CoreWatchStatus } from '@anima/core';
-import settingsIcon from './assets/settings.svg';
 import {
   browseCatalog,
   connectShikimori,
@@ -29,6 +28,7 @@ import { type AnimeTitle } from './data';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
+import { SettingsPage } from './pages/settings/SettingsPage';
 import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
@@ -720,43 +720,6 @@ export function App() {
       ) : null}
       {toast ? <div className="app-toast">{toast}</div> : null}
     </main>
-  );
-}
-
-function SettingsPage() {
-  return (
-    <section className="settings-page">
-      <header className="settings-hero">
-        <span className="settings-icon" aria-hidden="true">
-          <img src={settingsIcon} alt="" />
-        </span>
-        <div>
-          <p className="eyebrow">Anima</p>
-          <h2>Настройки</h2>
-          <p>Здесь будут общие параметры приложения.</p>
-        </div>
-      </header>
-
-      <section className="settings-panel">
-        <div>
-          <h3>Тема</h3>
-          <p>Позже добавим выбор светлой, тёмной и системной темы.</p>
-        </div>
-        <button type="button" disabled>
-          Скоро
-        </button>
-      </section>
-
-      <section className="settings-panel">
-        <div>
-          <h3>Язык</h3>
-          <p>Здесь будет выбор языка интерфейса.</p>
-        </div>
-        <button type="button" disabled>
-          Скоро
-        </button>
-      </section>
-    </section>
   );
 }
 
