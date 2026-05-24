@@ -603,15 +603,36 @@ h1 {
   font-weight: 900;
 }
 
+.settings-panel .settings-connect-button {
+  display: grid;
+  place-items: center;
+  border-color: transparent;
+  background: #d94d38;
+  color: white;
+  line-height: 1;
+}
+
+.settings-panel .settings-connect-button:disabled {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: #a99f92;
+}
+
 .connected-account {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 10px;
-  border: 1px solid rgba(242, 192, 99, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  background: rgba(242, 192, 99, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.connected-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .connected-account-main {
@@ -660,6 +681,69 @@ h1 {
   font-size: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.settings-icon-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 !important;
+  line-height: 0;
+}
+
+.settings-icon-button img {
+  display: block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.settings-icon-button::after {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 20;
+  min-width: max-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(20, 22, 21, 0.96);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  content: attr(data-tooltip);
+}
+
+.settings-icon-button:hover::after,
+.settings-icon-button:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.settings-import-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.settings-import-actions p {
+  color: #aaa196;
+  font-size: 13px;
+}
+
+.settings-import-actions .settings-error {
+  color: #ef9d73;
 }
 
 .search-loader {

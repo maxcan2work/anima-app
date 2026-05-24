@@ -4,7 +4,9 @@ import { io, type Socket } from 'socket.io-client';
 import copyIcon from './assets/copy.svg';
 import crownIcon from './assets/crown.svg';
 import discordIcon from './assets/discord.svg';
+import detachIcon from './assets/detach.svg';
 import episodeArrowIcon from './assets/episode-arrow.svg';
+import importIcon from './assets/import.svg';
 import kickIcon from './assets/kick.svg';
 import leaveRoomIcon from './assets/leave-room.svg';
 import musicNoteIcon from './assets/music-note.svg';
@@ -32,6 +34,7 @@ import {
   getEpisodePlayers,
   getMyAnimeList,
   getMyRandomHistory,
+  importShikimoriList,
   importCatalogAnime,
   loginWithDiscord,
   logout,
@@ -640,6 +643,14 @@ export function App() {
     );
   }
 
+  async function handleImportShikimoriList() {
+    const result = await importShikimoriList();
+    const [{ list }, { anime }] = await Promise.all([getMyAnimeList(), getAnimeCatalog()]);
+    setDiaryEntries(list);
+    setLibrary(anime.map(mapServerAnimeToTitle));
+    return result;
+  }
+
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
       <aside className="library-panel" aria-label="Каталог аниме">
@@ -750,7 +761,13 @@ export function App() {
             onToast={setToast}
           />
         ) : displayedView === 'settings' ? (
-          <SettingsPage authStatus={authStatus} user={user} onConnectShikimori={connectShikimori} onDisconnectShikimori={handleDisconnectShikimori} />
+          <SettingsPage
+            authStatus={authStatus}
+            user={user}
+            onConnectShikimori={connectShikimori}
+            onDisconnectShikimori={handleDisconnectShikimori}
+            onImportShikimori={handleImportShikimoriList}
+          />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
             browseResults={browseResults}
@@ -1756,15 +1773,20 @@ function SettingsPage({
   user,
   onConnectShikimori,
   onDisconnectShikimori,
+  onImportShikimori,
 }: {
   authStatus: 'loading' | 'guest' | 'ready';
   user: CurrentUser | null;
   onConnectShikimori: () => void;
   onDisconnectShikimori: () => Promise<void>;
+  onImportShikimori: () => Promise<{ imported: number; updated: number; skipped: number; total: number }>;
 }) {
   const canConnect = authStatus === 'ready' && Boolean(user);
   const shikimori = user?.integrations.shikimori ?? null;
   const [disconnecting, setDisconnecting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; updated: number; skipped: number; total: number } | null>(null);
+  const [importError, setImportError] = useState('');
 
   async function handleDisconnect() {
     if (disconnecting) return;
@@ -1774,6 +1796,23 @@ function SettingsPage({
       await onDisconnectShikimori();
     } finally {
       setDisconnecting(false);
+    }
+  }
+
+  async function handleImport() {
+    if (importing) return;
+
+    setImporting(true);
+    setImportResult(null);
+    setImportError('');
+
+    try {
+      const result = await onImportShikimori();
+      setImportResult(result);
+    } catch {
+      setImportError('Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.');
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -1791,29 +1830,45 @@ function SettingsPage({
       </header>
 
       <section className="settings-panel">
-        <div>
-          <h3>Импорт из Shikimori</h3>
-          <p>Подключи аккаунт Shikimori, чтобы позже перенести просмотренное, брошенное и запланированное в профиль Anima.</p>
-        </div>
-        {shikimori ? null : (
-          <button type="button" onClick={onConnectShikimori} disabled={!canConnect}>
-            {canConnect ? 'Подключить' : 'Нужен вход'}
-          </button>
-        )}
         {shikimori ? (
-          <div className="connected-account">
-            <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
-              {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
-              <span>
-                <small>Подключен профиль</small>
-                <strong>{shikimori.nickname}</strong>
-              </span>
-            </a>
-            <button type="button" onClick={handleDisconnect} disabled={disconnecting}>
-              {disconnecting ? 'Отключаем...' : 'Отвязать'}
+          <>
+            <div className="connected-account">
+              <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
+                {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
+                <span>
+                  <small>Профиль Shikimori подключен</small>
+                  <strong>{shikimori.nickname}</strong>
+                </span>
+              </a>
+              <div className="connected-account-actions">
+                <button className="settings-icon-button" type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
+                  <img src={importIcon} alt="" aria-hidden="true" />
+                </button>
+                <button className="settings-icon-button" type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
+                  <img src={detachIcon} alt="" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <div className="settings-import-actions">
+              {importResult ? (
+                <p>
+                  Импортировано: {importResult.imported}, обновлено: {importResult.updated}, пропущено: {importResult.skipped}
+                </p>
+              ) : null}
+              {importError ? <p className="settings-error">{importError}</p> : null}
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <h3>Импорт из Shikimori</h3>
+              <p>Подключи аккаунт Shikimori, чтобы перенести просмотренное, брошенное и запланированное в профиль Anima.</p>
+            </div>
+            <button className="settings-connect-button" type="button" onClick={onConnectShikimori} disabled={!canConnect}>
+              {canConnect ? 'Подключить' : 'Нужен вход'}
             </button>
-          </div>
-        ) : null}
+          </>
+        )}
       </section>
     </section>
   );

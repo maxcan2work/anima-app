@@ -120,6 +120,12 @@ export async function disconnectShikimori() {
   await apiFetch<void>('/me/integrations/shikimori', { method: 'DELETE' });
 }
 
+export async function importShikimoriList() {
+  return apiFetch<{ imported: number; updated: number; skipped: number; total: number }>('/me/integrations/shikimori/import', {
+    method: 'POST',
+  });
+}
+
 export async function logout() {
   await apiFetch<void>('/logout', { method: 'POST' });
 }

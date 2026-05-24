@@ -10,7 +10,7 @@ import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
 import { browseCatalog, importShikimoriAnime, searchCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
-import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl } from './shikimori.js';
+import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl, importLinkedShikimoriAnimeList } from './shikimori.js';
 
 const app = express();
 const server = createServer(app);
@@ -181,6 +181,15 @@ app.delete('/me/integrations/shikimori', requireAuth, async (request, response) 
   });
 
   response.status(204).send();
+});
+
+app.post('/me/integrations/shikimori/import', requireAuth, async (request, response, next) => {
+  try {
+    const result = await importLinkedShikimoriAnimeList(request.userId!);
+    response.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/anime', async (_request, response) => {
