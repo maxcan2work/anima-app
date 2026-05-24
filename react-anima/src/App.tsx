@@ -18,6 +18,7 @@ import randomDiceIcon from './assets/random-dice.svg';
 import sidebarExpandIcon from './assets/sidebar-expand.svg';
 import sidebarShrinkIcon from './assets/sidebar-shrink.svg';
 import settingsIcon from './assets/settings.svg';
+import shikimoriIcon from './assets/shikimori.png';
 import trashIcon from './assets/trash.svg';
 import watchPartyIcon from './assets/watch-party.svg';
 import {
@@ -761,14 +762,7 @@ export function App() {
             onToast={setToast}
           />
         ) : displayedView === 'settings' ? (
-          <SettingsPage
-            authStatus={authStatus}
-            user={user}
-            onConnectShikimori={connectShikimori}
-            onDisconnectShikimori={handleDisconnectShikimori}
-            onImportShikimori={handleImportShikimoriList}
-            onToast={setToast}
-          />
+          <SettingsPage />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
             browseResults={browseResults}
@@ -799,6 +793,10 @@ export function App() {
             entries={diaryEntries}
             onLogin={loginWithDiscord}
             onLogout={handleLogout}
+            onConnectShikimori={connectShikimori}
+            onDisconnectShikimori={handleDisconnectShikimori}
+            onImportShikimori={handleImportShikimoriList}
+            onToast={setToast}
           />
         )}
         </div>
@@ -1659,12 +1657,26 @@ function ProfilePage({
   entries,
   onLogin,
   onLogout,
+  onConnectShikimori,
+  onDisconnectShikimori,
+  onImportShikimori,
+  onToast,
 }: {
   user: CurrentUser | null;
   authStatus: 'loading' | 'guest' | 'ready';
   entries: ServerWatchEntry[];
   onLogin: () => void;
   onLogout: () => void;
+  onConnectShikimori: () => void;
+  onDisconnectShikimori: () => Promise<void>;
+  onImportShikimori: () => Promise<{
+    imported: number;
+    updated: number;
+    skipped: number;
+    total: number;
+    errors?: Array<{ shikimoriId: number | null; reason: string }>;
+  }>;
+  onToast: (message: string) => void;
 }) {
   const profileFilters: Array<{ status: WatchState['status']; label: string; count: number; icon: string }> = [
     { status: 'watching', label: 'Смотрю', count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
@@ -1681,6 +1693,7 @@ function ProfilePage({
   ];
   const sortedFriends = [...profileFriends].sort((left, right) => Number(right.status === 'online') - Number(left.status === 'online'));
   const [selectedStatus, setSelectedStatus] = useState<WatchState['status']>('watching');
+  const [sidebarMode, setSidebarMode] = useState<'overview' | 'settings'>('overview');
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerStatus(entry.status) === selectedStatus);
 
@@ -1729,52 +1742,89 @@ function ProfilePage({
           </div>
         </header>
 
-        <section className="profile-sidebar-section" aria-labelledby="profile-watch-section">
-          <h3 id="profile-watch-section">Просмотр</h3>
-          <div className="profile-stats" aria-label="Фильтр дневника">
-            {profileFilters.map((filter) => (
-              <button
-                key={filter.status}
-                className={filter.status === selectedStatus ? 'active' : ''}
-                type="button"
-                onClick={() => setSelectedStatus(filter.status)}
-              >
-                <img className="profile-stat-icon" src={filter.icon} alt="" aria-hidden="true" />
-                <span>{filter.label}</span>
-                <strong>{filter.count}</strong>
-              </button>
-            ))}
-          </div>
-        </section>
+        <div className={`profile-sidebar-content ${sidebarMode === 'settings' ? 'slide-up' : 'slide-down'}`} key={sidebarMode}>
+          {sidebarMode === 'overview' ? (
+            <>
+              <section className="profile-sidebar-section" aria-labelledby="profile-watch-section">
+                <h3 id="profile-watch-section">Просмотр</h3>
+                <div className="profile-stats" aria-label="Фильтр дневника">
+                  {profileFilters.map((filter) => (
+                    <button
+                      key={filter.status}
+                      className={filter.status === selectedStatus ? 'active' : ''}
+                      type="button"
+                      onClick={() => setSelectedStatus(filter.status)}
+                    >
+                      <img className="profile-stat-icon" src={filter.icon} alt="" aria-hidden="true" />
+                      <span>{filter.label}</span>
+                      <strong>{filter.count}</strong>
+                    </button>
+                  ))}
+                </div>
+              </section>
 
-        <section className="profile-sidebar-section profile-friends-section" aria-labelledby="profile-friends-section">
-          <div className="profile-section-title">
-            <h3 id="profile-friends-section">Друзья</h3>
-            <span>{profileFriends.length}</span>
-          </div>
-          <div className="profile-friends-list">
-            {sortedFriends.slice(0, 5).map((friend) => (
-              <article key={friend.id} className="profile-friend-row">
-                <span className="profile-friend-avatar">{friend.name[0]}</span>
-                <span className="profile-friend-name">{friend.name}</span>
-                <span className={`profile-friend-status ${friend.status}`}>{friend.status === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
-              </article>
-            ))}
-          </div>
-          <button className="profile-show-all" type="button">
-            Показать всех
+              <section className="profile-sidebar-section profile-friends-section" aria-labelledby="profile-friends-section">
+                <div className="profile-section-title">
+                  <h3 id="profile-friends-section">Друзья</h3>
+                  <span>{profileFriends.length}</span>
+                </div>
+                <div className="profile-friends-list">
+                  {sortedFriends.slice(0, 5).map((friend) => (
+                    <article key={friend.id} className="profile-friend-row">
+                      <span className="profile-friend-avatar">{friend.name[0]}</span>
+                      <span className="profile-friend-name">{friend.name}</span>
+                      <span className={`profile-friend-status ${friend.status}`}>{friend.status === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
+                    </article>
+                  ))}
+                </div>
+                <button className="profile-show-all" type="button">
+                  Показать всех
+                </button>
+              </section>
+            </>
+          ) : (
+            <>
+              <section className="profile-sidebar-section" aria-labelledby="profile-edit-section">
+                <h3 id="profile-edit-section">Профиль</h3>
+                <div className="profile-settings-card">
+                  <span>Редактирование ника и аватарки появится позже.</span>
+                </div>
+              </section>
+
+              <section className="profile-sidebar-section profile-integration-section" aria-labelledby="profile-integrations-section">
+                <h3 id="profile-integrations-section">Интеграции</h3>
+                <ShikimoriIntegration
+                  authStatus={authStatus}
+                  user={user}
+                  onConnectShikimori={onConnectShikimori}
+                  onDisconnectShikimori={onDisconnectShikimori}
+                  onImportShikimori={onImportShikimori}
+                  onToast={onToast}
+                />
+              </section>
+            </>
+          )}
+        </div>
+
+        <div className="profile-sidebar-actions">
+          <button
+            className={sidebarMode === 'settings' ? 'profile-settings-toggle active' : 'profile-settings-toggle'}
+            type="button"
+            onClick={() => setSidebarMode((current) => (current === 'settings' ? 'overview' : 'settings'))}
+            aria-label={sidebarMode === 'settings' ? 'Вернуться к профилю' : 'Настройки профиля'}
+          >
+            <img src={settingsIcon} alt="" aria-hidden="true" />
           </button>
-        </section>
-
-        <button className="profile-logout" type="button" onClick={onLogout}>
-          Выйти
-        </button>
+          <button className="profile-logout" type="button" onClick={onLogout}>
+            Выйти
+          </button>
+        </div>
       </aside>
     </section>
   );
 }
 
-function SettingsPage({
+function ShikimoriIntegration({
   authStatus,
   user,
   onConnectShikimori,
@@ -1836,6 +1886,53 @@ function SettingsPage({
     }
   }
 
+  if (isAuthLoading) {
+    return (
+      <div className="connected-account settings-account-placeholder" aria-hidden="true">
+        <span className="settings-placeholder-avatar" />
+        <span className="settings-placeholder-copy">
+          <span />
+          <strong />
+        </span>
+      </div>
+    );
+  }
+
+  if (shikimori) {
+    return (
+      <div className="connected-account">
+        <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
+          <span className="connected-account-avatar">
+            {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
+            <img className="connected-account-badge" src={shikimoriIcon} alt="" aria-hidden="true" />
+          </span>
+          <span>
+            <strong>{shikimori.nickname}</strong>
+          </span>
+        </a>
+        <div className="connected-account-actions">
+          <button className="settings-icon-button" type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
+            {importing ? <span className="settings-button-loader" aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
+          </button>
+          <button className="settings-icon-button" type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
+            <img src={detachIcon} alt="" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="profile-integration-empty">
+      <p>Подключи Shikimori, чтобы импортировать список просмотра.</p>
+      <button className="settings-connect-button" type="button" onClick={onConnectShikimori} disabled={!canConnect}>
+        {canConnect ? 'Подключить' : 'Нужен вход'}
+      </button>
+    </div>
+  );
+}
+
+function SettingsPage() {
   return (
     <section className="settings-page">
       <header className="settings-hero">
@@ -1845,50 +1942,28 @@ function SettingsPage({
         <div>
           <p className="eyebrow">Anima</p>
           <h2>Настройки</h2>
-          <p>Здесь будут параметры приложения и импорт просмотренного из Shikimori.</p>
+          <p>Здесь будут общие параметры приложения.</p>
         </div>
       </header>
 
       <section className="settings-panel">
-        {isAuthLoading ? (
-          <div className="connected-account settings-account-placeholder" aria-hidden="true">
-            <span className="settings-placeholder-avatar" />
-            <span className="settings-placeholder-copy">
-              <span />
-              <strong />
-            </span>
-          </div>
-        ) : shikimori ? (
-          <>
-            <div className="connected-account">
-              <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
-                {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
-                <span>
-                  <small>Профиль Shikimori подключен</small>
-                  <strong>{shikimori.nickname}</strong>
-                </span>
-              </a>
-              <div className="connected-account-actions">
-                <button className="settings-icon-button" type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
-                  {importing ? <span className="settings-button-loader" aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
-                </button>
-                <button className="settings-icon-button" type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
-                  <img src={detachIcon} alt="" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <h3>Импорт из Shikimori</h3>
-              <p>Подключи аккаунт Shikimori, чтобы перенести просмотренное, брошенное и запланированное в профиль Anima.</p>
-            </div>
-            <button className="settings-connect-button" type="button" onClick={onConnectShikimori} disabled={!canConnect}>
-              {canConnect ? 'Подключить' : 'Нужен вход'}
-            </button>
-          </>
-        )}
+        <div>
+          <h3>Тема</h3>
+          <p>Позже добавим выбор светлой, тёмной и системной темы.</p>
+        </div>
+        <button type="button" disabled>
+          Скоро
+        </button>
+      </section>
+
+      <section className="settings-panel">
+        <div>
+          <h3>Язык</h3>
+          <p>Здесь будет выбор языка интерфейса.</p>
+        </div>
+        <button type="button" disabled>
+          Скоро
+        </button>
       </section>
     </section>
   );
