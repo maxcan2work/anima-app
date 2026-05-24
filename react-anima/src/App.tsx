@@ -1,16 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   connectShikimori,
-  getAnimeById,
-  getAnimeCatalog,
-  importCatalogAnime,
   loginWithDiscord,
   saveAnimeProgress,
-  searchCatalog,
-  type CatalogSearchResult,
 } from './api';
-import { type AnimeTitle } from './data';
 import { useAppNavigation } from './hooks/useAppNavigation';
+import { useAnimeLibrary } from './hooks/useAnimeLibrary';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
@@ -22,23 +17,12 @@ import { RandomAnimePage } from './pages/random/RandomAnimePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
-import { mapServerAnime, mergeAnimeLibrary, upsertDiaryEntry } from './shared/animeMappers';
-import {
-  animeRouteFromCatalog,
-  animeRouteSlug,
-  findAnimeByRoute,
-  findCatalogResultByRoute,
-  getRouteAnimeId,
-  getWatchPartyCodeFromPath,
-  parseShikimoriRouteId,
-  type AppView,
-} from './shared/navigation';
+import { mapServerAnime, upsertDiaryEntry } from './shared/animeMappers';
+import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, saveWatchState, type WatchState } from './shared/storage';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
-  const [library, setLibrary] = useState<AnimeTitle[]>([]);
-  const [selectedId, setSelectedId] = useState('');
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const {
     browseResults,
@@ -53,33 +37,6 @@ export function App() {
     setBrowsePage,
     setCatalogSearchQuery,
   } = useCatalogBrowse();
-  const {
-    user,
-    authStatus,
-    diaryEntries,
-    setDiaryEntries,
-    handleLogout,
-    handleDisconnectShikimori,
-    handleImportShikimoriList,
-  } = useAuthSession({
-    setWatchState,
-    setLibrary,
-    onLogoutCleanup: () => clearRandomState(),
-  });
-  const {
-    randomAnime,
-    randomHistory,
-    randomLoading,
-    randomStatus,
-    randomClearing,
-    deletingRandomKey,
-    handleRandomAnime,
-    handleClearRandomHistory,
-    handleDeleteRandomHistoryEntry,
-    clearRandomState,
-  } = useRandomAnime(user);
-  const [syncStatus, setSyncStatus] = useState('');
-  const { toast, setToast } = useToast();
   const {
     watchPartyCode,
     watchPartyCreateCode,
@@ -108,9 +65,49 @@ export function App() {
   const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
   const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
   const displayedRouteAnimeId = getRouteAnimeId(displayedPath);
-
-  const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
-  const displayedSelected = displayedRouteAnimeId ? findAnimeByRoute(library, displayedRouteAnimeId) ?? selected : selected;
+  const catalogCandidates = useMemo(
+    () => [...catalogSearchResults, ...browseResults],
+    [browseResults, catalogSearchResults],
+  );
+  const {
+    library,
+    setLibrary,
+    displayedSelected,
+    openCatalogAnime,
+  } = useAnimeLibrary({
+    routeAnimeId,
+    displayedRouteAnimeId,
+    catalogCandidates,
+    requestAnimeRoute,
+    setView,
+  });
+  const {
+    user,
+    authStatus,
+    diaryEntries,
+    setDiaryEntries,
+    handleLogout,
+    handleDisconnectShikimori,
+    handleImportShikimoriList,
+  } = useAuthSession({
+    setWatchState,
+    setLibrary,
+    onLogoutCleanup: () => clearRandomState(),
+  });
+  const {
+    randomAnime,
+    randomHistory,
+    randomLoading,
+    randomStatus,
+    randomClearing,
+    deletingRandomKey,
+    handleRandomAnime,
+    handleClearRandomHistory,
+    handleDeleteRandomHistoryEntry,
+    clearRandomState,
+  } = useRandomAnime(user);
+  const [syncStatus, setSyncStatus] = useState('');
+  const { toast, setToast } = useToast();
 
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
@@ -124,99 +121,6 @@ export function App() {
   useEffect(() => {
     restoreScroll(displayedPath);
   }, [displayedPath, restoreScroll]);
-
-  function openCatalogAnime(result: CatalogSearchResult) {
-    requestAnimeRoute(animeRouteFromCatalog(result));
-  }
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadCatalog() {
-      try {
-        const response = await getAnimeCatalog();
-        if (ignore) return;
-
-        const loaded = mergeAnimeLibrary([], response.anime.map(mapServerAnime));
-        setLibrary(loaded);
-        setSelectedId((current) => current || loaded[0]?.id || '');
-      } catch {
-        if (!ignore) {
-          console.warn('Failed to load local catalog');
-        }
-      }
-    }
-
-    loadCatalog();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!routeAnimeId) return;
-    let ignore = false;
-
-    async function loadRouteAnime() {
-      const localAnime = findAnimeByRoute(library, routeAnimeId);
-      if (localAnime) {
-        setSelectedId(localAnime.id);
-        setView('watch');
-        return;
-      }
-
-      try {
-        const response = await getAnimeById(routeAnimeId);
-        if (ignore) return;
-
-        const anime = mapServerAnime(response.anime);
-        setLibrary((current) => mergeAnimeLibrary(current, [anime]));
-        setSelectedId(anime.id);
-        setView('watch');
-      } catch {
-        const shikimoriId = parseShikimoriRouteId(routeAnimeId);
-        const catalogMatch = shikimoriId
-          ? null
-          : findCatalogResultByRoute([...catalogSearchResults, ...browseResults, ...randomHistory], routeAnimeId) ??
-            (await findCatalogResultBySearch(routeAnimeId));
-        const providerId = shikimoriId ?? catalogMatch?.providerId;
-        if (!providerId) return;
-
-        try {
-          const response = await importCatalogAnime('shikimori', providerId);
-          if (ignore) return;
-
-          const anime = mapServerAnime(response.anime);
-          setLibrary((current) => mergeAnimeLibrary(current, [anime]));
-          setSelectedId(anime.id);
-          setView('watch');
-        } catch {
-          if (!ignore) {
-            console.warn('Failed to open anime route');
-          }
-        }
-      }
-    }
-
-    loadRouteAnime();
-
-    return () => {
-      ignore = true;
-    };
-  }, [browseResults, catalogSearchResults, library, randomHistory, routeAnimeId]);
-
-  async function handleImportCatalogAnime(result: CatalogSearchResult) {
-    try {
-      const response = await importCatalogAnime(result.provider, result.providerId);
-      const anime = mapServerAnime(response.anime);
-      setLibrary((current) => mergeAnimeLibrary(current, [anime]));
-      setSelectedId(anime.id);
-      requestAnimeRoute(`/anime/${encodeURIComponent(animeRouteSlug(anime))}`);
-    } catch {
-      console.warn('Failed to import catalog anime');
-    }
-  }
 
   function updateState(id: string, patch: Partial<WatchState>) {
     setWatchState((current) => {
@@ -366,14 +270,4 @@ export function App() {
       {toast ? <div className="app-toast">{toast}</div> : null}
     </main>
   );
-}
-
-async function findCatalogResultBySearch(routeId: string) {
-  const query = routeId.replace(/-/g, ' ');
-  try {
-    const response = await searchCatalog(query);
-    return findCatalogResultByRoute(response.results, routeId) ?? response.results[0] ?? null;
-  } catch {
-    return null;
-  }
 }
