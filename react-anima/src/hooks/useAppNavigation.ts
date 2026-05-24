@@ -11,7 +11,6 @@ export function useAppNavigation() {
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
   const [watchPartyCreateCode, setWatchPartyCreateCode] = useState('');
   const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<{ path: string; view: AppView } | null>(null);
-  const [watchPartyLeaveModalClosing, setWatchPartyLeaveModalClosing] = useState(false);
   const [view, setView] = useState<AppView>(() => getViewFromPath(window.location.pathname));
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
@@ -74,7 +73,6 @@ export function useAppNavigation() {
     setWatchPartyCode('');
     setWatchPartyCreateCode('');
     setWatchPartyLeaveTarget(null);
-    setWatchPartyLeaveModalClosing(false);
     setCurrentPath((current) => {
       scrollByPathRef.current[current] = window.scrollY;
       if (window.location.pathname !== path) {
@@ -91,19 +89,12 @@ export function useAppNavigation() {
   }
 
   function closeWatchPartyLeaveModal() {
-    if (watchPartyLeaveModalClosing) return;
-    setWatchPartyLeaveModalClosing(true);
-    window.setTimeout(() => {
-      setWatchPartyLeaveTarget(null);
-      setWatchPartyLeaveModalClosing(false);
-    }, 140);
+    setWatchPartyLeaveTarget(null);
   }
 
   function confirmLeaveWatchParty() {
-    if (watchPartyLeaveModalClosing) return;
     const target = watchPartyLeaveTarget ?? { path: '/anime', view: 'watch' as AppView };
     setWatchPartyLeaveTarget(null);
-    setWatchPartyLeaveModalClosing(false);
     setWatchPartyCode('');
     setCurrentPath((current) => {
       scrollByPathRef.current[current] = window.scrollY;
@@ -137,7 +128,6 @@ export function useAppNavigation() {
     watchPartyCode,
     watchPartyCreateCode,
     watchPartyLeaveTarget,
-    watchPartyLeaveModalClosing,
     view,
     currentPath,
     routeAnimeId,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   connectShikimori,
   loginWithDiscord,
@@ -20,9 +20,18 @@ import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
 import { mapServerAnime } from './shared/animeMappers';
 import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
+import { ModalProvider, useConfirmModal } from './shared/ui/ModalProvider';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
+  return (
+    <ModalProvider>
+      <AppContent />
+    </ModalProvider>
+  );
+}
+
+function AppContent() {
   const [watchState, setWatchState] = useState<Record<string, WatchState>>(loadWatchState);
   const {
     browseResults,
@@ -41,7 +50,6 @@ export function App() {
     watchPartyCode,
     watchPartyCreateCode,
     watchPartyLeaveTarget,
-    watchPartyLeaveModalClosing,
     view,
     currentPath,
     routeAnimeId,
@@ -59,6 +67,8 @@ export function App() {
     restoreScroll,
   } = useAppNavigation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
+  const confirm = useConfirmModal();
+  const leaveConfirmOpenRef = useRef(false);
   const screenKey = `${view}:${currentPath}`;
   const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
@@ -121,6 +131,26 @@ export function App() {
   useEffect(() => {
     restoreScroll(displayedPath);
   }, [displayedPath, restoreScroll]);
+
+  useEffect(() => {
+    if (!watchPartyLeaveTarget || leaveConfirmOpenRef.current) return;
+
+    leaveConfirmOpenRef.current = true;
+    confirm({
+      title: 'Покинуть совместный просмотр?',
+      content: <p>Чтобы перейти в другой раздел, нужно выйти из комнаты. Текущий совместный просмотр будет отключен для тебя.</p>,
+      cancelLabel: 'Остаться',
+      confirmLabel: 'Выйти и перейти',
+      confirmVariant: 'danger',
+    }).then((confirmed) => {
+      leaveConfirmOpenRef.current = false;
+      if (confirmed) {
+        confirmLeaveWatchParty();
+      } else {
+        closeWatchPartyLeaveModal();
+      }
+    });
+  }, [closeWatchPartyLeaveModal, confirm, confirmLeaveWatchParty, watchPartyLeaveTarget]);
 
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
@@ -211,26 +241,6 @@ export function App() {
         )}
         </div>
       </section>
-      {watchPartyLeaveTarget ? (
-        <div
-          className={watchPartyLeaveModalClosing ? 'modal-backdrop closing' : 'modal-backdrop'}
-          role="presentation"
-          onClick={closeWatchPartyLeaveModal}
-        >
-          <div className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="leave-watch-party-title" onClick={(event) => event.stopPropagation()}>
-            <h3 id="leave-watch-party-title">Покинуть совместный просмотр?</h3>
-            <p>Чтобы перейти в другой раздел, нужно выйти из комнаты. Текущий совместный просмотр будет отключен для тебя.</p>
-            <div className="confirm-modal-actions">
-              <button className="text-button" type="button" onClick={closeWatchPartyLeaveModal} disabled={watchPartyLeaveModalClosing}>
-                Остаться
-              </button>
-              <button className="danger-button" type="button" onClick={confirmLeaveWatchParty} disabled={watchPartyLeaveModalClosing}>
-                Выйти и перейти
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
       {toast ? <div className="app-toast">{toast}</div> : null}
     </main>
   );
