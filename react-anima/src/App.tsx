@@ -13,6 +13,7 @@ import { type AnimeTitle } from './data';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
+import { useScreenTransition } from './hooks/useScreenTransition';
 import { useToast } from './hooks/useToast';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
@@ -89,9 +90,8 @@ export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
   const lastWatchPathRef = useRef(window.location.pathname.startsWith('/anime') ? window.location.pathname : '/anime');
   const scrollByPathRef = useRef<Record<string, number>>({});
-  const [screenAnimation, setScreenAnimation] = useState<'idle' | 'leaving' | 'entering'>('idle');
   const screenKey = `${view}:${currentPath}`;
-  const [displayedScreenKey, setDisplayedScreenKey] = useState(screenKey);
+  const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
   const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
   const displayedPath = displayedScreenKey.slice(displayedScreenDivider + 1);
@@ -125,22 +125,6 @@ export function App() {
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed]);
-
-  useEffect(() => {
-    if (displayedScreenKey === screenKey) return;
-
-    setScreenAnimation('leaving');
-    const enterTimer = window.setTimeout(() => {
-      setDisplayedScreenKey(screenKey);
-      setScreenAnimation('entering');
-    }, 120);
-    const idleTimer = window.setTimeout(() => setScreenAnimation('idle'), 300);
-
-    return () => {
-      window.clearTimeout(enterTimer);
-      window.clearTimeout(idleTimer);
-    };
-  }, [displayedScreenKey, screenKey]);
 
   useEffect(() => {
     if (currentPath.startsWith('/anime')) {
