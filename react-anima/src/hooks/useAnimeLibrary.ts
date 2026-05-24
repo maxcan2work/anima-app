@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAnimeById, getAnimeCatalog, importCatalogAnime, searchCatalog, type CatalogSearchResult } from '../api';
 import type { AnimeTitle } from '../data';
 import { mapServerAnime, mergeAnimeLibrary } from '../shared/animeMappers';
@@ -30,30 +30,30 @@ export function useAnimeLibrary({
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
   const displayedSelected = displayedRouteAnimeId ? findAnimeByRoute(library, displayedRouteAnimeId) ?? selected : selected;
 
+  const refreshLibrary = useCallback(async () => {
+    try {
+      const response = await getAnimeCatalog();
+      const loaded = mergeAnimeLibrary([], response.anime.map(mapServerAnime));
+      setLibrary(loaded);
+      setSelectedId((current) => current || loaded[0]?.id || '');
+    } catch {
+      console.warn('Failed to load local catalog');
+    }
+  }, []);
+
   useEffect(() => {
     let ignore = false;
 
-    async function loadCatalog() {
-      try {
-        const response = await getAnimeCatalog();
-        if (ignore) return;
-
-        const loaded = mergeAnimeLibrary([], response.anime.map(mapServerAnime));
-        setLibrary(loaded);
-        setSelectedId((current) => current || loaded[0]?.id || '');
-      } catch {
-        if (!ignore) {
-          console.warn('Failed to load local catalog');
-        }
+    refreshLibrary().catch(() => {
+      if (!ignore) {
+        console.warn('Failed to load local catalog');
       }
-    }
-
-    loadCatalog();
+    });
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [refreshLibrary]);
 
   useEffect(() => {
     if (!routeAnimeId) return;
@@ -111,11 +111,12 @@ export function useAnimeLibrary({
     () => ({
       library,
       setLibrary,
+      refreshLibrary,
       selected,
       displayedSelected,
       openCatalogAnime: (result: CatalogSearchResult) => requestAnimeRoute(animeRouteFromCatalog(result)),
     }),
-    [displayedSelected, library, requestAnimeRoute, selected],
+    [displayedSelected, library, refreshLibrary, requestAnimeRoute, selected],
   );
 
   return api;

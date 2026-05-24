@@ -1,8 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { connectShikimori, loginWithDiscord, type CurrentUser, type ServerWatchEntry } from '../../api';
-import type { AnimeTitle } from '../../data';
 import { useAuthSession } from '../../hooks/useAuthSession';
-import type { WatchState } from '../../shared/storage';
 
 type AuthStatus = 'loading' | 'guest' | 'ready';
 
@@ -10,6 +8,7 @@ type AuthContextValue = {
   user: CurrentUser | null;
   authStatus: AuthStatus;
   diaryEntries: ServerWatchEntry[];
+  libraryRefreshKey: number;
   setDiaryEntries: (updater: (entries: ServerWatchEntry[]) => ServerWatchEntry[]) => void;
   login: () => void;
   logout: () => Promise<void>;
@@ -24,27 +23,19 @@ type AuthContextValue = {
   }>;
 };
 
-type AuthProviderProps = {
-  children: ReactNode;
-  setWatchState: (value: Record<string, WatchState> | ((current: Record<string, WatchState>) => Record<string, WatchState>)) => void;
-  setLibrary: (value: AnimeTitle[] | ((current: AnimeTitle[]) => AnimeTitle[])) => void;
-};
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children, setWatchState, setLibrary }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const {
     user,
     authStatus,
     diaryEntries,
+    libraryRefreshKey,
     setDiaryEntries,
     handleLogout,
     handleDisconnectShikimori,
     handleImportShikimoriList,
-  } = useAuthSession({
-    setWatchState,
-    setLibrary,
-  });
+  } = useAuthSession();
 
   return (
     <AuthContext.Provider
@@ -52,6 +43,7 @@ export function AuthProvider({ children, setWatchState, setLibrary }: AuthProvid
         user,
         authStatus,
         diaryEntries,
+        libraryRefreshKey,
         setDiaryEntries,
         login: loginWithDiscord,
         logout: handleLogout,
