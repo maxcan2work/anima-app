@@ -12,6 +12,7 @@ import { loadWatchState, type WatchState } from '../../shared/storage';
 type WatchLibraryContextValue = {
   library: AnimeTitle[];
   displayedSelected: AnimeTitle | null;
+  routeAnimeLoading: boolean;
   watchState: Record<string, WatchState>;
   openCatalogAnime: (anime: CatalogSearchResult) => void;
   updateWatchState: (animeId: string, patch: Partial<WatchState>) => void;
@@ -43,6 +44,7 @@ export function WatchLibraryProvider({ children }: { children: ReactNode }) {
   const {
     library,
     displayedSelected,
+    routeAnimeLoading,
     openCatalogAnime,
     refreshLibrary,
   } = useAnimeLibrary({
@@ -83,6 +85,7 @@ export function WatchLibraryProvider({ children }: { children: ReactNode }) {
       value={{
         library,
         displayedSelected,
+        routeAnimeLoading,
         watchState,
         openCatalogAnime,
         updateWatchState: updateState,

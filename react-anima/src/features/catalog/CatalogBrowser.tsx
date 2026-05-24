@@ -39,7 +39,10 @@ export function CatalogBrowser({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isSearching = searchQuery.trim().length >= 2;
   const visibleResults = isSearching ? searchResults : browseResults;
-  const status = isSearching ? searchStatus : browseStatus;
+  const isInitialBrowseLoading = !isSearching && browseLoading && browseResults.length === 0;
+  const hasBrowseError = !isSearching && Boolean(browseStatus) && !browseLoading && browseResults.length === 0;
+  const isLoadingMore = !isSearching && browseLoading && browseResults.length > 0;
+  const isSearchLoading = isSearching && searchLoading;
 
   useEffect(() => {
     if (isSearching) return;
@@ -79,13 +82,11 @@ export function CatalogBrowser({
         </label>
       </header>
 
-      {status ? <p className="catalog-status">{status}</p> : null}
-
-      {searchLoading && isSearching ? (
-        <SearchLoader />
-      ) : (
-        <div className="browse-grid">
-          {visibleResults.map((result) => (
+      <div className="browse-grid" aria-busy={isInitialBrowseLoading || isLoadingMore || isSearchLoading}>
+        {isSearchLoading || isInitialBrowseLoading || hasBrowseError ? (
+          <CatalogSkeletonCards count={12} />
+        ) : (
+          visibleResults.map((result) => (
             <button
               key={`${result.provider}-${result.providerId}`}
               className="browse-card"
@@ -101,25 +102,27 @@ export function CatalogBrowser({
                 </small>
               </div>
             </button>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+        {isLoadingMore ? <CatalogSkeletonCards count={6} /> : null}
+      </div>
 
-      {!isSearching ? (
-        <div ref={sentinelRef} className="scroll-sentinel">
-          {browseLoading ? 'Загружаем еще...' : browseHasNext ? 'Прокрути ниже для загрузки' : 'Больше тайтлов нет'}
-        </div>
-      ) : null}
+      {!isSearching ? <div ref={sentinelRef} className="scroll-sentinel" aria-hidden="true" /> : null}
     </section>
   );
 }
 
-function SearchLoader() {
+function CatalogSkeletonCards({ count }: { count: number }) {
   return (
-    <div className="search-loader" aria-label="Загрузка результатов">
-      <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
-        <circle cx="24" cy="24" r="18" />
-      </svg>
-    </div>
+    <>
+      {Array.from({ length: count }, (_, index) => (
+        <div className="browse-card browse-card-skeleton" key={`catalog-skeleton-${index}`}>
+          <span className="skeleton-poster" />
+          <span className="skeleton-line skeleton-line-title" />
+          <span className="skeleton-line" />
+          <span className="skeleton-line skeleton-line-short" />
+        </div>
+      ))}
+    </>
   );
 }

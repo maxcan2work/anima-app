@@ -1,4 +1,4 @@
-import { AnimeHero } from '../pages/anime/AnimeHero';
+import { AnimeHero, AnimeHeroSkeleton } from '../pages/anime/AnimeHero';
 import { ProfilePage } from '../pages/profile/ProfilePage';
 import { RandomAnimePage } from '../pages/random/RandomAnimePage';
 import { SettingsPage } from '../pages/settings/SettingsPage';
@@ -19,7 +19,7 @@ export function AppScreens() {
     leaveWatchParty,
     consumeWatchPartyCreate,
   } = useNavigation();
-  const { displayedSelected, watchState, updateWatchState } = useWatchLibrary();
+  const { displayedSelected, routeAnimeLoading, watchState, updateWatchState } = useWatchLibrary();
 
   if (displayedView === 'random') {
     return <RandomAnimePage />;
@@ -49,6 +49,10 @@ export function AppScreens() {
 
   if (displayedView === 'watch' && !displayedRouteAnimeId) {
     return <WatchHome />;
+  }
+
+  if (displayedView === 'watch' && (routeAnimeLoading || (displayedRouteAnimeId && !displayedSelected))) {
+    return <AnimeHeroSkeleton />;
   }
 
   if (!displayedSelected) {

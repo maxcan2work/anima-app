@@ -6,7 +6,7 @@ export function useCatalogBrowse() {
   const [browsePage, setBrowsePage] = useState(1);
   const [browseHasNext, setBrowseHasNext] = useState(true);
   const [browseLoading, setBrowseLoading] = useState(false);
-  const [browseStatus, setBrowseStatus] = useState('Загружаем каталог Shikimori...');
+  const [browseStatus, setBrowseStatus] = useState('');
   const [catalogSearchQuery, setCatalogSearchQuery] = useState('');
   const [catalogSearchResults, setCatalogSearchResults] = useState<CatalogSearchResult[]>([]);
   const [catalogSearchLoading, setCatalogSearchLoading] = useState(false);
@@ -17,7 +17,7 @@ export function useCatalogBrowse() {
 
     async function loadBrowse() {
       setBrowseLoading(true);
-      setBrowseStatus(browsePage === 1 ? 'Загружаем каталог Shikimori...' : '');
+      setBrowseStatus('');
       try {
         const response = await browseCatalog(browsePage);
         if (ignore) return;
@@ -36,7 +36,7 @@ export function useCatalogBrowse() {
       } catch {
         if (!ignore) {
           setBrowseResults([]);
-          setBrowseStatus('Не удалось загрузить каталог Shikimori.');
+          setBrowseStatus('error');
         }
       } finally {
         if (!ignore) {

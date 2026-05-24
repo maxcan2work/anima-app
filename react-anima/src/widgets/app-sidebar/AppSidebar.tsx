@@ -14,10 +14,7 @@ type AppSidebarProps = {
   onToggleCollapsed: () => void;
 };
 
-export function AppSidebar({
-  collapsed,
-  onToggleCollapsed,
-}: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
   const {
     view,
     watchPartyCode,
@@ -93,22 +90,13 @@ export function AppSidebar({
             <small>Скоро</small>
           </span>
         </button>
-        <AuthPanel
-          collapsed={collapsed}
-          onProfile={() => requestRoute('/profile', 'profile')}
-        />
+        <AuthPanel collapsed={collapsed} onProfile={() => requestRoute('/profile', 'profile')} />
       </div>
     </aside>
   );
 }
 
-function AuthPanel({
-  collapsed,
-  onProfile,
-}: {
-  collapsed: boolean;
-  onProfile: () => void;
-}) {
+function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: () => void }) {
   const { user, authStatus, login } = useAuth();
 
   if (authStatus === 'loading') {
@@ -121,19 +109,14 @@ function AuthPanel({
   }
 
   if (!user) {
-    if (collapsed) {
-      return (
-        <div className="auth-panel collapsed-auth">
-          <button className="auth-icon-button" onClick={login} data-tooltip="Войти через Discord" type="button">
-            <img src={discordIcon} alt="" aria-hidden="true" />
-          </button>
-        </div>
-      );
-    }
-
     return (
       <div className="auth-panel">
-        <button className="discord-button" onClick={login}>
+        <button
+          className="discord-button"
+          onClick={login}
+          data-tooltip={collapsed ? 'Войти через Discord' : undefined}
+          type="button"
+        >
           <img src={discordIcon} alt="" aria-hidden="true" />
           <span>Войти через Discord</span>
         </button>

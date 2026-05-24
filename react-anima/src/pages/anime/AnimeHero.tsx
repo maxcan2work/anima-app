@@ -194,6 +194,50 @@ export function AnimeHero({
   );
 }
 
+export function AnimeHeroSkeleton() {
+  return (
+    <div className="player-layout anime-page-skeleton" aria-busy="true">
+      <section className="player">
+        <div className="video-frame player-frame-skeleton">
+          <span />
+        </div>
+        <section className="episodes episodes-skeleton" aria-hidden="true">
+          <span className="episode-scroll skeleton-block" />
+          <div className="episode-grid">
+            {Array.from({ length: EPISODES_PER_PAGE }, (_, index) => (
+              <span className="skeleton-block" key={`episode-skeleton-${index}`} />
+            ))}
+          </div>
+          <span className="episode-scroll skeleton-block" />
+        </section>
+      </section>
+
+      <aside className="details-panel details-panel-skeleton">
+        <div className="details-poster skeleton-panel" />
+        <div className="genres skeleton-genres" aria-hidden="true">
+          <div className="genres-track">
+            {Array.from({ length: 5 }, (_, index) => (
+              <span className="skeleton-pill" key={`genre-skeleton-${index}`} />
+            ))}
+          </div>
+        </div>
+        <div className="meta-grid">
+          {Array.from({ length: 4 }, (_, index) => (
+            <span className="skeleton-meta" key={`meta-skeleton-${index}`} />
+          ))}
+        </div>
+        <div className="watch-tools">
+          <span className="skeleton-control" />
+          <span className="skeleton-control" />
+        </div>
+        <div className="sources-block">
+          <span className="skeleton-source" />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 function PlayerProviderSelect({
   players,
   value,
@@ -320,7 +364,7 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
 
 function PlayerLoader() {
   return (
-    <div className="player-loader" aria-label="Loading player">
+    <div className="player-loader player-loader-skeleton" aria-label="Loading player">
       <span />
     </div>
   );

@@ -27,6 +27,7 @@ export function useAnimeLibrary({
 }: UseAnimeLibraryOptions) {
   const [library, setLibrary] = useState<AnimeTitle[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [routeAnimeLoading, setRouteAnimeLoading] = useState(false);
   const selected = library.find((anime) => anime.id === selectedId) ?? library[0] ?? null;
   const displayedSelected = displayedRouteAnimeId ? findAnimeByRoute(library, displayedRouteAnimeId) ?? selected : selected;
 
@@ -64,9 +65,11 @@ export function useAnimeLibrary({
       if (localAnime) {
         setSelectedId(localAnime.id);
         setView('watch');
+        setRouteAnimeLoading(false);
         return;
       }
 
+      setRouteAnimeLoading(true);
       try {
         const response = await getAnimeById(routeAnimeId);
         if (ignore) return;
@@ -75,6 +78,7 @@ export function useAnimeLibrary({
         setLibrary((current) => mergeAnimeLibrary(current, [anime]));
         setSelectedId(anime.id);
         setView('watch');
+        setRouteAnimeLoading(false);
       } catch {
         const shikimoriId = parseShikimoriRouteId(routeAnimeId);
         const catalogMatch = shikimoriId
@@ -82,7 +86,10 @@ export function useAnimeLibrary({
           : findCatalogResultByRoute(catalogCandidates, routeAnimeId) ??
             (await findCatalogResultBySearch(routeAnimeId));
         const providerId = shikimoriId ?? catalogMatch?.providerId;
-        if (!providerId) return;
+        if (!providerId) {
+          setRouteAnimeLoading(false);
+          return;
+        }
 
         try {
           const response = await importCatalogAnime('shikimori', providerId);
@@ -92,9 +99,11 @@ export function useAnimeLibrary({
           setLibrary((current) => mergeAnimeLibrary(current, [anime]));
           setSelectedId(anime.id);
           setView('watch');
+          setRouteAnimeLoading(false);
         } catch {
           if (!ignore) {
             console.warn('Failed to open anime route');
+            setRouteAnimeLoading(false);
           }
         }
       }
@@ -114,9 +123,10 @@ export function useAnimeLibrary({
       refreshLibrary,
       selected,
       displayedSelected,
+      routeAnimeLoading,
       openCatalogAnime: (result: CatalogSearchResult) => requestAnimeRoute(animeRouteFromCatalog(result)),
     }),
-    [displayedSelected, library, refreshLibrary, requestAnimeRoute, selected],
+    [displayedSelected, library, refreshLibrary, requestAnimeRoute, routeAnimeLoading, selected],
   );
 
   return api;

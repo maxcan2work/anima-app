@@ -81,7 +81,7 @@ export function useWatchPartyCatalog({
 
     let ignore = false;
     setPartyCatalogLoading(true);
-    setPartyCatalogStatus(partyCatalogPage === 1 ? 'Загружаем каталог Shikimori...' : '');
+    setPartyCatalogStatus('');
 
     async function loadPartyCatalog() {
       try {
@@ -104,7 +104,7 @@ export function useWatchPartyCatalog({
           if (partyCatalogPage === 1) {
             setPartyCatalogResults([]);
           }
-          setPartyCatalogStatus('Не удалось загрузить каталог.');
+          setPartyCatalogStatus('error');
         }
       } finally {
         if (!ignore) {
