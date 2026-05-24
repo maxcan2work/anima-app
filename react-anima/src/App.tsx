@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  browseCatalog,
   connectShikimori,
-  clearMyRandomHistory,
-  deleteRandomHistoryEntry,
   getAnimeById,
   getAnimeCatalog,
-  getMyRandomHistory,
   importCatalogAnime,
   loginWithDiscord,
-  saveRandomHistoryEntry,
   saveAnimeProgress,
   searchCatalog,
   type CatalogSearchResult,
@@ -17,18 +12,14 @@ import {
 import { type AnimeTitle } from './data';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
+import { useRandomAnime } from './hooks/useRandomAnime';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { WatchPartyPage } from './pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
-import {
-  mapRandomHistoryEntry,
-  mapServerAnime,
-  mergeAnimeLibrary,
-  upsertDiaryEntry,
-} from './shared/animeMappers';
+import { mapServerAnime, mergeAnimeLibrary, upsertDiaryEntry } from './shared/animeMappers';
 import {
   animeRouteFromCatalog,
   animeRouteSlug,
@@ -61,12 +52,6 @@ export function App() {
     setBrowsePage,
     setCatalogSearchQuery,
   } = useCatalogBrowse();
-  const [randomAnime, setRandomAnime] = useState<CatalogSearchResult | null>(null);
-  const [randomHistory, setRandomHistory] = useState<CatalogSearchResult[]>([]);
-  const [randomLoading, setRandomLoading] = useState(false);
-  const [randomStatus, setRandomStatus] = useState('');
-  const [randomClearing, setRandomClearing] = useState(false);
-  const [deletingRandomKey, setDeletingRandomKey] = useState('');
   const {
     user,
     authStatus,
@@ -78,11 +63,20 @@ export function App() {
   } = useAuthSession({
     setWatchState,
     setLibrary,
-    onLogoutCleanup: () => {
-      setRandomHistory([]);
-      setRandomAnime(null);
-    },
+    onLogoutCleanup: () => clearRandomState(),
   });
+  const {
+    randomAnime,
+    randomHistory,
+    randomLoading,
+    randomStatus,
+    randomClearing,
+    deletingRandomKey,
+    handleRandomAnime,
+    handleClearRandomHistory,
+    handleDeleteRandomHistoryEntry,
+    clearRandomState,
+  } = useRandomAnime(user);
   const [syncStatus, setSyncStatus] = useState('');
   const [toast, setToast] = useState('');
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
@@ -174,30 +168,6 @@ export function App() {
     });
     setView('watch');
   }, [authStatus, currentPath, user]);
-
-  useEffect(() => {
-    if (!user) return;
-    let ignore = false;
-
-    async function loadRandomHistory() {
-      try {
-        const { history } = await getMyRandomHistory();
-        if (!ignore) {
-          setRandomHistory(history.map(mapRandomHistoryEntry));
-        }
-      } catch {
-        if (!ignore) {
-          setRandomHistory([]);
-        }
-      }
-    }
-
-    loadRandomHistory();
-
-    return () => {
-      ignore = true;
-    };
-  }, [user]);
 
   useEffect(() => {
     window.requestAnimationFrame(() => {
@@ -365,83 +335,6 @@ export function App() {
       requestAnimeRoute(`/anime/${encodeURIComponent(animeRouteSlug(anime))}`);
     } catch {
       console.warn('Failed to import catalog anime');
-    }
-  }
-
-  async function handleRandomAnime() {
-    setRandomLoading(true);
-    setRandomStatus('');
-
-    try {
-      const page = Math.floor(Math.random() * 20) + 1;
-      const response = await browseCatalog(page, 'ranked_random');
-      const candidates = response.results.filter((item) => item.posterUrl);
-      const pool = candidates.length > 0 ? candidates : response.results;
-      const next = pool[Math.floor(Math.random() * pool.length)];
-
-      if (!next) {
-        setRandomStatus('Shikimori не вернул тайтлы для рандома.');
-        return;
-      }
-
-      setRandomAnime(next);
-      setRandomHistory((current) => {
-        const withoutDuplicate = current.filter((item) => item.providerId !== next.providerId);
-        return [next, ...withoutDuplicate].slice(0, 10);
-      });
-
-      if (user) {
-        saveRandomHistoryEntry(next)
-          .then(({ entry }) => {
-            const saved = mapRandomHistoryEntry(entry);
-            setRandomHistory((current) => {
-              const withoutDuplicate = current.filter((item) => item.providerId !== saved.providerId);
-              return [saved, ...withoutDuplicate].slice(0, 10);
-            });
-          })
-          .catch(() => setRandomStatus('Случайный тайтл показан, но историю не удалось сохранить.'));
-      }
-    } catch {
-      setRandomStatus('Не удалось получить случайное аниме.');
-    } finally {
-      setRandomLoading(false);
-    }
-  }
-
-  async function handleClearRandomHistory() {
-    if (randomHistory.length === 0 || randomClearing) return;
-
-    setRandomClearing(true);
-    setRandomStatus('');
-
-    try {
-      if (user) {
-        await clearMyRandomHistory();
-      }
-      setRandomHistory([]);
-    } catch {
-      setRandomStatus('Не удалось очистить историю.');
-    } finally {
-      setRandomClearing(false);
-    }
-  }
-
-  async function handleDeleteRandomHistoryEntry(entry: CatalogSearchResult) {
-    const key = `${entry.provider}-${entry.providerId}`;
-    if (deletingRandomKey) return;
-
-    setDeletingRandomKey(key);
-    setRandomStatus('');
-
-    try {
-      if (user) {
-        await deleteRandomHistoryEntry(entry.provider, entry.providerId);
-      }
-      setRandomHistory((current) => current.filter((item) => `${item.provider}-${item.providerId}` !== key));
-    } catch {
-      setRandomStatus('Не удалось удалить запись из истории.');
-    } finally {
-      setDeletingRandomKey('');
     }
   }
 
