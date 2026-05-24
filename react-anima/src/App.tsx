@@ -15,7 +15,6 @@ import { useWatchPartyLeaveGuard } from './hooks/useWatchPartyLeaveGuard';
 import { AppScreens } from './app/AppScreens';
 import { getRouteAnimeId, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
-import { useToast } from './shared/ui/ToastProvider';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
@@ -110,7 +109,6 @@ function AppContent() {
     clearRandomState,
   } = useRandomAnime(user);
   const { updateState } = useWatchProgress({ library, user, setWatchState, setDiaryEntries });
-  const toast = useToast();
 
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
@@ -187,7 +185,6 @@ function AppContent() {
             onJoinWatchParty={(code) => openWatchParty(`/watch-party/${code}`)}
             onLeaveWatchParty={leaveWatchParty}
             onCreateWatchPartyConsumed={consumeWatchPartyCreate}
-            onToast={toast}
             onSearchChange={setCatalogSearchQuery}
             onBrowsePageChange={setBrowsePage}
             onWatchStateChange={updateState}

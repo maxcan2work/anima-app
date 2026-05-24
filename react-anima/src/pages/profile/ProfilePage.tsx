@@ -9,6 +9,7 @@ import profileNoteIcon from '../../assets/profile-note.svg';
 import settingsIcon from '../../assets/settings.svg';
 import shikimoriIcon from '../../assets/shikimori.png';
 import trashIcon from '../../assets/trash.svg';
+import { useToast } from '../../shared/ui/ToastProvider';
 
 type AuthStatus = 'loading' | 'guest' | 'ready';
 
@@ -29,7 +30,6 @@ type ProfilePageProps = {
   onConnectShikimori: () => void;
   onDisconnectShikimori: () => Promise<void>;
   onImportShikimori: () => Promise<ShikimoriImportResult>;
-  onToast: (message: string) => void;
 };
 
 export function ProfilePage({
@@ -41,7 +41,6 @@ export function ProfilePage({
   onConnectShikimori,
   onDisconnectShikimori,
   onImportShikimori,
-  onToast,
 }: ProfilePageProps) {
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
     { status: 'watching', label: 'Смотрю', count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
@@ -164,7 +163,6 @@ export function ProfilePage({
                   onConnectShikimori={onConnectShikimori}
                   onDisconnectShikimori={onDisconnectShikimori}
                   onImportShikimori={onImportShikimori}
-                  onToast={onToast}
                 />
               </section>
             </>
@@ -195,15 +193,14 @@ function ShikimoriIntegration({
   onConnectShikimori,
   onDisconnectShikimori,
   onImportShikimori,
-  onToast,
 }: {
   authStatus: AuthStatus;
   user: CurrentUser | null;
   onConnectShikimori: () => void;
   onDisconnectShikimori: () => Promise<void>;
   onImportShikimori: () => Promise<ShikimoriImportResult>;
-  onToast: (message: string) => void;
 }) {
+  const toast = useToast();
   const canConnect = authStatus === 'ready' && Boolean(user);
   const shikimori = user?.integrations.shikimori ?? null;
   const isAuthLoading = authStatus === 'loading';
@@ -225,7 +222,7 @@ function ShikimoriIntegration({
     if (importing) return;
 
     setImporting(true);
-    onToast('Импортируем список Shikimori. Не закрывай страницу.');
+    toast('Импортируем список Shikimori. Не закрывай страницу.');
 
     try {
       const result = await onImportShikimori();
@@ -233,13 +230,13 @@ function ShikimoriIntegration({
       const changed = result.imported + result.updated;
 
       if (changed > 0) {
-        onToast(`Импорт завершён: ${result.imported} новых, ${result.updated} обновлено, ${result.skipped} пропущено`);
+        toast({ message: `Импорт завершён: ${result.imported} новых, ${result.updated} обновлено, ${result.skipped} пропущено`, variant: 'success' });
       } else {
         const reason = firstError ? ` Причина: ${firstError.reason}` : '';
-        onToast(`Не удалось импортировать список Shikimori.${reason}`);
+        toast({ message: `Не удалось импортировать список Shikimori.${reason}`, variant: 'danger' });
       }
     } catch {
-      onToast('Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.');
+      toast({ message: 'Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.', variant: 'danger' });
     } finally {
       setImporting(false);
     }

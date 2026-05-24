@@ -43,7 +43,6 @@ type AppScreensProps = {
   onJoinWatchParty: (code: string) => void;
   onLeaveWatchParty: () => void;
   onCreateWatchPartyConsumed: () => void;
-  onToast: (message: string) => void;
   onSearchChange: (query: string) => void;
   onBrowsePageChange: (page: number) => void;
   onWatchStateChange: (animeId: string, patch: Partial<WatchState>) => void;
@@ -93,7 +92,6 @@ export function AppScreens({
   onJoinWatchParty,
   onLeaveWatchParty,
   onCreateWatchPartyConsumed,
-  onToast,
   onSearchChange,
   onBrowsePageChange,
   onWatchStateChange,
@@ -132,7 +130,6 @@ export function AppScreens({
         onJoinRoom={onJoinWatchParty}
         onLeaveRoom={onLeaveWatchParty}
         onCreateRoomConsumed={onCreateWatchPartyConsumed}
-        onToast={onToast}
         mapServerAnime={mapServerAnime}
         renderAnimeHero={(props) => <AnimeHero {...props} />}
       />
@@ -186,7 +183,6 @@ export function AppScreens({
       onConnectShikimori={onConnectShikimori}
       onDisconnectShikimori={onDisconnectShikimori}
       onImportShikimori={onImportShikimori}
-      onToast={onToast}
     />
   );
 }

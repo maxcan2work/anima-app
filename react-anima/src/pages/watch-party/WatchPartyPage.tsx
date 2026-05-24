@@ -18,6 +18,7 @@ import leaveRoomIcon from '../../assets/leave-room.svg';
 import watchPartyIcon from '../../assets/watch-party.svg';
 import { CatalogBrowser } from '../../features/catalog/CatalogBrowser';
 import type { AnimeTitle } from '../../data';
+import { useToast } from '../../shared/ui/ToastProvider';
 
 type WatchState = {
   episode: number;
@@ -45,7 +46,6 @@ type WatchPartyPageProps = {
   onJoinRoom: (code: string) => void;
   onLeaveRoom: () => void;
   onCreateRoomConsumed: () => void;
-  onToast: (message: string) => void;
   mapServerAnime: (anime: ServerAnime) => AnimeTitle;
   renderAnimeHero: (props: {
     anime: AnimeTitle;
@@ -65,10 +65,10 @@ export function WatchPartyPage({
   onJoinRoom,
   onLeaveRoom,
   onCreateRoomConsumed,
-  onToast,
   mapServerAnime,
   renderAnimeHero,
 }: WatchPartyPageProps) {
+  const toast = useToast();
   const [joinCode, setJoinCode] = useState(code);
   const [participants, setParticipants] = useState<WatchPartyParticipant[]>([]);
   const [ownParticipantId, setOwnParticipantId] = useState('');
@@ -144,7 +144,7 @@ export function WatchPartyPage({
     });
 
     socket.on('watch-party:kicked', () => {
-      onToast('Тебя исключили из комнаты');
+      toast({ message: 'Тебя исключили из комнаты', variant: 'warning' });
       onLeaveRoom();
     });
 
@@ -154,7 +154,7 @@ export function WatchPartyPage({
         : payload.reason === 'room-not-found'
           ? 'Комната с таким кодом не найдена'
           : 'Не удалось войти в комнату';
-      onToast(message);
+      toast({ message, variant: 'warning' });
       onLeaveRoom();
     });
 
@@ -164,7 +164,7 @@ export function WatchPartyPage({
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [code, mapServerAnime, onCreateRoomConsumed, onLeaveRoom, onToast, user?.avatarUrl, user?.displayName]);
+  }, [code, mapServerAnime, onCreateRoomConsumed, onLeaveRoom, toast, user?.avatarUrl, user?.displayName]);
 
   useEffect(() => {
     setPartyCatalogResults([]);
@@ -268,7 +268,7 @@ export function WatchPartyPage({
       try {
         const { exists } = await checkWatchPartyRoom(normalized);
         if (!exists) {
-          onToast('Комната с таким кодом не найдена');
+          toast({ message: 'Комната с таким кодом не найдена', variant: 'warning' });
           return;
         }
 
@@ -278,7 +278,7 @@ export function WatchPartyPage({
         setSelectedAnime(null);
         onJoinRoom(normalized);
       } catch {
-        onToast('Не удалось проверить комнату');
+        toast({ message: 'Не удалось проверить комнату', variant: 'danger' });
       } finally {
         setJoinChecking(false);
       }
@@ -331,7 +331,6 @@ export function WatchPartyPage({
                   ownParticipantId={ownParticipantId}
                   onKickParticipant={(participantId) => socketRef.current?.emit('watch-party:kick', { code, participantId })}
                   onLeaveRoom={onLeaveRoom}
-                  onToast={onToast}
                   showActions={false}
                 />
               ),
@@ -339,7 +338,6 @@ export function WatchPartyPage({
                 <WatchPartyRoomActions
                   code={code}
                   onLeaveRoom={onLeaveRoom}
-                  onToast={onToast}
                 />
               ),
             })
@@ -379,7 +377,6 @@ export function WatchPartyPage({
               ownParticipantId={ownParticipantId}
               onKickParticipant={(participantId) => socketRef.current?.emit('watch-party:kick', { code, participantId })}
               onLeaveRoom={onLeaveRoom}
-              onToast={onToast}
             />
           </aside> : null}
         </div>
@@ -432,15 +429,15 @@ export function WatchPartyPage({
 function WatchPartyRoomActions({
   code,
   onLeaveRoom,
-  onToast,
 }: {
   code: string;
   onLeaveRoom: () => void;
-  onToast: (message: string) => void;
 }) {
+  const toast = useToast();
+
   async function handleCopyCode() {
     await navigator.clipboard?.writeText(code);
-    onToast('Код скопирован');
+    toast({ message: 'Код скопирован', variant: 'success' });
   }
 
   return (
@@ -464,7 +461,6 @@ function WatchPartyParticipants({
   ownParticipantId,
   onKickParticipant,
   onLeaveRoom,
-  onToast,
   showActions = true,
 }: {
   code: string;
@@ -474,7 +470,6 @@ function WatchPartyParticipants({
   ownParticipantId: string;
   onKickParticipant: (participantId: string) => void;
   onLeaveRoom: () => void;
-  onToast: (message: string) => void;
   showActions?: boolean;
 }) {
   return (
@@ -506,7 +501,7 @@ function WatchPartyParticipants({
         ))}
       </div>
       {showActions ? (
-        <WatchPartyRoomActions code={code} onLeaveRoom={onLeaveRoom} onToast={onToast} />
+        <WatchPartyRoomActions code={code} onLeaveRoom={onLeaveRoom} />
       ) : null}
     </>
   );
