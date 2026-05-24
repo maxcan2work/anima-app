@@ -960,13 +960,21 @@ h1 {
   animation: screen-fade-right 180ms ease-out both;
 }
 
-.app-toast {
+.toast-viewport {
   position: fixed;
   left: 50%;
   bottom: 28px;
   z-index: 80;
+  display: grid;
+  gap: 10px;
+  width: min(420px, calc(100vw - 36px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.app-toast {
   min-width: 180px;
-  max-width: min(420px, calc(100vw - 36px));
+  max-width: 100%;
   border: 1px solid rgba(201, 166, 109, 0.34);
   border-radius: 8px;
   background: rgba(18, 18, 16, 0.92);
@@ -976,8 +984,24 @@ h1 {
   text-align: center;
   font-size: 14px;
   font-weight: 800;
-  transform: translateX(-50%);
-  animation: toast-lifecycle 2.4s both;
+  pointer-events: auto;
+  animation: toast-in 160ms ease-out both;
+}
+
+.app-toast.success {
+  border-color: rgba(76, 175, 113, 0.42);
+}
+
+.app-toast.danger {
+  border-color: rgba(217, 77, 56, 0.48);
+}
+
+.app-toast.warning {
+  border-color: rgba(245, 165, 36, 0.48);
+}
+
+.app-toast.closing {
+  animation: toast-out 180ms ease-in both;
 }
 
 .modal-backdrop {
@@ -1136,21 +1160,27 @@ h1 {
   }
 }
 
-@keyframes toast-lifecycle {
-  0% {
+@keyframes toast-in {
+  from {
     opacity: 0;
-    transform: translate(-50%, 12px);
+    transform: translateY(12px);
   }
 
-  12%,
-  82% {
+  to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
   }
 
-  100% {
+  to {
     opacity: 0;
-    transform: translate(-50%, 12px);
+    transform: translateY(12px);
   }
 }
 

@@ -9,7 +9,6 @@ import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
 import { useScreenTransition } from './hooks/useScreenTransition';
-import { useToast } from './hooks/useToast';
 import { useWatchProgress } from './hooks/useWatchProgress';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
@@ -21,12 +20,15 @@ import { mapServerAnime } from './shared/animeMappers';
 import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
 import { ModalProvider, useConfirmModal } from './shared/ui/ModalProvider';
+import { ToastProvider, useToast } from './shared/ui/ToastProvider';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
   return (
     <ModalProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </ModalProvider>
   );
 }
@@ -117,7 +119,7 @@ function AppContent() {
     clearRandomState,
   } = useRandomAnime(user);
   const { updateState } = useWatchProgress({ library, user, setWatchState, setDiaryEntries });
-  const { toast, setToast } = useToast();
+  const toast = useToast();
 
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
@@ -197,7 +199,7 @@ function AppContent() {
             onJoinRoom={(code) => openWatchParty(`/watch-party/${code}`)}
             onLeaveRoom={leaveWatchParty}
             onCreateRoomConsumed={consumeWatchPartyCreate}
-            onToast={setToast}
+            onToast={toast}
             mapServerAnime={mapServerAnime}
             renderAnimeHero={(props) => <AnimeHero {...props} />}
           />
@@ -236,12 +238,11 @@ function AppContent() {
             onConnectShikimori={connectShikimori}
             onDisconnectShikimori={handleDisconnectShikimori}
             onImportShikimori={handleImportShikimoriList}
-            onToast={setToast}
+            onToast={toast}
           />
         )}
         </div>
       </section>
-      {toast ? <div className="app-toast">{toast}</div> : null}
     </main>
   );
 }
