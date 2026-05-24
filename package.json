@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "build:api-client": "npm run build -w @anima/api-client",
     "build:core": "npm run build -w @anima/core",
     "build:web": "npm run build -w react-anima",
     "build:backend": "npm run build -w backend-anima"

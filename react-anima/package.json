@@ -4,13 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "prebuild": "npm run build --prefix ../packages/core",
-    "predev": "npm run build --prefix ../packages/core",
+    "prebuild": "npm run build --prefix ../packages/core && npm run build --prefix ../packages/api-client",
+    "predev": "npm run build --prefix ../packages/core && npm run build --prefix ../packages/api-client",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@anima/api-client": "file:../packages/api-client",
     "@anima/core": "file:../packages/core",
     "@vitejs/plugin-react": "^5.0.0",
     "hls.js": "^1.6.16",
