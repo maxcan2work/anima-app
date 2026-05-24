@@ -13,6 +13,7 @@ import { type AnimeTitle } from './data';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
+import { useToast } from './hooks/useToast';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
@@ -78,7 +79,7 @@ export function App() {
     clearRandomState,
   } = useRandomAnime(user);
   const [syncStatus, setSyncStatus] = useState('');
-  const [toast, setToast] = useState('');
+  const { toast, setToast } = useToast();
   const [watchPartyCode, setWatchPartyCode] = useState(getWatchPartyCodeFromPath(window.location.pathname));
   const [watchPartyCreateCode, setWatchPartyCreateCode] = useState('');
   const [watchPartyLeaveTarget, setWatchPartyLeaveTarget] = useState<{ path: string; view: AppView } | null>(null);
@@ -124,13 +125,6 @@ export function App() {
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
   }, [sidebarCollapsed]);
-
-  useEffect(() => {
-    if (!toast) return;
-
-    const timer = window.setTimeout(() => setToast(''), 2400);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
 
   useEffect(() => {
     if (displayedScreenKey === screenKey) return;
