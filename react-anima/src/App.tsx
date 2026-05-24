@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fromServerWatchStatus, type WatchStatus as CoreWatchStatus } from '@anima/core';
+import { fromServerWatchStatus } from '@anima/core';
 import {
   browseCatalog,
   connectShikimori,
@@ -48,35 +48,8 @@ import {
   parseShikimoriRouteId,
   type AppView,
 } from './shared/navigation';
+import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, saveWatchState, type WatchState } from './shared/storage';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
-
-type WatchState = {
-  episode: number;
-  status: CoreWatchStatus;
-};
-
-const STORAGE_KEY = 'anima.watchState.v1';
-const SIDEBAR_STORAGE_KEY = 'anima.sidebarCollapsed.v1';
-function loadWatchState(): Record<string, WatchState> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveWatchState(value: Record<string, WatchState>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-}
-
-function loadSidebarCollapsed() {
-  return localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
-}
-
-function saveSidebarCollapsed(value: boolean) {
-  localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
-}
 
 export function App() {
   const [library, setLibrary] = useState<AnimeTitle[]>([]);
