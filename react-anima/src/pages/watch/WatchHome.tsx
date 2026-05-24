@@ -1,20 +1,6 @@
-import type { CatalogSearchResult } from '../../api';
+import { useCatalog } from '../../features/catalog/CatalogProvider';
 import { CatalogBrowser } from '../../features/catalog/CatalogBrowser';
-
-type WatchHomeProps = {
-  browseResults: CatalogSearchResult[];
-  browsePage: number;
-  browseHasNext: boolean;
-  browseLoading: boolean;
-  browseStatus: string;
-  searchQuery: string;
-  searchResults: CatalogSearchResult[];
-  searchLoading: boolean;
-  searchStatus: string;
-  onSearchChange: (query: string) => void;
-  onOpenAnime: (result: CatalogSearchResult) => void;
-  onPageChange: (page: number) => void;
-};
+import { useWatchLibrary } from '../../features/watch-library/WatchLibraryProvider';
 
 export function EmptyCatalog() {
   return (
@@ -26,20 +12,22 @@ export function EmptyCatalog() {
   );
 }
 
-export function WatchHome({
-  browseResults,
-  browsePage,
-  browseHasNext,
-  browseLoading,
-  browseStatus,
-  searchQuery,
-  searchResults,
-  searchLoading,
-  searchStatus,
-  onSearchChange,
-  onOpenAnime,
-  onPageChange,
-}: WatchHomeProps) {
+export function WatchHome() {
+  const {
+    browseResults,
+    browsePage,
+    browseHasNext,
+    browseLoading,
+    browseStatus,
+    searchQuery,
+    searchResults,
+    searchLoading,
+    searchStatus,
+    setSearchQuery,
+    setBrowsePage,
+  } = useCatalog();
+  const { openCatalogAnime } = useWatchLibrary();
+
   return (
     <CatalogBrowser
       className="watch-home"
@@ -54,9 +42,9 @@ export function WatchHome({
       searchResults={searchResults}
       searchLoading={searchLoading}
       searchStatus={searchStatus}
-      onSearchChange={onSearchChange}
-      onOpenAnime={onOpenAnime}
-      onPageChange={onPageChange}
+      onSearchChange={setSearchQuery}
+      onOpenAnime={openCatalogAnime}
+      onPageChange={setBrowsePage}
     />
   );
 }
