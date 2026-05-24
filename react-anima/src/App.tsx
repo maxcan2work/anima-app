@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   connectShikimori,
   loginWithDiscord,
 } from './api';
+import { AppProviders } from './app/AppProviders';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import { useAnimeLibrary } from './hooks/useAnimeLibrary';
 import { useAuthSession } from './hooks/useAuthSession';
@@ -10,6 +11,7 @@ import { useCatalogBrowse } from './hooks/useCatalogBrowse';
 import { useRandomAnime } from './hooks/useRandomAnime';
 import { useScreenTransition } from './hooks/useScreenTransition';
 import { useWatchProgress } from './hooks/useWatchProgress';
+import { useWatchPartyLeaveGuard } from './hooks/useWatchPartyLeaveGuard';
 import { AnimeHero } from './pages/anime/AnimeHero';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { RandomAnimePage } from './pages/random/RandomAnimePage';
@@ -19,17 +21,14 @@ import { EmptyCatalog, WatchHome } from './pages/watch/WatchHome';
 import { mapServerAnime } from './shared/animeMappers';
 import { getRouteAnimeId, getWatchPartyCodeFromPath, type AppView } from './shared/navigation';
 import { loadSidebarCollapsed, loadWatchState, saveSidebarCollapsed, type WatchState } from './shared/storage';
-import { ModalProvider, useConfirmModal } from './shared/ui/ModalProvider';
-import { ToastProvider, useToast } from './shared/ui/ToastProvider';
+import { useToast } from './shared/ui/ToastProvider';
 import { AppSidebar } from './widgets/app-sidebar/AppSidebar';
 
 export function App() {
   return (
-    <ModalProvider>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
-    </ModalProvider>
+    <AppProviders>
+      <AppContent />
+    </AppProviders>
   );
 }
 
@@ -69,8 +68,6 @@ function AppContent() {
     restoreScroll,
   } = useAppNavigation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
-  const confirm = useConfirmModal();
-  const leaveConfirmOpenRef = useRef(false);
   const screenKey = `${view}:${currentPath}`;
   const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
@@ -134,25 +131,11 @@ function AppContent() {
     restoreScroll(displayedPath);
   }, [displayedPath, restoreScroll]);
 
-  useEffect(() => {
-    if (!watchPartyLeaveTarget || leaveConfirmOpenRef.current) return;
-
-    leaveConfirmOpenRef.current = true;
-    confirm({
-      title: 'Покинуть совместный просмотр?',
-      content: <p>Чтобы перейти в другой раздел, нужно выйти из комнаты. Текущий совместный просмотр будет отключен для тебя.</p>,
-      cancelLabel: 'Остаться',
-      confirmLabel: 'Выйти и перейти',
-      confirmVariant: 'danger',
-    }).then((confirmed) => {
-      leaveConfirmOpenRef.current = false;
-      if (confirmed) {
-        confirmLeaveWatchParty();
-      } else {
-        closeWatchPartyLeaveModal();
-      }
-    });
-  }, [closeWatchPartyLeaveModal, confirm, confirmLeaveWatchParty, watchPartyLeaveTarget]);
+  useWatchPartyLeaveGuard({
+    active: Boolean(watchPartyLeaveTarget),
+    onConfirm: confirmLeaveWatchParty,
+    onCancel: closeWatchPartyLeaveModal,
+  });
 
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
