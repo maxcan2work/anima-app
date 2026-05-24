@@ -1,0 +1,610 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 24px;
+  align-items: center;
+}
+
+.watchPartyLayout {
+  --watch-party-video-max-height: calc(100vh - 156px);
+
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: stretch;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+}
+
+.player {
+  display: grid;
+  gap: 14px;
+}
+
+.watchPartyLayout .player {
+  align-self: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.videoFrame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: #060706;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+}
+
+.watchPartyLayout .videoFrame {
+  width: min(100%, calc(var(--watch-party-video-max-height) * 16 / 9));
+  max-height: var(--watch-party-video-max-height);
+}
+
+.videoFrame video,
+.videoFrame iframe {
+  width: 100%;
+  height: 100%;
+  background: #060706;
+}
+
+.videoFrame iframe {
+  border: 0;
+}
+
+.playerFrameSkeleton {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.playerFrameSkeleton > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(242, 192, 99, 0.1), rgba(255, 255, 255, 0.03));
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.25s linear infinite;
+}
+
+.playerLoader {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060706;
+}
+
+.playerLoaderSkeleton {
+  background: rgba(6, 7, 6, 0.96);
+}
+
+.playerLoaderSkeleton::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(242, 192, 99, 0.1), rgba(255, 255, 255, 0.03));
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.25s linear infinite;
+  content: "";
+}
+
+.playerLoader span {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(235, 226, 214, 0.16);
+  border-top-color: #caa772;
+  border-radius: 50%;
+  animation: playerLoaderSpin 0.8s linear infinite;
+}
+
+.playerMessage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #060706;
+  text-align: center;
+}
+
+.playerMessage p {
+  max-width: 360px;
+  margin: 0;
+  color: #cfc7ba;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.detailsPanel {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+}
+
+.watchPartyLayout .detailsPanel {
+  position: sticky;
+  top: 28px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  align-content: initial;
+}
+
+.detailsPanelSkeleton {
+  align-content: center;
+}
+
+.detailsPoster {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+  max-height: 44vh;
+  border-radius: 8px;
+  background: #070807;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+}
+
+.detailsPoster img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.detailsPoster::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 8, 7, 0.02) 35%, rgba(7, 8, 7, 0.92) 100%);
+  content: "";
+}
+
+.detailsPoster > div {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  z-index: 1;
+}
+
+.detailsPoster h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.08;
+}
+
+.detailsContent {
+  display: grid;
+  gap: 12px;
+}
+
+.genres {
+  container-type: inline-size;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.genres::-webkit-scrollbar {
+  display: none;
+}
+
+.genres:focus-visible {
+  outline: none;
+}
+
+.genresTrack {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.genres:hover .genresTrack,
+.genres:focus-visible .genresTrack {
+  animation: genresMarquee 2s linear infinite alternate both;
+}
+
+.genresTrack span {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #efe3cf;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metaGrid span {
+  display: grid;
+  gap: 5px;
+  min-height: 58px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa196;
+  font-size: 12px;
+}
+
+.metaGrid strong {
+  color: #fffaf2;
+  font-size: 15px;
+}
+
+.watchTools {
+  display: grid;
+  gap: 8px;
+}
+
+.providerSelect {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.providerSelect button {
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #aaa196;
+  font-weight: 850;
+}
+
+.providerSelect button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.selectedProvider {
+  background: rgba(242, 192, 99, 0.16) !important;
+  color: #fffaf2 !important;
+}
+
+.statusSelect {
+  position: relative;
+}
+
+.statusSelectTrigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fffaf2;
+  font-weight: 800;
+  text-align: left;
+}
+
+.statusSelectTrigger:hover,
+.statusSelectTrigger[aria-expanded="true"] {
+  border-color: rgba(242, 192, 99, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.statusSelectChevron {
+  justify-self: end;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid #f2c063;
+  border-bottom: 2px solid #f2c063;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.statusSelectMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(24, 24, 22, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+}
+
+.statusSelectMenu button {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #f9f1e6;
+  font-weight: 750;
+  text-align: left;
+}
+
+.statusSelectMenu button:hover,
+.selectedStatus {
+  background: rgba(242, 192, 99, 0.14) !important;
+  color: #fffaf2 !important;
+}
+
+.sourcesBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.sourcesBlock h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sourceLink {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-decoration: none;
+}
+
+.sourceLink:hover {
+  border-color: rgba(242, 192, 99, 0.55);
+}
+
+.sourceLink strong {
+  display: block;
+}
+
+.episodes {
+  display: grid;
+  grid-template-columns: var(--ui-row-height) minmax(0, 1fr) var(--ui-row-height);
+  align-items: center;
+  gap: var(--ui-grid-gap);
+  width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.episodeScroll {
+  display: grid;
+  place-items: center;
+  width: var(--ui-row-height);
+  height: var(--ui-row-height);
+  min-height: 0;
+  padding: var(--ui-row-padding);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f2c063;
+  line-height: 1;
+}
+
+.episodeScroll:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.episodeScroll img {
+  width: 22px;
+  height: 22px;
+}
+
+.episodeScrollNext img {
+  transform: rotate(180deg);
+}
+
+.episodeGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--ui-grid-gap);
+}
+
+.pageNext {
+  animation: episodesRollNext 220ms ease both;
+}
+
+.pagePrev {
+  animation: episodesRollPrev 220ms ease both;
+}
+
+.episodeGrid button {
+  width: 100%;
+  height: var(--ui-row-height);
+  min-height: 0;
+  padding: var(--ui-row-padding);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f9f1e6;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.currentEpisode {
+  border-color: #f2c063 !important;
+  background: #f2c063 !important;
+  color: #17120c !important;
+}
+
+.episodesSkeleton .episodeGrid {
+  animation: none;
+}
+
+.episodesSkeleton .skeletonBlock {
+  width: 100%;
+  height: var(--ui-row-height);
+}
+
+.watchPartyFooter {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.watchPartyFooter .episodes {
+  margin-top: 0;
+}
+
+.watchPartyActions {
+  min-width: 0;
+}
+
+.watchPartyActions > * {
+  margin-top: 0;
+}
+
+.watchPartyPanel {
+  position: static;
+  top: auto;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin-top: 2px;
+}
+
+.skeletonPanel,
+.skeletonBlock,
+.skeletonPill,
+.skeletonMeta,
+.skeletonControl,
+.skeletonSource {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(242, 192, 99, 0.12), rgba(255, 255, 255, 0.05));
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.25s linear infinite;
+}
+
+.skeletonPanel {
+  min-height: 300px;
+  max-height: 44vh;
+  aspect-ratio: 2 / 3;
+}
+
+.skeletonPill {
+  width: 82px;
+  height: 31px;
+  border-radius: 6px;
+}
+
+.skeletonMeta {
+  min-height: 58px;
+}
+
+.skeletonControl {
+  min-height: 44px;
+}
+
+.skeletonSource {
+  min-height: 52px;
+}
+
+@keyframes playerLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes skeletonPulse {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes genresMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-100% + 100cqw));
+  }
+}
+
+@keyframes episodesRollNext {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes episodesRollPrev {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .watchPartyLayout {
+    grid-template-rows: auto;
+    height: auto;
+    max-height: none;
+  }
+
+  .watchPartyLayout .detailsPanel {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .watchPartyFooter {
+    grid-template-columns: 1fr;
+  }
+
+  .watchPartyPanel {
+    height: auto;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .detailsPoster h2 {
+    font-size: 25px;
+  }
+}

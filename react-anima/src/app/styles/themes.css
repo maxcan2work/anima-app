@@ -1,0 +1,14 @@
+:root,
+[data-theme="dark"] {
+  --color-text-primary: #f5f1e8;
+  --color-text-strong: #fffaf2;
+  --color-text-muted: #aaa196;
+  --color-accent: #f2c063;
+  --color-accent-soft: rgba(242, 192, 99, 0.14);
+  --color-danger: #d94d38;
+  --color-discord: #5865f2;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-strong: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-page-bg: #121413;
+}

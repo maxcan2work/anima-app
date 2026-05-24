@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import discordIcon from '@assets/discord.svg';
 import musicNoteIcon from '@assets/music-note.svg';
 import nekoIcon from '@assets/neko.svg';
@@ -8,6 +9,7 @@ import settingsIcon from '@assets/settings.svg';
 import watchPartyIcon from '@assets/watch-party.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
+import styles from './AppSidebar.module.css';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -24,13 +26,13 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
   } = useNavigation();
 
   return (
-    <aside className="library-panel" aria-label="Каталог аниме">
-      <div className="brand-row">
-        <div>
+    <aside className={styles.libraryPanel} aria-label="Каталог аниме">
+      <div className={styles.brandRow}>
+        <div className={styles.brandCopy}>
           <p className="eyebrow">Anima</p>
         </div>
         <button
-          className="sidebar-toggle"
+          className={styles.toggle}
           type="button"
           onClick={onToggleCollapsed}
           aria-label={collapsed ? 'Развернуть сайдбар' : 'Свернуть сайдбар'}
@@ -40,7 +42,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         </button>
       </div>
 
-      <nav className="side-nav" aria-label="Разделы">
+      <nav className={styles.nav} aria-label="Разделы">
         <SideNavButton
           active={view === 'watch'}
           icon={nekoIcon}
@@ -75,17 +77,17 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         />
       </nav>
 
-      <div className="sidebar-footer">
+      <div className={styles.footer}>
         <button
-          className={view === 'settings' ? 'sidebar-action active' : 'sidebar-action'}
+          className={clsx(styles.footerAction, view === 'settings' && styles.footerActionActive)}
           type="button"
           data-tooltip={collapsed ? 'Настройки' : undefined}
           onClick={() => requestRoute('/settings', 'settings')}
         >
-          <span className="nav-icon" aria-hidden="true">
+          <span className={styles.navIcon} aria-hidden="true">
             <img src={settingsIcon} alt="" />
           </span>
-          <span className="nav-copy">
+          <span className={styles.navCopy}>
             <span>Настройки</span>
             <small>Скоро</small>
           </span>
@@ -101,18 +103,25 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: ()
 
   if (authStatus === 'loading') {
     return (
-      <div className={collapsed ? 'auth-panel auth-placeholder collapsed-auth' : 'auth-panel auth-placeholder'} aria-hidden="true">
-        <span className="auth-placeholder-avatar" />
-        {collapsed ? null : <span className="auth-placeholder-copy" />}
+      <div
+        className={
+          collapsed
+            ? clsx(styles.authPanel, styles.authPlaceholder, styles.collapsedAuth)
+            : clsx(styles.authPanel, styles.authPlaceholder)
+        }
+        aria-hidden="true"
+      >
+        <span className={styles.placeholderAvatar} />
+        {collapsed ? null : <span className={styles.placeholderCopy} />}
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="auth-panel">
+      <div className={styles.authPanel}>
         <button
-          className="discord-button"
+          className={styles.discordButton}
           onClick={login}
           data-tooltip={collapsed ? 'Войти через Discord' : undefined}
           type="button"
@@ -125,9 +134,9 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: ()
   }
 
   return (
-    <div className="auth-panel signed-in">
-      <button className="profile-link" onClick={onProfile} data-tooltip={user.displayName}>
-        {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback">{user.displayName[0]}</div>}
+    <div className={clsx(styles.authPanel, styles.authPanelSignedIn)}>
+      <button className={styles.profileLink} onClick={onProfile} data-tooltip={user.displayName}>
+        {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className={styles.avatarFallback}>{user.displayName[0]}</div>}
         <span>
           <strong>{user.displayName}</strong>
         </span>
@@ -155,17 +164,17 @@ function SideNavButton({
 }) {
   return (
     <button
-      className={active ? 'active' : ''}
+      className={clsx(styles.navButton, active && styles.navButtonActive)}
       disabled={disabled}
       onClick={onClick}
       type="button"
       aria-label={title}
       data-tooltip={collapsed ? title : undefined}
     >
-      <span className="nav-icon" aria-hidden="true">
+      <span className={styles.navIcon} aria-hidden="true">
         <img src={icon} alt="" />
       </span>
-      <span className="nav-copy">
+      <span className={styles.navCopy}>
         <span>{title}</span>
         <small>{description}</small>
       </span>

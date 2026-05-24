@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import Hls from 'hls.js';
 import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import type { AnimeTitle } from '@/data';
+import styles from './AnimeHero.module.css';
 
 type PlayerProvider = PlayerProviderResult['provider'];
 
@@ -86,7 +88,7 @@ export function AnimeHero({
       } catch {
         if (!ignore) {
           setPlayers([]);
-          setPlayersStatus('Не удалось загрузить плеер.');
+          setPlayersStatus('Не удалось загрузить плеер');
         }
       }
     }
@@ -99,9 +101,9 @@ export function AnimeHero({
   }, [anime.id, state.episode]);
 
   const episodeControls = (
-    <section className="episodes" aria-label="Серии">
+    <section className={styles.episodes} aria-label="Серии">
       <button
-        className="episode-scroll"
+        className={styles.episodeScroll}
         type="button"
         onClick={() => changeEpisodePage(episodePage - 1)}
         disabled={episodePage === 0}
@@ -109,11 +111,11 @@ export function AnimeHero({
       >
         <img src={episodeArrowIcon} alt="" aria-hidden="true" />
       </button>
-      <div key={episodePage} className={`episode-grid page-${episodePageDirection}`}>
+      <div key={episodePage} className={clsx(styles.episodeGrid, episodePageDirection === 'next' ? styles.pageNext : styles.pagePrev)}>
         {visibleEpisodes.map((episode) => (
           <button
             key={episode}
-            className={episode === state.episode ? 'current' : ''}
+            className={clsx(episode === state.episode && styles.currentEpisode)}
             onClick={() => onStateChange({ episode, status: 'watching' })}
           >
             {episode}
@@ -121,7 +123,7 @@ export function AnimeHero({
         ))}
       </div>
       <button
-        className="episode-scroll"
+        className={clsx(styles.episodeScroll, styles.episodeScrollNext)}
         type="button"
         onClick={() => changeEpisodePage(episodePage + 1)}
         disabled={episodePage >= episodePages - 1}
@@ -133,105 +135,103 @@ export function AnimeHero({
   );
 
   return (
-    <>
-      <div className={mode === 'watchParty' ? 'player-layout watch-party-player-layout' : 'player-layout'}>
-        <section className="player">
-          {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
-            <VideoPlayer anime={anime} player={selectedPlayer} />
-          ) : (
-            <div className="video-frame">
-              {playersStatus ? <PlayerMessage message={playersStatus} /> : <PlayerLoader />}
-            </div>
-          )}
-
-          {mode === 'default' ? episodeControls : null}
-        </section>
-
-        <aside className="details-panel">
-          <div className="details-poster">
-            <img src={anime.poster} alt="" />
-            <div>
-              <p className="eyebrow">{anime.originalTitle}</p>
-              <h2>{anime.title}</h2>
-            </div>
+    <div className={clsx(styles.layout, mode === 'watchParty' && styles.watchPartyLayout)}>
+      <section className={styles.player}>
+        {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
+          <VideoPlayer anime={anime} player={selectedPlayer} />
+        ) : (
+          <div className={styles.videoFrame}>
+            {playersStatus ? <PlayerMessage message={playersStatus} /> : <PlayerLoader />}
           </div>
-          <div className="details-content">
-            <div className="genres" tabIndex={0} aria-label="Жанры">
-              <div className="genres-track">
-                {anime.genres.map((genre) => (
-                  <span key={genre}>{genre}</span>
-                ))}
-              </div>
+        )}
+
+        {mode === 'default' ? episodeControls : null}
+      </section>
+
+      <aside className={styles.detailsPanel}>
+        <div className={styles.detailsPoster}>
+          <img src={anime.poster} alt="" />
+          <div>
+            <p className="eyebrow">{anime.originalTitle}</p>
+            <h2>{anime.title}</h2>
+          </div>
+        </div>
+        <div className={styles.detailsContent}>
+          <div className={styles.genres} tabIndex={0} aria-label="Жанры">
+            <div className={styles.genresTrack}>
+              {anime.genres.map((genre) => (
+                <span key={genre}>{genre}</span>
+              ))}
             </div>
           </div>
+        </div>
 
-          {mode === 'default' ? (
-            <>
-              <div className="meta-grid">
-                <span>Год<strong>{anime.year}</strong></span>
-                <span>Серии<strong>{anime.episodes}</strong></span>
-                <span>Студия<strong>{anime.studio}</strong></span>
-                <span>Рейтинг<strong>{anime.rating}</strong></span>
-              </div>
+        {mode === 'default' ? (
+          <>
+            <div className={styles.metaGrid}>
+              <span>Год<strong>{anime.year}</strong></span>
+              <span>Серии<strong>{anime.episodes}</strong></span>
+              <span>Студия<strong>{anime.studio}</strong></span>
+              <span>Рейтинг<strong>{anime.rating}</strong></span>
+            </div>
 
-              <div className="watch-tools">
-                <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
-                <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
-              </div>
-              <WatchSources anime={anime} />
-            </>
-          ) : null}
-          {sidebarExtra ? <div className="watch-party-panel in-player">{sidebarExtra}</div> : null}
-        </aside>
-        {mode === 'watchParty' ? (
-          <div className="watch-party-player-footer">
-            {episodeControls}
-            {footerExtra ? <div className="watch-party-player-actions">{footerExtra}</div> : null}
-          </div>
+            <div className={styles.watchTools}>
+              <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
+              <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
+            </div>
+            <WatchSources anime={anime} />
+          </>
         ) : null}
-      </div>
-    </>
+        {sidebarExtra ? <div className={styles.watchPartyPanel}>{sidebarExtra}</div> : null}
+      </aside>
+      {mode === 'watchParty' ? (
+        <div className={styles.watchPartyFooter}>
+          {episodeControls}
+          {footerExtra ? <div className={styles.watchPartyActions}>{footerExtra}</div> : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
 export function AnimeHeroSkeleton() {
   return (
-    <div className="player-layout anime-page-skeleton" aria-busy="true">
-      <section className="player">
-        <div className="video-frame player-frame-skeleton">
+    <div className={clsx(styles.layout)} aria-busy="true">
+      <section className={styles.player}>
+        <div className={clsx(styles.videoFrame, styles.playerFrameSkeleton)}>
           <span />
         </div>
-        <section className="episodes episodes-skeleton" aria-hidden="true">
-          <span className="episode-scroll skeleton-block" />
-          <div className="episode-grid">
+        <section className={clsx(styles.episodes, styles.episodesSkeleton)} aria-hidden="true">
+          <span className={clsx(styles.episodeScroll, styles.skeletonBlock)} />
+          <div className={styles.episodeGrid}>
             {Array.from({ length: EPISODES_PER_PAGE }, (_, index) => (
-              <span className="skeleton-block" key={`episode-skeleton-${index}`} />
+              <span className={styles.skeletonBlock} key={`episode-skeleton-${index}`} />
             ))}
           </div>
-          <span className="episode-scroll skeleton-block" />
+          <span className={clsx(styles.episodeScroll, styles.skeletonBlock)} />
         </section>
       </section>
 
-      <aside className="details-panel details-panel-skeleton">
-        <div className="details-poster skeleton-panel" />
-        <div className="genres skeleton-genres" aria-hidden="true">
-          <div className="genres-track">
+      <aside className={clsx(styles.detailsPanel, styles.detailsPanelSkeleton)}>
+        <div className={clsx(styles.detailsPoster, styles.skeletonPanel)} />
+        <div className={styles.genres} aria-hidden="true">
+          <div className={styles.genresTrack}>
             {Array.from({ length: 5 }, (_, index) => (
-              <span className="skeleton-pill" key={`genre-skeleton-${index}`} />
+              <span className={styles.skeletonPill} key={`genre-skeleton-${index}`} />
             ))}
           </div>
         </div>
-        <div className="meta-grid">
+        <div className={styles.metaGrid}>
           {Array.from({ length: 4 }, (_, index) => (
-            <span className="skeleton-meta" key={`meta-skeleton-${index}`} />
+            <span className={styles.skeletonMeta} key={`meta-skeleton-${index}`} />
           ))}
         </div>
-        <div className="watch-tools">
-          <span className="skeleton-control" />
-          <span className="skeleton-control" />
+        <div className={styles.watchTools}>
+          <span className={styles.skeletonControl} />
+          <span className={styles.skeletonControl} />
         </div>
-        <div className="sources-block">
-          <span className="skeleton-source" />
+        <div className={styles.sourcesBlock}>
+          <span className={styles.skeletonSource} />
         </div>
       </aside>
     </div>
@@ -248,13 +248,13 @@ function PlayerProviderSelect({
   onChange: (value: PlayerProvider) => void;
 }) {
   return (
-    <div className="provider-select" aria-label="Плеер">
+    <div className={styles.providerSelect} aria-label="Плеер">
       {PLAYER_PROVIDER_OPTIONS.map((option) => {
         const available = players.some((player) => player.provider === option.value && isPlayablePlayer(player));
         return (
           <button
             key={option.value}
-            className={option.value === value ? 'selected' : ''}
+            className={clsx(option.value === value && styles.selectedProvider)}
             type="button"
             disabled={!available}
             onClick={() => onChange(option.value)}
@@ -302,24 +302,24 @@ function WatchStatusSelect({
   }, [open]);
 
   return (
-    <div className="status-select" ref={rootRef}>
+    <div className={styles.statusSelect} ref={rootRef}>
       <button
-        className="status-select-trigger"
+        className={styles.statusSelectTrigger}
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
         <span>{selected.label}</span>
-        <span className="status-select-chevron" aria-hidden="true" />
+        <span className={styles.statusSelectChevron} aria-hidden="true" />
       </button>
 
       {open ? (
-        <div className="status-select-menu" role="listbox" aria-label="Статус просмотра">
+        <div className={styles.statusSelectMenu} role="listbox" aria-label="Статус просмотра">
           {WATCH_STATUS_OPTIONS.map((option) => (
             <button
               key={option.value}
-              className={option.value === value ? 'selected' : ''}
+              className={clsx(option.value === value && styles.selectedStatus)}
               type="button"
               role="option"
               aria-selected={option.value === value}
@@ -346,7 +346,7 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
 
   if (player.streamType === 'iframe' && player.embedUrl) {
     return (
-      <div className="video-frame">
+      <div className={styles.videoFrame}>
         <iframe
           src={player.embedUrl}
           title={player.title}
@@ -364,7 +364,7 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
 
 function PlayerLoader() {
   return (
-    <div className="player-loader player-loader-skeleton" aria-label="Loading player">
+    <div className={clsx(styles.playerLoader, styles.playerLoaderSkeleton)} aria-label="Загрузка плеера">
       <span />
     </div>
   );
@@ -372,7 +372,7 @@ function PlayerLoader() {
 
 function PlayerMessage({ message }: { message: string }) {
   return (
-    <div className="player-message" role="status">
+    <div className={styles.playerMessage} role="status">
       <p>{message}</p>
     </div>
   );
@@ -412,7 +412,7 @@ function HlsPlayer({
   }, [player.streamUrl]);
 
   return (
-    <div className="video-frame">
+    <div className={styles.videoFrame}>
       <video ref={videoRef} controls poster={anime.backdrop} onCanPlay={onReady} />
       {isLoading ? <PlayerLoader /> : null}
     </div>
@@ -425,10 +425,10 @@ function isPlayablePlayer(player: PlayerProviderResult) {
 
 function WatchSources({ anime }: { anime: AnimeTitle }) {
   return (
-    <div className="sources-block">
+    <div className={styles.sourcesBlock}>
       <h3>Источники</h3>
       {anime.watchSources.map((source) => (
-        <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className="source-link">
+        <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
           <span>
             <strong>{source.name}</strong>
           </span>

@@ -1,0 +1,16 @@
+.emptyCatalog {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  max-width: 560px;
+}
+
+.emptyCatalog p:not(.eyebrow) {
+  color: #cfc7ba;
+  line-height: 1.6;
+}
+
+.watchHome {
+  display: grid;
+  gap: 24px;
+}

@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useState } from 'react';
 import { AnimeHero } from '@pages/anime/AnimeHero';
 import watchPartyIcon from '@assets/watch-party.svg';
@@ -9,6 +10,7 @@ import { WatchPartyParticipants } from './WatchPartyParticipants';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
 import { useWatchPartyCatalog } from './useWatchPartyCatalog';
 import { useWatchPartyRoom } from './useWatchPartyRoom';
+import styles from './WatchPartyPage.module.css';
 
 type WatchPartyPageProps = {
   code: string;
@@ -55,8 +57,8 @@ export function WatchPartyPage({
   }
 
   return (
-    <section className={room.selectedAnime ? 'watch-party-page' : 'watch-party-page room-selecting'}>
-      <div className="watch-party-room">
+    <section className={clsx(styles.page, !room.selectedAnime && styles.roomSelecting)}>
+      <div className={styles.room}>
         {room.selectedAnime ? (
           <AnimeHero
             anime={room.selectedAnime}
@@ -84,7 +86,7 @@ export function WatchPartyPage({
           />
         ) : room.isHost ? (
           <CatalogBrowser
-            className="watch-party-catalog"
+            className={styles.catalog}
             eyebrow="Совместный просмотр"
             title="Выбери аниме"
             browseResults={catalog.partyCatalogResults}
@@ -101,8 +103,8 @@ export function WatchPartyPage({
             onPageChange={catalog.setPartyCatalogPage}
           />
         ) : (
-          <div className="watch-party-stage waiting-host">
-            <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+          <div className={clsx(styles.stage, styles.waitingHost)}>
+            <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
             <p className="eyebrow">Совместный просмотр</p>
             <h2>Комната {code}</h2>
             <p>Ждём, пока хост выберет аниме для просмотра.</p>
@@ -110,7 +112,7 @@ export function WatchPartyPage({
         )}
 
         {!room.selectedAnime ? (
-          <aside className="watch-party-panel">
+          <aside className={styles.panel}>
             <WatchPartyParticipants
               code={code}
               participants={room.participants}

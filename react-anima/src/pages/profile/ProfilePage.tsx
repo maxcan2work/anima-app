@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useState } from 'react';
 import { fromServerWatchStatus, watchStatusLabel, type WatchStatus } from '@anima/core';
 import detachIcon from '@assets/detach.svg';
@@ -10,6 +11,7 @@ import shikimoriIcon from '@assets/shikimori.png';
 import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useToast } from '@shared/ui/ToastProvider';
+import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
@@ -33,64 +35,68 @@ export function ProfilePage() {
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
 
   if (authStatus === 'loading') {
-    return <section className="profile-page empty-state">Загружаем профиль...</section>;
+    return <section className={clsx(styles.page, styles.emptyState)}>Загружаем профиль...</section>;
   }
 
   if (!user) {
     return (
-      <section className="profile-page empty-state">
+      <section className={clsx(styles.page, styles.emptyState)}>
         <h2>Профиль</h2>
         <p>Войди через Discord, чтобы вести дневник просмотра, оценки и рецензии.</p>
-        <button className="discord-button" onClick={login}>Войти через Discord</button>
+        <button className={styles.discordButton} onClick={login}>Войти через Discord</button>
       </section>
     );
   }
 
   return (
-    <section className="profile-page">
-      <section className="diary-list">
-          <h3>{selectedFilter.label}</h3>
-          {entries.length === 0 ? (
-            <p className="muted-copy">Пока нет записей. Выбери тайтл и сохрани первую запись.</p>
-          ) : filteredEntries.length === 0 ? (
-            <p className="muted-copy">В этом разделе пока нет аниме.</p>
-          ) : (
-            filteredEntries.map((entry) => (
-              <article key={entry.id} className="diary-row">
-                {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className="poster-fallback" />}
-                <span>
-                  <strong>{entry.anime?.title ?? entry.animeId}</strong>
-                  <small>{watchStatusLabel(fromServerWatchStatus(entry.status))} · серия {entry.currentEpisode}</small>
-                  {entry.review ? <small className="diary-review">{entry.review}</small> : null}
-                </span>
-                {entry.score ? <em>{entry.score}/10</em> : null}
-              </article>
-            ))
-          )}
-        </section>
+    <section className={styles.page}>
+      <section className={styles.diaryList}>
+        <h3>{selectedFilter.label}</h3>
+        {entries.length === 0 ? (
+          <p className={styles.mutedCopy}>Пока нет записей. Выбери тайтл и сохрани первую запись.</p>
+        ) : filteredEntries.length === 0 ? (
+          <p className={styles.mutedCopy}>В этом разделе пока нет аниме.</p>
+        ) : (
+          filteredEntries.map((entry) => (
+            <article key={entry.id} className={styles.diaryRow}>
+              {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
+              <span>
+                <strong>{entry.anime?.title ?? entry.animeId}</strong>
+                <small>{watchStatusLabel(fromServerWatchStatus(entry.status))} · серия {entry.currentEpisode}</small>
+                {entry.review ? <small className={styles.diaryReview}>{entry.review}</small> : null}
+              </span>
+              {entry.score ? <em>{entry.score}/10</em> : null}
+            </article>
+          ))
+        )}
+      </section>
 
-      <aside className="profile-sidebar">
-        <header className="profile-header">
-          <div className="profile-avatar-frame">
-            {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className="avatar-fallback large">{user.displayName[0]}</div>}
+      <aside className={styles.sidebar}>
+        <header className={styles.header}>
+          <div className={styles.avatarFrame}>
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="" />
+            ) : (
+              <div className={styles.avatarFallbackLarge}>{user.displayName[0]}</div>
+            )}
             <h2>{user.displayName}</h2>
           </div>
         </header>
 
-        <div className={`profile-sidebar-content ${sidebarMode === 'settings' ? 'slide-up' : 'slide-down'}`} key={sidebarMode}>
+        <div className={clsx(styles.sidebarContent, sidebarMode === 'settings' ? styles.slideUp : styles.slideDown)} key={sidebarMode}>
           {sidebarMode === 'overview' ? (
             <>
-              <section className="profile-sidebar-section" aria-labelledby="profile-watch-section">
+              <section className={styles.section} aria-labelledby="profile-watch-section">
                 <h3 id="profile-watch-section">Просмотр</h3>
-                <div className="profile-stats" aria-label="Фильтр дневника">
+                <div className={styles.stats} aria-label="Фильтр дневника">
                   {profileFilters.map((filter) => (
                     <button
                       key={filter.status}
-                      className={filter.status === selectedStatus ? 'active' : ''}
+                      className={clsx(filter.status === selectedStatus && styles.activeStat)}
                       type="button"
                       onClick={() => setSelectedStatus(filter.status)}
                     >
-                      <img className="profile-stat-icon" src={filter.icon} alt="" aria-hidden="true" />
+                      <img className={styles.statIcon} src={filter.icon} alt="" aria-hidden="true" />
                       <span>{filter.label}</span>
                       <strong>{filter.count}</strong>
                     </button>
@@ -98,35 +104,37 @@ export function ProfilePage() {
                 </div>
               </section>
 
-              <section className="profile-sidebar-section profile-friends-section" aria-labelledby="profile-friends-section">
-                <div className="profile-section-title">
+              <section className={clsx(styles.section, styles.friendsSection)} aria-labelledby="profile-friends-section">
+                <div className={styles.sectionTitle}>
                   <h3 id="profile-friends-section">Друзья</h3>
                   <span>{profileFriends.length}</span>
                 </div>
-                <div className="profile-friends-list">
+                <div className={styles.friendsList}>
                   {sortedFriends.slice(0, 5).map((friend) => (
-                    <article key={friend.id} className="profile-friend-row">
-                      <span className="profile-friend-avatar">{friend.name[0]}</span>
-                      <span className="profile-friend-name">{friend.name}</span>
-                      <span className={`profile-friend-status ${friend.status}`}>{friend.status === 'online' ? 'Онлайн' : 'Оффлайн'}</span>
+                    <article key={friend.id} className={styles.friendRow}>
+                      <span className={styles.friendAvatar}>{friend.name[0]}</span>
+                      <span className={styles.friendName}>{friend.name}</span>
+                      <span className={clsx(styles.friendStatus, friend.status === 'online' && styles.online)}>
+                        {friend.status === 'online' ? 'Онлайн' : 'Оффлайн'}
+                      </span>
                     </article>
                   ))}
                 </div>
-                <button className="profile-show-all" type="button">
+                <button className={styles.showAll} type="button">
                   Показать всех
                 </button>
               </section>
             </>
           ) : (
             <>
-              <section className="profile-sidebar-section" aria-labelledby="profile-edit-section">
+              <section className={styles.section} aria-labelledby="profile-edit-section">
                 <h3 id="profile-edit-section">Профиль</h3>
-                <div className="profile-settings-card">
+                <div className={styles.settingsCard}>
                   <span>Редактирование ника и аватарки появится позже.</span>
                 </div>
               </section>
 
-              <section className="profile-sidebar-section profile-integration-section" aria-labelledby="profile-integrations-section">
+              <section className={clsx(styles.section, styles.integrationSection)} aria-labelledby="profile-integrations-section">
                 <h3 id="profile-integrations-section">Интеграции</h3>
                 <ShikimoriIntegration />
               </section>
@@ -134,16 +142,16 @@ export function ProfilePage() {
           )}
         </div>
 
-        <div className="profile-sidebar-actions">
+        <div className={styles.actions}>
           <button
-            className={sidebarMode === 'settings' ? 'profile-settings-toggle active' : 'profile-settings-toggle'}
+            className={clsx(styles.settingsToggle, sidebarMode === 'settings' && styles.activeToggle)}
             type="button"
             onClick={() => setSidebarMode((current) => (current === 'settings' ? 'overview' : 'settings'))}
             aria-label={sidebarMode === 'settings' ? 'Вернуться к профилю' : 'Настройки профиля'}
           >
             <img src={settingsIcon} alt="" aria-hidden="true" />
           </button>
-          <button className="profile-logout" type="button" onClick={logout}>
+          <button className={styles.logout} type="button" onClick={logout}>
             Выйти
           </button>
         </div>
@@ -204,9 +212,9 @@ function ShikimoriIntegration() {
 
   if (isAuthLoading) {
     return (
-      <div className="connected-account settings-account-placeholder" aria-hidden="true">
-        <span className="settings-placeholder-avatar" />
-        <span className="settings-placeholder-copy">
+      <div className={clsx(styles.connectedAccount, styles.accountPlaceholder)} aria-hidden="true">
+        <span className={styles.placeholderAvatar} />
+        <span className={styles.placeholderCopy}>
           <span />
           <strong />
         </span>
@@ -216,21 +224,21 @@ function ShikimoriIntegration() {
 
   if (shikimori) {
     return (
-      <div className="connected-account">
-        <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
-          <span className="connected-account-avatar">
-            {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
-            <img className="connected-account-badge" src={shikimoriIcon} alt="" aria-hidden="true" />
+      <div className={styles.connectedAccount}>
+        <a className={styles.connectedMain} href={shikimori.profileUrl} target="_blank" rel="noreferrer">
+          <span className={styles.connectedAvatar}>
+            {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className={styles.connectedFallback}>{shikimori.nickname[0]}</span>}
+            <img className={styles.connectedBadge} src={shikimoriIcon} alt="" aria-hidden="true" />
           </span>
           <span>
             <strong>{shikimori.nickname}</strong>
           </span>
         </a>
-        <div className="connected-account-actions">
-          <button className="settings-icon-button" type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
-            {importing ? <span className="settings-button-loader" aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
+        <div className={styles.connectedActions}>
+          <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
+            {importing ? <span className={styles.buttonLoader} aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
           </button>
-          <button className="settings-icon-button" type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
+          <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
             <img src={detachIcon} alt="" aria-hidden="true" />
           </button>
         </div>
@@ -239,9 +247,9 @@ function ShikimoriIntegration() {
   }
 
   return (
-    <div className="profile-integration-empty">
+    <div className={styles.integrationEmpty}>
       <p>Подключи Shikimori, чтобы импортировать список просмотра.</p>
-      <button className="settings-connect-button" type="button" onClick={connectShikimori} disabled={!canConnect}>
+      <button className={styles.connectButton} type="button" onClick={connectShikimori} disabled={!canConnect}>
         {canConnect ? 'Подключить' : 'Нужен вход'}
       </button>
     </div>

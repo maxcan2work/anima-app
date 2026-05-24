@@ -1,10 +1,11 @@
 import settingsIcon from '@assets/settings.svg';
+import styles from './SettingsPage.module.css';
 
 export function SettingsPage() {
   return (
-    <section className="settings-page">
-      <header className="settings-hero">
-        <span className="settings-icon" aria-hidden="true">
+    <section className={styles.page}>
+      <header className={styles.hero}>
+        <span className={styles.icon} aria-hidden="true">
           <img src={settingsIcon} alt="" />
         </span>
         <div>
@@ -14,7 +15,7 @@ export function SettingsPage() {
         </div>
       </header>
 
-      <section className="settings-panel">
+      <section className={styles.panel}>
         <div>
           <h3>Тема</h3>
           <p>Позже добавим выбор светлой, тёмной и системной темы.</p>
@@ -24,7 +25,7 @@ export function SettingsPage() {
         </button>
       </section>
 
-      <section className="settings-panel">
+      <section className={styles.panel}>
         <div>
           <h3>Язык</h3>
           <p>Здесь будет выбор языка интерфейса.</p>

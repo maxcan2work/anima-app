@@ -1,0 +1,438 @@
+.libraryPanel {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: visible;
+  padding: 28px 24px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 12, 11, 0.55);
+  backdrop-filter: blur(18px);
+}
+
+.libraryPanel button:not(:disabled):hover {
+  transform: none;
+}
+
+.brandRow {
+  display: grid;
+  grid-template-columns: 56px minmax(0, var(--sidebar-label-width));
+  align-items: center;
+  gap: 12px;
+  transition: grid-template-columns 220ms ease;
+}
+
+.brandCopy {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  opacity: var(--sidebar-label-opacity);
+  transform: translateX(var(--sidebar-label-shift));
+  transition: opacity 120ms ease 120ms, transform 220ms ease;
+}
+
+.toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  grid-column: 1;
+  grid-row: 1;
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f2c063;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.toggle img {
+  width: 20px;
+  height: 20px;
+}
+
+.nav {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  transition: width 220ms ease;
+}
+
+.navButton,
+.footerAction {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5f1e8;
+  font-weight: 800;
+  text-align: left;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
+}
+
+.footerAction {
+  width: 100%;
+}
+
+.navButtonActive,
+.footerActionActive {
+  border-color: rgba(242, 192, 99, 0.65);
+  background: rgba(242, 192, 99, 0.14);
+  color: #f2c063;
+}
+
+.navButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.navIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2c063;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.navIcon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.navCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: var(--sidebar-label-width);
+  opacity: var(--sidebar-label-opacity);
+  overflow: hidden;
+  transform: translateX(var(--sidebar-label-shift));
+  transition: opacity 120ms ease 120ms, transform 220ms ease, max-width 220ms ease;
+}
+
+.navCopy > span,
+.navCopy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navCopy small {
+  color: #aaa196;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.footer {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+  transition: width 220ms ease;
+}
+
+.authPanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transition: width 220ms ease;
+}
+
+.authPanelSignedIn {
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+.authPlaceholder {
+  grid-template-columns: var(--ui-control-size) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--ui-grid-gap);
+  width: 100%;
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  padding: var(--ui-row-padding);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.authPlaceholder span {
+  margin: 0;
+  line-height: 0;
+}
+
+.collapsedAuth {
+  justify-items: center;
+}
+
+.placeholderAvatar,
+.placeholderCopy {
+  display: block;
+  margin-top: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  animation: placeholder-pulse 1.2s linear infinite;
+}
+
+.placeholderAvatar {
+  width: var(--ui-control-size);
+  height: var(--ui-control-size);
+  align-self: center;
+  justify-self: center;
+}
+
+.placeholderCopy {
+  align-self: center;
+  width: 128px;
+  max-width: 72%;
+  height: 12px;
+}
+
+.profileLink {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ui-control-size) 1fr;
+  align-items: center;
+  gap: var(--ui-grid-gap);
+  width: 100%;
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  min-width: 0;
+  padding: var(--ui-row-padding);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--ui-radius);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-align: left;
+  transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
+}
+
+.profileLink span {
+  display: block;
+  max-width: 220px;
+  margin-top: 0;
+  color: #aaa196;
+  font-size: 12px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: max-width 220ms ease, opacity 120ms ease 120ms, transform 220ms ease;
+}
+
+.profileLink strong {
+  display: block;
+  color: #fffaf2;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.profileLink img,
+.avatarFallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.profileLink img {
+  object-fit: cover;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: #5865f2;
+  color: white;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.discordButton {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ui-control-size) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--ui-grid-gap);
+  width: 100%;
+  max-width: none;
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+  padding: var(--ui-row-padding);
+  border: 0;
+  border-radius: 8px;
+  background: #5865f2;
+  color: white;
+  font-weight: 800;
+  text-align: center;
+  overflow: hidden;
+  transition: width 220ms ease, grid-template-columns 220ms ease, background 160ms ease;
+}
+
+.discordButton img {
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  justify-self: center;
+  color: white;
+  object-fit: contain;
+}
+
+.discordButton span {
+  display: block;
+  min-width: 0;
+  max-width: var(--sidebar-label-width);
+  margin-top: 0;
+  overflow: hidden;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  justify-self: center;
+  opacity: var(--sidebar-label-opacity);
+  transform: translateX(var(--sidebar-label-shift));
+  transition: max-width 220ms ease, opacity 120ms ease 120ms, transform 220ms ease;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global(.sidebar-collapsed) .brandCopy {
+  visibility: hidden;
+  transition: none;
+}
+
+:global(.sidebar-collapsed) .footer,
+:global(.sidebar-collapsed) .authPanel,
+:global(.sidebar-collapsed) .authPanel:not(.authPanelSignedIn),
+:global(.sidebar-collapsed) .nav {
+  width: 56px;
+}
+
+:global(.sidebar-collapsed) .authPlaceholder {
+  grid-template-columns: var(--ui-control-size);
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+}
+
+:global(.sidebar-collapsed) .profileLink {
+  grid-template-columns: var(--ui-control-size);
+  width: 56px;
+  padding: var(--ui-row-padding);
+}
+
+:global(.sidebar-collapsed) .profileLink span,
+:global(.sidebar-collapsed) .discordButton span,
+:global(.sidebar-collapsed) .navCopy {
+  position: absolute;
+  inset: auto;
+  max-width: 0;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-8px);
+  transition: none;
+}
+
+:global(.sidebar-collapsed) .discordButton,
+:global(.sidebar-collapsed) .navButton,
+:global(.sidebar-collapsed) .footerAction {
+  grid-template-columns: 34px;
+  justify-items: center;
+  width: 56px;
+  padding: 10px;
+}
+
+:global(.sidebar-collapsed) .discordButton {
+  gap: 0;
+}
+
+.toggle::after,
+:global(.sidebar-collapsed) .discordButton::after,
+:global(.sidebar-collapsed) .profileLink::after,
+:global(.sidebar-collapsed) .footerAction::after,
+:global(.sidebar-collapsed) .navButton::after {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  z-index: 200;
+  min-width: max-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(20, 22, 21, 0.96);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(4px, -50%);
+  transition: opacity 140ms ease, transform 140ms ease;
+  content: attr(data-tooltip);
+}
+
+.toggle:hover::after,
+.toggle:focus-visible::after,
+:global(.sidebar-collapsed) .discordButton:hover::after,
+:global(.sidebar-collapsed) .discordButton:focus-visible::after,
+:global(.sidebar-collapsed) .profileLink:hover::after,
+:global(.sidebar-collapsed) .profileLink:focus-visible::after,
+:global(.sidebar-collapsed) .footerAction:hover::after,
+:global(.sidebar-collapsed) .footerAction:focus-visible::after,
+:global(.sidebar-collapsed) .navButton:hover::after,
+:global(.sidebar-collapsed) .navButton:focus-visible::after {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+@keyframes placeholder-pulse {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .libraryPanel {
+    position: static;
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (max-width: 700px) {
+  .libraryPanel {
+    padding: 18px;
+  }
+
+  .authPanelSignedIn {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,6 +1,7 @@
 import copyIcon from '@assets/copy.svg';
 import leaveRoomIcon from '@assets/leave-room.svg';
 import { useToast } from '@shared/ui/ToastProvider';
+import styles from './WatchPartyRoomActions.module.css';
 
 export function WatchPartyRoomActions({
   code,
@@ -17,12 +18,12 @@ export function WatchPartyRoomActions({
   }
 
   return (
-    <div className="watch-party-actions-row">
-      <button className="watch-party-code compact" type="button" onClick={handleCopyCode}>
+    <div className={styles.row}>
+      <button className={styles.code} type="button" onClick={handleCopyCode}>
         <span>{code}</span>
         <img src={copyIcon} alt="" aria-hidden="true" />
       </button>
-      <button className="watch-party-leave" type="button" onClick={onLeaveRoom} aria-label="Выйти из комнаты">
+      <button className={styles.leave} type="button" onClick={onLeaveRoom} aria-label="Выйти из комнаты">
         <img src={leaveRoomIcon} alt="" aria-hidden="true" />
       </button>
     </div>

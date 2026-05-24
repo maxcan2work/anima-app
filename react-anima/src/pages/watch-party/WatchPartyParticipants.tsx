@@ -2,6 +2,7 @@ import crownIcon from '@assets/crown.svg';
 import kickIcon from '@assets/kick.svg';
 import type { WatchPartyParticipant } from './types';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
+import styles from './WatchPartyParticipants.module.css';
 
 export function WatchPartyParticipants({
   code,
@@ -24,21 +25,21 @@ export function WatchPartyParticipants({
 }) {
   return (
     <>
-      <h3>Участники ({participants.length}/16)</h3>
-      {connectionStatus ? <p className="party-status">{connectionStatus}</p> : null}
-      <div className="party-members">
+      <h3 className={styles.title}>Участники ({participants.length}/16)</h3>
+      {connectionStatus ? <p className={styles.status}>{connectionStatus}</p> : null}
+      <div className={styles.members}>
         {participants.map((participant) => (
-          <div className="party-member" key={participant.id}>
+          <div className={styles.member} key={participant.id}>
             {participant.avatarUrl ? (
               <img src={participant.avatarUrl} alt="" />
             ) : (
-              <div className="avatar-fallback">{participant.name[0] ?? 'G'}</div>
+              <div className={styles.avatarFallback}>{participant.name[0] ?? 'G'}</div>
             )}
             <strong>{participant.name}</strong>
-            <span className="party-member-actions">
+            <span className={styles.actions}>
               {participant.isHost ? (
-                <span className="party-host-badge" aria-label="Хост" title="Хост">
-                  <img className="party-host-icon" src={crownIcon} alt="" aria-hidden="true" />
+                <span className={styles.hostBadge} aria-label="Хост" title="Хост">
+                  <img className={styles.hostIcon} src={crownIcon} alt="" aria-hidden="true" />
                 </span>
               ) : null}
               {canKick && !participant.isHost && participant.id !== ownParticipantId ? (
@@ -50,9 +51,7 @@ export function WatchPartyParticipants({
           </div>
         ))}
       </div>
-      {showActions ? (
-        <WatchPartyRoomActions code={code} onLeaveRoom={onLeaveRoom} />
-      ) : null}
+      {showActions ? <WatchPartyRoomActions code={code} onLeaveRoom={onLeaveRoom} /> : null}
     </>
   );
 }

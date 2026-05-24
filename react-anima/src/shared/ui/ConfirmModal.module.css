@@ -1,0 +1,137 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 6, 6, 0.68);
+  backdrop-filter: blur(8px);
+  animation: backdropIn 140ms ease-out both;
+}
+
+.backdropClosing {
+  pointer-events: none;
+  animation: backdropOut 140ms ease-in both;
+}
+
+.modal {
+  display: grid;
+  gap: 14px;
+  width: min(420px, 100%);
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(24, 24, 22, 0.98);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  animation: modalPop 160ms ease-out both;
+}
+
+.backdropClosing .modal {
+  animation: modalPopOut 140ms ease-in both;
+}
+
+.modal h3,
+.modal p {
+  margin: 0;
+}
+
+.modal h3 {
+  color: #fff7ec;
+  font-size: 22px;
+}
+
+.modal p {
+  color: #cfc7ba;
+  line-height: 1.55;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.textButton,
+.dangerButton,
+.primaryButton {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 900;
+}
+
+.textButton {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fffaf2;
+  font-weight: 800;
+}
+
+.dangerButton {
+  background: #d94d38;
+  color: white;
+}
+
+.dangerButton:hover {
+  background: #e15843;
+}
+
+.primaryButton {
+  background: #f5a524;
+  color: #191713;
+}
+
+.primaryButton:hover {
+  background: #ffb640;
+}
+
+.modal button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalPopOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

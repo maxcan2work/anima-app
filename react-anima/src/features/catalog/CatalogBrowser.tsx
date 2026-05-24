@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { CatalogSearchResult } from '@/api';
+import styles from './CatalogBrowser.module.css';
 
 type CatalogBrowserProps = {
   className: string;
@@ -67,12 +68,12 @@ export function CatalogBrowser({
 
   return (
     <section className={className}>
-      <header className="browse-header">
+      <header className={styles.header}>
         <div>
           <p className="eyebrow">{eyebrow}</p>
           <h2>{title}</h2>
         </div>
-        <label className="catalog-search" aria-label="Найти аниме">
+        <label className={styles.search} aria-label="Найти аниме">
           <input
             type="search"
             value={searchQuery}
@@ -82,14 +83,14 @@ export function CatalogBrowser({
         </label>
       </header>
 
-      <div className="browse-grid" aria-busy={isInitialBrowseLoading || isLoadingMore || isSearchLoading}>
+      <div className={styles.grid} aria-busy={isInitialBrowseLoading || isLoadingMore || isSearchLoading}>
         {isSearchLoading || isInitialBrowseLoading || hasBrowseError ? (
           <CatalogSkeletonCards count={12} />
         ) : (
           visibleResults.map((result) => (
             <button
               key={`${result.provider}-${result.providerId}`}
-              className="browse-card"
+              className={styles.card}
               onClick={() => onOpenAnime(result)}
               type="button"
             >
@@ -107,7 +108,7 @@ export function CatalogBrowser({
         {isLoadingMore ? <CatalogSkeletonCards count={6} /> : null}
       </div>
 
-      {!isSearching ? <div ref={sentinelRef} className="scroll-sentinel" aria-hidden="true" /> : null}
+      {!isSearching ? <div ref={sentinelRef} className={styles.sentinel} aria-hidden="true" /> : null}
     </section>
   );
 }
@@ -116,11 +117,11 @@ function CatalogSkeletonCards({ count }: { count: number }) {
   return (
     <>
       {Array.from({ length: count }, (_, index) => (
-        <div className="browse-card browse-card-skeleton" key={`catalog-skeleton-${index}`}>
-          <span className="skeleton-poster" />
-          <span className="skeleton-line skeleton-line-title" />
-          <span className="skeleton-line" />
-          <span className="skeleton-line skeleton-line-short" />
+        <div className={`${styles.card} ${styles.skeletonCard}`} key={`catalog-skeleton-${index}`}>
+          <span className={styles.skeletonPoster} />
+          <span className={`${styles.skeletonLine} ${styles.skeletonLineTitle}`} />
+          <span className={styles.skeletonLine} />
+          <span className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
         </div>
       ))}
     </>

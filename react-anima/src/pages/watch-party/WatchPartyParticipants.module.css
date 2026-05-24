@@ -1,0 +1,119 @@
+.title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.status {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 10px;
+  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+.members::-webkit-scrollbar {
+  width: 6px;
+}
+
+.members::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.members::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(201, 166, 109, 0.48);
+}
+
+.members::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 166, 109, 0.72);
+}
+
+.member {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 10px;
+}
+
+.member img,
+.avatarFallback {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  background: var(--color-discord);
+  color: white;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.member strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f1e7dc;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: end;
+}
+
+.hostBadge,
+.actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+}
+
+.hostBadge {
+  border: 1px solid rgba(201, 166, 109, 0.36);
+  background: rgba(201, 166, 109, 0.14);
+}
+
+.hostIcon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.actions button {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.actions button:hover {
+  border-color: rgba(201, 166, 109, 0.42);
+  background: rgba(201, 166, 109, 0.1);
+}
+
+.actions button img {
+  width: 16px;
+  height: 16px;
+}

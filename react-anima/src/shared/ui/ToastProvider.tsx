@@ -1,4 +1,6 @@
+import clsx from 'clsx';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import styles from './ToastProvider.module.css';
 
 type ToastVariant = 'default' | 'success' | 'danger' | 'warning';
 
@@ -76,9 +78,18 @@ function ToastViewport({ toasts }: { toasts: ToastItem[] }) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-viewport" aria-live="polite" aria-atomic="false">
+    <div className={styles.viewport} aria-live="polite" aria-atomic="false">
       {toasts.map((toast) => (
-        <div key={toast.id} className={`app-toast ${toast.closing ? 'closing' : ''} ${toast.variant}`}>
+        <div
+          key={toast.id}
+          className={clsx(
+            styles.toast,
+            toast.closing && styles.closing,
+            toast.variant === 'success' && styles.success,
+            toast.variant === 'danger' && styles.danger,
+            toast.variant === 'warning' && styles.warning,
+          )}
+        >
           {toast.message}
         </div>
       ))}

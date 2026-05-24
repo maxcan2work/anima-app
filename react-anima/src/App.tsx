@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { AppProviders } from '@app/AppProviders';
 import { AppScreens } from '@app/AppScreens';
@@ -5,6 +6,7 @@ import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { loadSidebarCollapsed, saveSidebarCollapsed } from '@shared/storage';
 import { AppSidebar } from '@widgets/app-sidebar/AppSidebar';
+import styles from './App.module.css';
 
 export function App() {
   return (
@@ -29,14 +31,14 @@ function AppContent() {
   }, [authStatus, currentPath, redirectToWatchRoot, user]);
 
   return (
-    <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
+    <main className={clsx(styles.shell, sidebarCollapsed && styles.collapsed)}>
       <AppSidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
       />
 
-      <section className="watch-area">
-        <div className={`screen-transition ${screenAnimation}`}>
+      <section className={styles.watchArea}>
+        <div className={clsx(styles.screenTransition, screenAnimation === 'leaving' && styles.leaving, screenAnimation === 'entering' && styles.entering)}>
           <AppScreens />
         </div>
       </section>

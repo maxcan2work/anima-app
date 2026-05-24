@@ -1,4 +1,6 @@
+import clsx from 'clsx';
 import { useId, type ReactNode } from 'react';
+import styles from './ConfirmModal.module.css';
 
 export type ConfirmModalVariant = 'danger' | 'primary';
 
@@ -31,18 +33,18 @@ export function ConfirmModal({
 
   return (
     <div
-      className={closing ? 'modal-backdrop closing' : 'modal-backdrop'}
+      className={clsx(styles.backdrop, closing && styles.backdropClosing)}
       role="presentation"
       onClick={onCancel}
     >
-      <div className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(event) => event.stopPropagation()}>
+      <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(event) => event.stopPropagation()}>
         <h3 id={titleId}>{title}</h3>
-        <div className="confirm-modal-body">{children}</div>
-        <div className="confirm-modal-actions">
-          <button className="text-button" type="button" onClick={onCancel} disabled={closing}>
+        <div>{children}</div>
+        <div className={styles.actions}>
+          <button className={styles.textButton} type="button" onClick={onCancel} disabled={closing}>
             {cancelLabel}
           </button>
-          <button className={confirmVariant === 'danger' ? 'danger-button' : 'primary-button'} type="button" onClick={onConfirm} disabled={closing}>
+          <button className={confirmVariant === 'danger' ? styles.dangerButton : styles.primaryButton} type="button" onClick={onConfirm} disabled={closing}>
             {confirmLabel}
           </button>
         </div>

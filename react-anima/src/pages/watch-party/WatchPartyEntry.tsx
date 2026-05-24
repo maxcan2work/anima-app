@@ -3,6 +3,7 @@ import { checkWatchPartyRoom } from '@/api';
 import watchPartyIcon from '@assets/watch-party.svg';
 import { normalizeWatchPartyCode } from '@shared/navigation';
 import { useToast } from '@shared/ui/ToastProvider';
+import styles from './WatchPartyEntry.module.css';
 
 type WatchPartyEntryProps = {
   code: string;
@@ -48,30 +49,30 @@ export function WatchPartyEntry({
   }
 
   return (
-    <section className="watch-party-page">
-      <div className="watch-party-entry">
-        <header className="watch-party-entry-header">
-          <img className="watch-party-icon" src={watchPartyIcon} alt="" aria-hidden="true" />
+    <section className={styles.page}>
+      <div className={styles.entry}>
+        <header className={styles.header}>
+          <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
           <h2>Совместный просмотр</h2>
         </header>
 
-        <div className="watch-party-entry-options">
-          <section className="watch-party-entry-option">
+        <div className={styles.options}>
+          <section className={styles.option}>
             <h3>Создать комнату</h3>
             <p>Собери друзей в одной комнате, выбери аниме и управляй сериями как хост.</p>
-            <button className="random-button" type="button" onClick={onCreateRoom}>
+            <button className={styles.createButton} type="button" onClick={onCreateRoom}>
               Создать комнату
             </button>
           </section>
 
-          <div className="watch-party-divider" aria-hidden="true">
+          <div className={styles.divider} aria-hidden="true">
             <span>или</span>
           </div>
 
-          <section className="watch-party-entry-option">
+          <section className={styles.option}>
             <h3>Войти по коду</h3>
             <p>Вставь код комнаты, который отправил хост, и подключайся к совместному просмотру.</p>
-            <form className="watch-party-join" onSubmit={handleJoinRoom}>
+            <form className={styles.join} onSubmit={handleJoinRoom}>
               <input
                 value={joinCode}
                 onChange={(event) => setJoinCode(event.target.value)}

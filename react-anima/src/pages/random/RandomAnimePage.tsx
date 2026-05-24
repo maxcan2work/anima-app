@@ -3,6 +3,7 @@ import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 import { useRandomAnime } from '@hooks/useRandomAnime';
+import styles from './RandomAnimePage.module.css';
 
 export function RandomAnimePage() {
   const { user } = useAuth();
@@ -20,15 +21,15 @@ export function RandomAnimePage() {
   } = useRandomAnime(user);
 
   return (
-    <section className="random-page">
-      <div className="random-stage">
-        <img className="random-dice" src={randomDiceIcon} alt="" aria-hidden="true" />
+    <section className={styles.page}>
+      <div className={styles.stage}>
+        <img className={styles.dice} src={randomDiceIcon} alt="" aria-hidden="true" />
         <p className="eyebrow">Рандомайзер</p>
         <h2>Не знаешь, что посмотреть?</h2>
         <p>Жми кнопку снизу, а Anima достанет случайный тайтл из каталога Shikimori.</p>
 
         {randomAnime ? (
-          <button className="random-card" onClick={() => openCatalogAnime(randomAnime)} type="button">
+          <button className={styles.card} onClick={() => openCatalogAnime(randomAnime)} type="button">
             {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : null}
             <div>
               <strong>{randomAnime.title}</strong>
@@ -40,15 +41,15 @@ export function RandomAnimePage() {
           </button>
         ) : null}
 
-        {randomStatus ? <p className="catalog-status">{randomStatus}</p> : null}
+        {randomStatus ? <p className={styles.status}>{randomStatus}</p> : null}
 
-        <button className="random-button" onClick={handleRandomAnime} disabled={randomLoading}>
+        <button className={styles.button} onClick={handleRandomAnime} disabled={randomLoading}>
           {randomLoading ? 'Рандомим...' : randomAnime ? 'Перерандомить' : 'Срандомить'}
         </button>
       </div>
 
-      <aside className="random-history" aria-label="История случайных аниме">
-        <div className="random-history-header">
+      <aside className={styles.history} aria-label="История случайных аниме">
+        <div className={styles.historyHeader}>
           <h3>История</h3>
           {randomHistory.length > 0 ? (
             <button type="button" onClick={handleClearRandomHistory} disabled={randomClearing}>
@@ -57,21 +58,21 @@ export function RandomAnimePage() {
           ) : null}
         </div>
         {randomHistory.length === 0 ? (
-          <p className="muted-copy">Здесь появятся последние варианты.</p>
+          <p className={styles.mutedCopy}>Здесь появятся последние варианты.</p>
         ) : (
           randomHistory.map((item) => {
             const key = `${item.provider}-${item.providerId}`;
             return (
-              <div key={key} className="random-history-row">
-                <button className="random-history-open" onClick={() => openCatalogAnime(item)} type="button">
-                  {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className="poster-fallback" />}
+              <div key={key} className={styles.historyRow}>
+                <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button">
+                  {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
                   <span>
                     <strong>{item.title}</strong>
                     <small>{item.score ?? 'без оценки'}</small>
                   </span>
                 </button>
                 <button
-                  className="random-history-delete"
+                  className={styles.historyDelete}
                   type="button"
                   aria-label={`Удалить ${item.title} из истории`}
                   disabled={deletingRandomKey === key}

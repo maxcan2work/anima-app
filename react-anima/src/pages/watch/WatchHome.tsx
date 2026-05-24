@@ -1,10 +1,11 @@
 import { useCatalog } from '@features/catalog/CatalogProvider';
 import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
+import styles from './WatchHome.module.css';
 
 export function EmptyCatalog() {
   return (
-    <section className="empty-catalog">
+    <section className={styles.emptyCatalog}>
       <p className="eyebrow">Shikimori</p>
       <h2>Каталог пуст</h2>
       <p>Найди аниме через Shikimori и добавь его в Anima, чтобы вести просмотр, дневник и искать плееры AniLibria.</p>
@@ -30,7 +31,7 @@ export function WatchHome() {
 
   return (
     <CatalogBrowser
-      className="watch-home"
+      className={styles.watchHome}
       eyebrow="Shikimori"
       title="Каталог аниме"
       browseResults={browseResults}
