@@ -149,16 +149,22 @@ export async function getLinkedShikimoriProfile(account: LinkedShikimoriAccount)
   let avatarUrl: string | null = null;
 
   if (account.accessToken) {
-    const profile = await fetchShikimoriProfile(account.accessToken);
-    avatarUrl = getShikimoriAvatarUrl(profile);
+    const profile = await fetchShikimoriProfile(account.accessToken).catch((error) => {
+      console.warn('Failed to refresh linked Shikimori profile', error);
+      return null;
+    });
 
-    if (/^\d+$/.test(nickname) || nickname !== profile.nickname) {
-      nickname = profile.nickname;
+    if (profile) {
+      avatarUrl = getShikimoriAvatarUrl(profile);
 
-      await prisma.authAccount.update({
-        where: { id: account.id },
-        data: { providerUserId: nickname },
-      });
+      if (/^\d+$/.test(nickname) || nickname !== profile.nickname) {
+        nickname = profile.nickname;
+
+        await prisma.authAccount.update({
+          where: { id: account.id },
+          data: { providerUserId: nickname },
+        });
+      }
     }
   }
 

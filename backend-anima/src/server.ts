@@ -127,49 +127,53 @@ app.post('/logout', (_request, response) => {
   response.status(204).send();
 });
 
-app.get('/me', requireAuth, async (request, response) => {
-  const user = await prisma.user.findUnique({
-    where: { id: request.userId },
-    select: {
-      id: true,
-      displayName: true,
-      avatarUrl: true,
-      createdAt: true,
-      accounts: {
-        where: { provider: AuthProvider.SHIKIMORI },
-        select: {
-          id: true,
-          providerUserId: true,
-          accessToken: true,
-          updatedAt: true,
-        },
-        take: 1,
-      },
-    },
-  });
-  const shikimoriProfile = user?.accounts[0] ? await getLinkedShikimoriProfile(user.accounts[0]) : null;
-
-  response.json({
-    user: user
-      ? {
-          id: user.id,
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
-          createdAt: user.createdAt,
-          integrations: {
-            shikimori: shikimoriProfile
-              ? {
-                  id: shikimoriProfile.id,
-                  nickname: shikimoriProfile.nickname,
-                  avatarUrl: shikimoriProfile.avatarUrl,
-                  profileUrl: shikimoriProfile.profileUrl,
-                  connectedAt: user.accounts[0].updatedAt,
-                }
-              : null,
+app.get('/me', requireAuth, async (request, response, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: {
+        id: true,
+        displayName: true,
+        avatarUrl: true,
+        createdAt: true,
+        accounts: {
+          where: { provider: AuthProvider.SHIKIMORI },
+          select: {
+            id: true,
+            providerUserId: true,
+            accessToken: true,
+            updatedAt: true,
           },
-        }
-      : null,
-  });
+          take: 1,
+        },
+      },
+    });
+    const shikimoriProfile = user?.accounts[0] ? await getLinkedShikimoriProfile(user.accounts[0]) : null;
+
+    response.json({
+      user: user
+        ? {
+            id: user.id,
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrl,
+            createdAt: user.createdAt,
+            integrations: {
+              shikimori: shikimoriProfile
+                ? {
+                    id: shikimoriProfile.id,
+                    nickname: shikimoriProfile.nickname,
+                    avatarUrl: shikimoriProfile.avatarUrl,
+                    profileUrl: shikimoriProfile.profileUrl,
+                    connectedAt: user.accounts[0].updatedAt,
+                  }
+                : null,
+            },
+          }
+        : null,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.delete('/me/integrations/shikimori', requireAuth, async (request, response) => {
