@@ -1,0 +1,1 @@
+-- SQLite stores Prisma enums as TEXT, so adding SHIKIMORI only updates the Prisma schema.

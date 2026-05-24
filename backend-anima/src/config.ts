@@ -9,6 +9,10 @@ const envSchema = z.object({
   DISCORD_CLIENT_ID: z.string().optional(),
   DISCORD_CLIENT_SECRET: z.string().optional(),
   DISCORD_REDIRECT_URI: z.string().url().optional(),
+  SHIKIMORI_BASE_URL: z.string().url().default('https://shikimori.io'),
+  SHIKIMORI_CLIENT_ID: z.string().optional(),
+  SHIKIMORI_CLIENT_SECRET: z.string().optional(),
+  SHIKIMORI_REDIRECT_URI: z.string().url().default('http://localhost:4000/auth/shikimori/callback'),
 });
 
 export const config = envSchema.parse(process.env);

@@ -562,6 +562,16 @@ h1 {
   line-height: 1.55;
 }
 
+.settings-panel a {
+  color: #f2c063;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.settings-panel a:hover {
+  text-decoration: underline;
+}
+
 .settings-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -571,6 +581,10 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
+}
+
+.settings-panel .connected-account {
+  grid-column: 1 / -1;
 }
 
 .settings-panel h3 {
@@ -587,6 +601,65 @@ h1 {
   background: rgba(255, 255, 255, 0.06);
   color: #a99f92;
   font-weight: 900;
+}
+
+.connected-account {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(242, 192, 99, 0.18);
+  border-radius: 8px;
+  background: rgba(242, 192, 99, 0.08);
+}
+
+.connected-account-main {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.connected-account-main img,
+.connected-account-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
+
+.connected-account-main img {
+  object-fit: cover;
+}
+
+.connected-account-fallback {
+  display: grid;
+  place-items: center;
+  background: rgba(242, 192, 99, 0.16);
+  color: #f2c063;
+  font-weight: 900;
+}
+
+.connected-account-main small,
+.connected-account-main strong {
+  display: block;
+}
+
+.connected-account-main small {
+  margin-bottom: 4px;
+  color: #aaa196;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.connected-account-main strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff7ec;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .search-loader {

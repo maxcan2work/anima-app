@@ -3,13 +3,14 @@ import cors from 'cors';
 import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-import { WatchStatus } from '@prisma/client';
+import { AuthProvider, WatchStatus } from '@prisma/client';
 import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSession } from './auth.js';
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
 import { browseCatalog, importShikimoriAnime, searchCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
+import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl } from './shikimori.js';
 
 const app = express();
 const server = createServer(app);
@@ -97,6 +98,30 @@ app.get('/auth/discord/callback', async (request, response, next) => {
   }
 });
 
+app.get('/auth/shikimori', requireAuth, (request, response, next) => {
+  try {
+    response.redirect(getShikimoriAuthUrl(request.userId!));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/auth/shikimori/callback', requireAuth, async (request, response, next) => {
+  try {
+    const code = String(request.query.code ?? '');
+    const state = String(request.query.state ?? '');
+    if (!code || !state) {
+      response.status(400).json({ error: 'Shikimori authorization code or state is missing' });
+      return;
+    }
+
+    await exchangeShikimoriCode(code, state, request.userId!);
+    response.redirect(`${config.WEB_ORIGIN}/settings`);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post('/logout', (_request, response) => {
   clearSessionCookie(response);
   response.status(204).send();
@@ -110,10 +135,52 @@ app.get('/me', requireAuth, async (request, response) => {
       displayName: true,
       avatarUrl: true,
       createdAt: true,
+      accounts: {
+        where: { provider: AuthProvider.SHIKIMORI },
+        select: {
+          id: true,
+          providerUserId: true,
+          accessToken: true,
+          updatedAt: true,
+        },
+        take: 1,
+      },
+    },
+  });
+  const shikimoriProfile = user?.accounts[0] ? await getLinkedShikimoriProfile(user.accounts[0]) : null;
+
+  response.json({
+    user: user
+      ? {
+          id: user.id,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          createdAt: user.createdAt,
+          integrations: {
+            shikimori: shikimoriProfile
+              ? {
+                  id: shikimoriProfile.id,
+                  nickname: shikimoriProfile.nickname,
+                  avatarUrl: shikimoriProfile.avatarUrl,
+                  profileUrl: shikimoriProfile.profileUrl,
+                  connectedAt: user.accounts[0].updatedAt,
+                }
+              : null,
+          },
+        }
+      : null,
+  });
+});
+
+app.delete('/me/integrations/shikimori', requireAuth, async (request, response) => {
+  await prisma.authAccount.deleteMany({
+    where: {
+      userId: request.userId!,
+      provider: AuthProvider.SHIKIMORI,
     },
   });
 
-  response.json({ user });
+  response.status(204).send();
 });
 
 app.get('/anime', async (_request, response) => {

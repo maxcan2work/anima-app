@@ -9,6 +9,7 @@ datasource db {
 
 enum AuthProvider {
   DISCORD
+  SHIKIMORI
   GOOGLE
   TELEGRAM
 }

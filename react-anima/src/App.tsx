@@ -22,7 +22,9 @@ import {
   API_URL,
   browseCatalog,
   checkWatchPartyRoom,
+  connectShikimori,
   clearMyRandomHistory,
+  disconnectShikimori,
   deleteRandomHistoryEntry,
   getAnimeById,
   getCurrentUser,
@@ -623,6 +625,21 @@ export function App() {
     setWatchState(loadWatchState());
   }
 
+  async function handleDisconnectShikimori() {
+    await disconnectShikimori();
+    setUser((current) =>
+      current
+        ? {
+            ...current,
+            integrations: {
+              ...current.integrations,
+              shikimori: null,
+            },
+          }
+        : current,
+    );
+  }
+
   return (
     <main className={sidebarCollapsed ? 'app-shell sidebar-collapsed' : 'app-shell'}>
       <aside className="library-panel" aria-label="Каталог аниме">
@@ -733,7 +750,7 @@ export function App() {
             onToast={setToast}
           />
         ) : displayedView === 'settings' ? (
-          <SettingsPage />
+          <SettingsPage authStatus={authStatus} user={user} onConnectShikimori={connectShikimori} onDisconnectShikimori={handleDisconnectShikimori} />
         ) : displayedView === 'watch' && !displayedRouteAnimeId ? (
           <WatchHome
             browseResults={browseResults}
@@ -1734,7 +1751,32 @@ function ProfilePage({
   );
 }
 
-function SettingsPage() {
+function SettingsPage({
+  authStatus,
+  user,
+  onConnectShikimori,
+  onDisconnectShikimori,
+}: {
+  authStatus: 'loading' | 'guest' | 'ready';
+  user: CurrentUser | null;
+  onConnectShikimori: () => void;
+  onDisconnectShikimori: () => Promise<void>;
+}) {
+  const canConnect = authStatus === 'ready' && Boolean(user);
+  const shikimori = user?.integrations.shikimori ?? null;
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  async function handleDisconnect() {
+    if (disconnecting) return;
+
+    setDisconnecting(true);
+    try {
+      await onDisconnectShikimori();
+    } finally {
+      setDisconnecting(false);
+    }
+  }
+
   return (
     <section className="settings-page">
       <header className="settings-hero">
@@ -1751,11 +1793,27 @@ function SettingsPage() {
       <section className="settings-panel">
         <div>
           <h3>Импорт из Shikimori</h3>
-          <p>Позже добавим подключение аккаунта и перенос дневника просмотра в профиль Anima.</p>
+          <p>Подключи аккаунт Shikimori, чтобы позже перенести просмотренное, брошенное и запланированное в профиль Anima.</p>
         </div>
-        <button type="button" disabled>
-          Скоро
-        </button>
+        {shikimori ? null : (
+          <button type="button" onClick={onConnectShikimori} disabled={!canConnect}>
+            {canConnect ? 'Подключить' : 'Нужен вход'}
+          </button>
+        )}
+        {shikimori ? (
+          <div className="connected-account">
+            <a className="connected-account-main" href={shikimori.profileUrl} target="_blank" rel="noreferrer">
+              {shikimori.avatarUrl ? <img src={shikimori.avatarUrl} alt="" /> : <span className="connected-account-fallback">{shikimori.nickname[0]}</span>}
+              <span>
+                <small>Подключен профиль</small>
+                <strong>{shikimori.nickname}</strong>
+              </span>
+            </a>
+            <button type="button" onClick={handleDisconnect} disabled={disconnecting}>
+              {disconnecting ? 'Отключаем...' : 'Отвязать'}
+            </button>
+          </div>
+        ) : null}
       </section>
     </section>
   );

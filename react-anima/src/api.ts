@@ -5,6 +5,15 @@ export type CurrentUser = {
   displayName: string;
   avatarUrl: string | null;
   createdAt: string;
+  integrations: {
+    shikimori: {
+      id: string;
+      nickname: string;
+      avatarUrl: string | null;
+      profileUrl: string;
+      connectedAt: string;
+    } | null;
+  };
 };
 
 export type ServerWatchEntry = {
@@ -101,6 +110,14 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function loginWithDiscord() {
   window.location.href = `${API_URL}/auth/discord`;
+}
+
+export function connectShikimori() {
+  window.location.href = `${API_URL}/auth/shikimori`;
+}
+
+export async function disconnectShikimori() {
+  await apiFetch<void>('/me/integrations/shikimori', { method: 'DELETE' });
 }
 
 export async function logout() {
