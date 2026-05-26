@@ -495,46 +495,71 @@
 
 .actions {
   display: grid;
-  grid-template-columns: var(--ui-row-height) minmax(0, 1fr);
+  grid-template-columns: repeat(4, var(--ui-row-height));
   align-items: center;
+  justify-content: end;
   gap: var(--ui-grid-gap);
   align-self: end;
   min-height: var(--ui-row-height);
 }
 
-.settingsToggle,
-.logout {
+.sidebarAction {
+  position: relative;
+  display: grid;
+  place-items: center;
   align-self: stretch;
+  width: var(--ui-row-height);
   height: var(--ui-row-height);
+  min-width: var(--ui-row-height);
   min-height: var(--ui-row-height);
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--ui-radius);
   background: rgba(255, 255, 255, 0.05);
   color: #f1e7dc;
-  font-weight: 900;
 }
 
-.settingsToggle {
-  display: grid;
-  place-items: center;
-  width: var(--ui-row-height);
-  padding: 0;
-}
-
-.settingsToggle img {
+.sidebarAction img {
   width: 18px;
   height: 18px;
+  object-fit: contain;
 }
 
-.settingsToggle:hover,
+.sidebarAction::after {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 20;
+  min-width: max-content;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(20, 22, 21, 0.96);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  content: attr(data-tooltip);
+  transform: translate(-50%, 4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.sidebarAction:hover::after,
+.sidebarAction:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.sidebarAction:hover,
 .activeToggle {
   border-color: rgba(242, 192, 99, 0.45) !important;
   background: rgba(242, 192, 99, 0.1) !important;
 }
 
 .logout {
-  margin-top: auto;
-  padding: 0 14px;
+  margin-top: 0;
 }
 
 .logout:hover {

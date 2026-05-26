@@ -6,9 +6,12 @@ import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
 import profileEyeIcon from '@assets/profile-eye.svg';
 import profileNoteIcon from '@assets/profile-note.svg';
+import profileFriendsIcon from '@assets/circled-group.svg';
+import profileStatsIcon from '@assets/stats.svg';
 import settingsIcon from '@assets/settings.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import trashIcon from '@assets/trash.svg';
+import leaveRoomIcon from '@assets/leave-room.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { useToast } from '@shared/ui/ToastProvider';
@@ -32,7 +35,7 @@ export function ProfilePage() {
   ];
   const sortedFriends = [...profileFriends].sort((left, right) => Number(right.status === 'online') - Number(left.status === 'online'));
   const [selectedStatus, setSelectedStatus] = useState<WatchStatus>('watching');
-  const [sidebarMode, setSidebarMode] = useState<'overview' | 'settings'>('overview');
+  const [sidebarMode, setSidebarMode] = useState<'stats' | 'friends' | 'settings'>('stats');
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
@@ -87,7 +90,7 @@ export function ProfilePage() {
         </header>
 
         <div className={clsx(styles.sidebarContent, sidebarMode === 'settings' ? styles.slideUp : styles.slideDown)} key={sidebarMode}>
-          {sidebarMode === 'overview' ? (
+          {sidebarMode === 'stats' ? (
             <>
               <section className={styles.section} aria-labelledby="profile-watch-section">
                 <h3 id="profile-watch-section">{t('profile.watchSection')}</h3>
@@ -106,7 +109,9 @@ export function ProfilePage() {
                   ))}
                 </div>
               </section>
-
+            </>
+          ) : sidebarMode === 'friends' ? (
+            <>
               <section className={clsx(styles.section, styles.friendsSection)} aria-labelledby="profile-friends-section">
                 <div className={styles.sectionTitle}>
                   <h3 id="profile-friends-section">Друзья</h3>
@@ -147,15 +152,34 @@ export function ProfilePage() {
 
         <div className={styles.actions}>
           <button
-            className={clsx(styles.settingsToggle, sidebarMode === 'settings' && styles.activeToggle)}
+            className={clsx(styles.sidebarAction, sidebarMode === 'stats' && styles.activeToggle)}
             type="button"
-            onClick={() => setSidebarMode((current) => (current === 'settings' ? 'overview' : 'settings'))}
-            aria-label={sidebarMode === 'settings' ? t('profile.backToProfile') : t('profile.profileSettings')}
+            onClick={() => setSidebarMode('stats')}
+            aria-label={t('profile.stats')}
+            data-tooltip={t('profile.stats')}
+          >
+            <img src={profileStatsIcon} alt="" aria-hidden="true" />
+          </button>
+          <button
+            className={clsx(styles.sidebarAction, sidebarMode === 'friends' && styles.activeToggle)}
+            type="button"
+            onClick={() => setSidebarMode('friends')}
+            aria-label={t('profile.friends')}
+            data-tooltip={t('profile.friends')}
+          >
+            <img src={profileFriendsIcon} alt="" aria-hidden="true" />
+          </button>
+          <button
+            className={clsx(styles.sidebarAction, sidebarMode === 'settings' && styles.activeToggle)}
+            type="button"
+            onClick={() => setSidebarMode('settings')}
+            aria-label={t('profile.profileSettings')}
+            data-tooltip={t('profile.profileSettings')}
           >
             <img src={settingsIcon} alt="" aria-hidden="true" />
           </button>
-          <button className={styles.logout} type="button" onClick={logout}>
-            {t('profile.logout')}
+          <button className={clsx(styles.sidebarAction, styles.logout)} type="button" onClick={logout} aria-label={t('profile.logout')} data-tooltip={t('profile.logout')}>
+            <img src={leaveRoomIcon} alt="" aria-hidden="true" />
           </button>
         </div>
       </aside>
