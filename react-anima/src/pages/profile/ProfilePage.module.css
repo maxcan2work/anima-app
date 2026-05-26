@@ -469,7 +469,7 @@
 .iconButton::after {
   position: absolute;
   bottom: calc(100% + 10px);
-  left: 50%;
+  right: 0;
   z-index: 20;
   min-width: max-content;
   padding: 8px 10px;
@@ -483,14 +483,14 @@
   opacity: 0;
   pointer-events: none;
   content: attr(data-tooltip);
-  transform: translate(-50%, 4px);
+  transform: translateY(4px);
   transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .iconButton:hover::after,
 .iconButton:focus-visible::after {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translateY(0);
 }
 
 .actions {
