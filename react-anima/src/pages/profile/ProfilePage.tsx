@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useState } from 'react';
-import { fromServerWatchStatus, watchStatusLabel, type WatchStatus } from '@anima/core';
+import { fromServerWatchStatus, type WatchStatus } from '@anima/core';
 import detachIcon from '@assets/detach.svg';
 import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
@@ -10,16 +10,18 @@ import settingsIcon from '@assets/settings.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
+  const { t } = useI18n();
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
-    { status: 'watching', label: 'Смотрю', count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
-    { status: 'completed', label: 'Просмотрено', count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
-    { status: 'dropped', label: 'Брошено', count: entries.filter((entry) => entry.status === 'DROPPED').length, icon: trashIcon },
-    { status: 'planned', label: 'В планах', count: entries.filter((entry) => entry.status === 'PLANNED').length, icon: profileNoteIcon },
+    { status: 'watching', label: t('profile.status.watching'), count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
+    { status: 'completed', label: t('profile.status.completed'), count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
+    { status: 'dropped', label: t('profile.status.dropped'), count: entries.filter((entry) => entry.status === 'DROPPED').length, icon: trashIcon },
+    { status: 'planned', label: t('profile.status.planned'), count: entries.filter((entry) => entry.status === 'PLANNED').length, icon: profileNoteIcon },
   ];
   const profileFriends = [
     { id: 'mira', name: 'Mira', status: 'online' },
@@ -33,17 +35,18 @@ export function ProfilePage() {
   const [sidebarMode, setSidebarMode] = useState<'overview' | 'settings'>('overview');
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
+  const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
 
   if (authStatus === 'loading') {
-    return <section className={clsx(styles.page, styles.emptyState)}>Загружаем профиль...</section>;
+    return <section className={clsx(styles.page, styles.emptyState)}>{t('profile.loading')}</section>;
   }
 
   if (!user) {
     return (
       <section className={clsx(styles.page, styles.emptyState)}>
-        <h2>Профиль</h2>
-        <p>Войди через Discord, чтобы вести дневник просмотра, оценки и рецензии.</p>
-        <button className={styles.discordButton} onClick={login}>Войти через Discord</button>
+        <h2>{t('profile.title')}</h2>
+        <p>{t('profile.authDescription')}</p>
+        <button className={styles.discordButton} onClick={login}>{t('sidebar.loginDiscord')}</button>
       </section>
     );
   }
@@ -53,16 +56,16 @@ export function ProfilePage() {
       <section className={styles.diaryList}>
         <h3>{selectedFilter.label}</h3>
         {entries.length === 0 ? (
-          <p className={styles.mutedCopy}>Пока нет записей. Выбери тайтл и сохрани первую запись.</p>
+          <p className={styles.mutedCopy}>{t('profile.emptyAll')}</p>
         ) : filteredEntries.length === 0 ? (
-          <p className={styles.mutedCopy}>В этом разделе пока нет аниме.</p>
+          <p className={styles.mutedCopy}>{t('profile.emptyStatus')}</p>
         ) : (
           filteredEntries.map((entry) => (
             <article key={entry.id} className={styles.diaryRow}>
               {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
               <span>
                 <strong>{entry.anime?.title ?? entry.animeId}</strong>
-                <small>{watchStatusLabel(fromServerWatchStatus(entry.status))} · серия {entry.currentEpisode}</small>
+                <small>{getStatusLabel(fromServerWatchStatus(entry.status))} · {t('profile.episode', { episode: entry.currentEpisode })}</small>
                 {entry.review ? <small className={styles.diaryReview}>{entry.review}</small> : null}
               </span>
               {entry.score ? <em>{entry.score}/10</em> : null}
@@ -87,8 +90,8 @@ export function ProfilePage() {
           {sidebarMode === 'overview' ? (
             <>
               <section className={styles.section} aria-labelledby="profile-watch-section">
-                <h3 id="profile-watch-section">Просмотр</h3>
-                <div className={styles.stats} aria-label="Фильтр дневника">
+                <h3 id="profile-watch-section">{t('profile.watchSection')}</h3>
+                <div className={styles.stats} aria-label={t('profile.diaryFilter')}>
                   {profileFilters.map((filter) => (
                     <button
                       key={filter.status}
@@ -128,14 +131,14 @@ export function ProfilePage() {
           ) : (
             <>
               <section className={styles.section} aria-labelledby="profile-edit-section">
-                <h3 id="profile-edit-section">Профиль</h3>
+                <h3 id="profile-edit-section">{t('profile.title')}</h3>
                 <div className={styles.settingsCard}>
-                  <span>Редактирование ника и аватарки появится позже.</span>
+                  <span>{t('profile.editSoon')}</span>
                 </div>
               </section>
 
               <section className={clsx(styles.section, styles.integrationSection)} aria-labelledby="profile-integrations-section">
-                <h3 id="profile-integrations-section">Интеграции</h3>
+                <h3 id="profile-integrations-section">{t('profile.integrations')}</h3>
                 <ShikimoriIntegration />
               </section>
             </>
@@ -147,12 +150,12 @@ export function ProfilePage() {
             className={clsx(styles.settingsToggle, sidebarMode === 'settings' && styles.activeToggle)}
             type="button"
             onClick={() => setSidebarMode((current) => (current === 'settings' ? 'overview' : 'settings'))}
-            aria-label={sidebarMode === 'settings' ? 'Вернуться к профилю' : 'Настройки профиля'}
+            aria-label={sidebarMode === 'settings' ? t('profile.backToProfile') : t('profile.profileSettings')}
           >
             <img src={settingsIcon} alt="" aria-hidden="true" />
           </button>
           <button className={styles.logout} type="button" onClick={logout}>
-            Выйти
+            {t('profile.logout')}
           </button>
         </div>
       </aside>
@@ -168,6 +171,7 @@ function ShikimoriIntegration() {
     disconnectShikimori,
     importShikimoriList,
   } = useAuth();
+  const { t } = useI18n();
   const toast = useToast();
   const canConnect = authStatus === 'ready' && Boolean(user);
   const shikimori = user?.integrations.shikimori ?? null;
@@ -190,7 +194,7 @@ function ShikimoriIntegration() {
     if (importing) return;
 
     setImporting(true);
-    toast('Импортируем список Shikimori. Не закрывай страницу.');
+    toast(t('profile.shikimori.importPending'));
 
     try {
       const result = await importShikimoriList();
@@ -198,13 +202,20 @@ function ShikimoriIntegration() {
       const changed = result.imported + result.updated;
 
       if (changed > 0) {
-        toast({ message: `Импорт завершён: ${result.imported} новых, ${result.updated} обновлено, ${result.skipped} пропущено`, variant: 'success' });
+        toast({
+          message: t('profile.shikimori.importSuccess', {
+            imported: result.imported,
+            updated: result.updated,
+            skipped: result.skipped,
+          }),
+          variant: 'success',
+        });
       } else {
-        const reason = firstError ? ` Причина: ${firstError.reason}` : '';
-        toast({ message: `Не удалось импортировать список Shikimori.${reason}`, variant: 'danger' });
+        const reason = firstError ? ` ${t('profile.shikimori.importReason', { reason: firstError.reason })}` : '';
+        toast({ message: `${t('profile.shikimori.importFailed')}${reason}`, variant: 'danger' });
       }
     } catch {
-      toast({ message: 'Не удалось импортировать список Shikimori. Попробуй подключить профиль заново.', variant: 'danger' });
+      toast({ message: t('profile.shikimori.importFailedReconnect'), variant: 'danger' });
     } finally {
       setImporting(false);
     }
@@ -235,10 +246,10 @@ function ShikimoriIntegration() {
           </span>
         </a>
         <div className={styles.connectedActions}>
-          <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? 'Импортируем...' : 'Импортировать список'}>
+          <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? t('profile.shikimori.importing') : t('profile.shikimori.importList')}>
             {importing ? <span className={styles.buttonLoader} aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
           </button>
-          <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? 'Отключаем...' : 'Отвязать профиль'}>
+          <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? t('profile.shikimori.disconnecting') : t('profile.shikimori.disconnect')}>
             <img src={detachIcon} alt="" aria-hidden="true" />
           </button>
         </div>
@@ -248,9 +259,9 @@ function ShikimoriIntegration() {
 
   return (
     <div className={styles.integrationEmpty}>
-      <p>Подключи Shikimori, чтобы импортировать список просмотра.</p>
+      <p>{t('profile.shikimori.empty')}</p>
       <button className={styles.connectButton} type="button" onClick={connectShikimori} disabled={!canConnect}>
-        {canConnect ? 'Подключить' : 'Нужен вход'}
+        {canConnect ? t('profile.shikimori.connect') : t('profile.shikimori.needLogin')}
       </button>
     </div>
   );

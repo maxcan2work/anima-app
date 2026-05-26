@@ -8,6 +8,7 @@ import volumeHighIcon from '@assets/volume-high.svg';
 import volumeMediumIcon from '@assets/volume-medium.svg';
 import volumeMutedIcon from '@assets/volume-muted.svg';
 import type { AnimeTitle } from '@/data';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { Tooltip } from '@shared/ui/Tooltip';
 import styles from './ControlledVideoPlayer.module.css';
 
@@ -47,6 +48,7 @@ export function ControlledVideoPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const lastSyncEmitRef = useRef(0);
+  const { t } = useI18n();
   const [paused, setPaused] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -67,6 +69,9 @@ export function ControlledVideoPlayer({
     return Math.min(Math.max((currentTime / duration) * 100, 0), 100);
   }, [currentTime, duration]);
   const volumeIcon = muted || volume === 0 ? volumeMutedIcon : volume <= 0.5 ? volumeMediumIcon : volumeHighIcon;
+  const playbackLabel = paused ? t('player.play') : t('player.pause');
+  const volumeLabel = muted ? t('player.volumeEnable') : t('player.volumeDisable');
+  const fullscreenLabel = fullscreen ? t('player.fullscreenExit') : t('player.fullscreenEnter');
 
   useEffect(() => {
     const video = videoRef.current;
@@ -370,7 +375,7 @@ export function ControlledVideoPlayer({
 
       {!canControl ? <div className={styles.guestShield} aria-hidden="true" /> : null}
       {seeking && !isLoading ? (
-        <div className={styles.seekFeedback} role="status" aria-label="Перематываем">
+        <div className={styles.seekFeedback} role="status" aria-label={t('player.seeking')}>
           <span />
         </div>
       ) : null}
@@ -381,11 +386,11 @@ export function ControlledVideoPlayer({
           onFocus={showControls}
           onPointerMove={showControls}
         >
-          <Tooltip label={paused ? 'Запустить' : 'Пауза'} placement="top">
+          <Tooltip label={playbackLabel} placement="top">
             <button type="button" onClick={(event) => {
               event.currentTarget.blur();
               void togglePlayback();
-            }} aria-label={paused ? 'Запустить' : 'Пауза'}>
+            }} aria-label={playbackLabel}>
               {paused ? '▶' : '❚❚'}
             </button>
           </Tooltip>
@@ -395,7 +400,7 @@ export function ControlledVideoPlayer({
               className={clsx(styles.progress, seeking && styles.progressSeeking)}
               role="slider"
               tabIndex={0}
-              aria-label="Позиция"
+              aria-label={t('player.position')}
               aria-valuemin={0}
               aria-valuemax={Math.round(duration)}
               aria-valuenow={Math.round(currentTime)}
@@ -448,16 +453,17 @@ export function ControlledVideoPlayer({
               open={volumeFeedbackVisible && !volumePopoverOpen}
               disabled={volumePopoverOpen}
             >
-              <button type="button" onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'}>
+              <button type="button" onClick={toggleMute} aria-label={volumeLabel}>
                 <img src={volumeIcon} alt="" aria-hidden="true" />
               </button>
             </Tooltip>
             <div className={styles.volumePopover}>
+              <strong className={styles.volumeValue}>{Math.round((muted ? 0 : volume) * 100)}%</strong>
               <div
                 className={styles.volume}
                 role="slider"
                 tabIndex={0}
-                aria-label="Громкость"
+                aria-label={t('player.volume')}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round((muted ? 0 : volume) * 100)}
@@ -480,7 +486,7 @@ export function ControlledVideoPlayer({
               </div>
             </div>
           </div>
-          <select value={quality} aria-label="Качество" onChange={(event) => changeQuality(Number(event.target.value))}>
+          <select value={quality} aria-label={t('player.quality')} onChange={(event) => changeQuality(Number(event.target.value))}>
             <option value={-1}>Auto</option>
             {qualities.map((item) => (
               <option key={item.value} value={item.value}>
@@ -488,19 +494,19 @@ export function ControlledVideoPlayer({
               </option>
             ))}
           </select>
-          <Tooltip label="Картинка в картинке" placement="top">
+          <Tooltip label={t('player.pictureInPicture')} placement="top">
             <button type="button" onClick={(event) => {
               event.currentTarget.blur();
               void togglePictureInPicture();
-            }} aria-label="Картинка в картинке">
+            }} aria-label={t('player.pictureInPicture')}>
               <img src={pictureInPictureIcon} alt="" aria-hidden="true" />
             </button>
           </Tooltip>
-          <Tooltip label={fullscreen ? 'Выйти из полноэкранного режима' : 'На весь экран'} placement="left">
+          <Tooltip label={fullscreenLabel} placement="left">
             <button type="button" onClick={(event) => {
               event.currentTarget.blur();
               void toggleFullscreen();
-            }} aria-label={fullscreen ? 'Выйти из полноэкранного режима' : 'На весь экран'}>
+            }} aria-label={fullscreenLabel}>
               <img src={fullscreenIcon} alt="" aria-hidden="true" />
             </button>
           </Tooltip>

@@ -198,10 +198,12 @@
   left: 50%;
   z-index: 5;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
   place-items: center;
   width: 42px;
-  height: 142px;
-  padding: 16px 0;
+  height: 162px;
+  padding: 12px 0 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(12, 13, 12, 0.92);
@@ -210,6 +212,14 @@
   pointer-events: none;
   transform: translate(-50%, 6px);
   transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.volumeValue {
+  color: #fff7ec;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .volumePopover::after {
