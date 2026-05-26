@@ -1,0 +1,75 @@
+.tooltip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.content {
+  position: absolute;
+  z-index: 300;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(20, 22, 21, 0.96);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 14px;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 140ms ease, transform 140ms ease;
+  white-space: nowrap;
+}
+
+.tooltip:hover .content,
+.tooltip:focus-within .content {
+  opacity: 1;
+}
+
+.top .content {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translate3d(-50%, 4px, 0);
+}
+
+.top:hover .content,
+.top:focus-within .content {
+  transform: translate3d(-50%, 0, 0);
+}
+
+.right .content {
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translate3d(4px, -50%, 0);
+}
+
+.right:hover .content,
+.right:focus-within .content {
+  transform: translate3d(0, -50%, 0);
+}
+
+.bottom .content {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translate3d(-50%, -4px, 0);
+}
+
+.bottom:hover .content,
+.bottom:focus-within .content {
+  transform: translate3d(-50%, 0, 0);
+}
+
+.left .content {
+  top: 50%;
+  right: calc(100% + 8px);
+  transform: translate3d(-4px, -50%, 0);
+}
+
+.left:hover .content,
+.left:focus-within .content {
+  transform: translate3d(0, -50%, 0);
+}

@@ -14,6 +14,8 @@ export default defineConfig({
       '@pages': fileURLToPath(new URL('./src/pages', import.meta.url)),
       '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
       '@widgets': fileURLToPath(new URL('./src/widgets', import.meta.url)),
+      '@anima/core': fileURLToPath(new URL('../packages/core/src/index.ts', import.meta.url)),
+      '@anima/api-client': fileURLToPath(new URL('../packages/api-client/src/index.ts', import.meta.url)),
     },
   },
 });

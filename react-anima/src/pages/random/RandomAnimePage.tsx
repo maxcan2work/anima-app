@@ -5,6 +5,7 @@ import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 import { useRandomAnime } from '@hooks/useRandomAnime';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
 import type { CatalogSearchResult } from '@/api';
 import styles from './RandomAnimePage.module.css';
@@ -27,6 +28,7 @@ export function RandomAnimePage() {
     handleClearRandomHistory,
     handleDeleteRandomHistoryEntry,
   } = useRandomAnime(user);
+  const { t } = useI18n();
   const [removingHistoryKeys, setRemovingHistoryKeys] = useState<string[]>([]);
   const [clearAnimating, setClearAnimating] = useState(false);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
@@ -73,14 +75,14 @@ export function RandomAnimePage() {
       fixed
       mainClassName={styles.stage}
       sidebarClassName={styles.history}
-      sidebarLabel="История случайных аниме"
+      sidebarLabel={t('random.sidebarLabel')}
       sidebar={(
         <>
           <div className={styles.historyHeader}>
-            <h3>История</h3>
+            <h3>{t('random.history')}</h3>
             {randomHistory.length > 0 ? (
               <button type="button" onClick={handleClearHistory} disabled={historyBusy}>
-                {historyBusy ? 'Очищаем...' : 'Очистить'}
+                {historyBusy ? t('common.clearing') : t('common.clear')}
               </button>
             ) : (
               <span className={styles.historyHeaderActionPlaceholder} aria-hidden="true" />
@@ -101,7 +103,7 @@ export function RandomAnimePage() {
                 ))}
               </div>
             ) : randomHistory.length === 0 ? (
-              <p className={styles.mutedCopy}>Здесь появятся последние варианты.</p>
+              <p className={styles.mutedCopy}>{t('random.emptyHistory')}</p>
             ) : (
               randomHistory.map((item) => {
                 const key = getRandomHistoryKey(item);
@@ -112,13 +114,13 @@ export function RandomAnimePage() {
                       {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
                       <span>
                         <strong>{item.title}</strong>
-                        <small>{item.score ?? 'без оценки'}</small>
+                        <small>{item.score ?? t('common.noScore')}</small>
                       </span>
                     </button>
                     <button
                       className={styles.historyDelete}
                       type="button"
-                      aria-label={`Удалить ${item.title} из истории`}
+                      aria-label={t('random.removeFromHistory', { title: item.title })}
                       disabled={removing || historyBusy || deletingRandomKey === key}
                       onClick={() => handleDeleteHistoryEntry(item)}
                     >
@@ -133,9 +135,9 @@ export function RandomAnimePage() {
       )}
     >
       <img className={styles.dice} src={randomDiceIcon} alt="" aria-hidden="true" />
-      <p className="eyebrow">Рандомайзер</p>
-      <h2>Не знаешь, что посмотреть?</h2>
-      <p>Жми кнопку снизу, а Anima достанет случайный тайтл из каталога Shikimori.</p>
+      <p className="eyebrow">{t('random.eyebrow')}</p>
+      <h2>{t('random.title')}</h2>
+      <p>{t('random.description')}</p>
 
       {randomAnime ? (
         <button className={styles.card} onClick={() => openCatalogAnime(randomAnime)} type="button">
@@ -144,7 +146,7 @@ export function RandomAnimePage() {
             <strong>{randomAnime.title}</strong>
             <small>{randomAnime.originalTitle}</small>
             <small>
-              {randomAnime.episodes} сер. · {randomAnime.score ?? 'без оценки'}
+              {randomAnime.episodes} {t('common.episodesShort')} · {randomAnime.score ?? t('common.noScore')}
             </small>
           </div>
         </button>
@@ -153,7 +155,7 @@ export function RandomAnimePage() {
       {randomStatus ? <p className={styles.status}>{randomStatus}</p> : null}
 
       <button className={styles.button} onClick={handleRandomAnime} disabled={randomLoading}>
-        {randomLoading ? 'Рандомим...' : randomAnime ? 'Перерандомить' : 'Срандомить'}
+        {randomLoading ? t('random.rolling') : randomAnime ? t('random.reroll') : t('random.roll')}
       </button>
     </SplitScreenLayout>
   );

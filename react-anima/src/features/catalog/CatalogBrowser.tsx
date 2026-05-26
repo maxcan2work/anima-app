@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { CatalogSearchResult } from '@/api';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import styles from './CatalogBrowser.module.css';
 
 type CatalogBrowserProps = {
@@ -37,6 +38,7 @@ export function CatalogBrowser({
   onOpenAnime,
   onPageChange,
 }: CatalogBrowserProps) {
+  const { t } = useI18n();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isSearching = searchQuery.trim().length >= 2;
   const visibleResults = isSearching ? searchResults : browseResults;
@@ -73,12 +75,12 @@ export function CatalogBrowser({
           <p className="eyebrow">{eyebrow}</p>
           <h2>{title}</h2>
         </div>
-        <label className={styles.search} aria-label="Найти аниме">
+        <label className={styles.search} aria-label={t('catalog.search')}>
           <input
             type="search"
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Найти аниме"
+            placeholder={t('catalog.search')}
           />
         </label>
       </header>
@@ -99,7 +101,7 @@ export function CatalogBrowser({
                 <strong>{result.title}</strong>
                 <small>{result.originalTitle}</small>
                 <small>
-                  {result.episodes} сер. · {result.score ?? 'без оценки'}
+                  {result.episodes} {t('common.episodesShort')} · {result.score ?? t('common.noScore')}
                 </small>
               </div>
             </button>

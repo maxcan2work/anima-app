@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { dictionaries } from '@shared/i18n/dictionaries';
 import styles from './ErrorBoundary.module.css';
 
 type ErrorBoundaryProps = {
@@ -30,15 +31,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return (
       <main className={styles.fallback}>
         <section className={styles.panel}>
-          <h1>Приложение упало</h1>
+          <h1>{getErrorBoundaryText('error.title')}</h1>
           <pre className={styles.details}>{this.state.error.message}</pre>
           <div className={styles.actions}>
             <button className={styles.reload} type="button" onClick={() => window.location.reload()}>
-              Перезагрузить
+              {getErrorBoundaryText('common.reload')}
             </button>
           </div>
         </section>
       </main>
     );
   }
+}
+
+function getErrorBoundaryText(key: keyof typeof dictionaries.ru) {
+  const language = localStorage.getItem('anima-language');
+  if (language === 'en' || language === 'ja' || language === 'ru') {
+    return dictionaries[language][key];
+  }
+  return dictionaries.ru[key];
 }

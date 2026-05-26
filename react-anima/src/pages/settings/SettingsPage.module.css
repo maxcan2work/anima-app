@@ -32,14 +32,14 @@
   margin: 0 0 8px;
   color: #fff7ec;
   font-size: 34px;
-  line-height: 1;
+  line-height: 34px;
 }
 
 .hero p:last-child,
 .panel p {
   margin: 0;
   color: #cfc7ba;
-  line-height: 1.55;
+  line-height: 22px;
 }
 
 .panel {
@@ -57,6 +57,7 @@
   margin: 0 0 6px;
   color: #fff7ec;
   font-size: 18px;
+  line-height: 22px;
 }
 
 .panel button {
@@ -67,4 +68,48 @@
   background: rgba(255, 255, 255, 0.06);
   color: #a99f92;
   font-weight: 900;
+  line-height: 18px;
+}
+
+.languageList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
+}
+
+.languageButton {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  min-width: 54px;
+  height: 42px;
+  padding: 0 !important;
+  color: #d9d0c5 !important;
+  font-size: 22px;
+  line-height: 1;
+  text-align: center;
+}
+
+.languageButton img {
+  width: 34px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.languageButtonActive {
+  border-color: rgba(242, 192, 99, 0.5) !important;
+  background: rgba(242, 192, 99, 0.14) !important;
+  color: #fff7ec !important;
+}
+
+@media (max-width: 700px) {
+  .panel {
+    grid-template-columns: 1fr;
+  }
+
+  .languageList {
+    justify-content: start;
+  }
 }

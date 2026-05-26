@@ -129,6 +129,7 @@
 .navCopy > span,
 .navCopy small {
   overflow: hidden;
+  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -137,6 +138,7 @@
   color: #aaa196;
   font-size: 12px;
   font-weight: 600;
+  line-height: 14px;
 }
 
 .footer {
@@ -236,6 +238,7 @@
   margin-top: 0;
   color: #aaa196;
   font-size: 12px;
+  line-height: 14px;
   opacity: 1;
   transform: translateX(0);
   transition: max-width 220ms ease, opacity 120ms ease 120ms, transform 220ms ease;
@@ -246,6 +249,7 @@
   color: #fffaf2;
   font-size: 15px;
   font-weight: 900;
+  line-height: 18px;
 }
 
 .profileLink img,
@@ -307,6 +311,7 @@
   color: white;
   font-size: 14px;
   font-weight: 900;
+  line-height: 18px;
   justify-self: center;
   opacity: var(--sidebar-label-opacity);
   transform: translateX(var(--sidebar-label-shift));
@@ -315,34 +320,34 @@
   white-space: nowrap;
 }
 
-:global(.sidebar-collapsed) .brandCopy {
+.collapsed .brandCopy {
   visibility: hidden;
   transition: none;
 }
 
-:global(.sidebar-collapsed) .footer,
-:global(.sidebar-collapsed) .authPanel,
-:global(.sidebar-collapsed) .authPanel:not(.authPanelSignedIn),
-:global(.sidebar-collapsed) .nav {
+.collapsed .footer,
+.collapsed .authPanel,
+.collapsed .authPanel:not(.authPanelSignedIn),
+.collapsed .nav {
   width: 56px;
 }
 
-:global(.sidebar-collapsed) .authPlaceholder {
+.collapsed .authPlaceholder {
   grid-template-columns: var(--ui-control-size);
   justify-content: center;
   width: 56px;
   height: 56px;
 }
 
-:global(.sidebar-collapsed) .profileLink {
+.collapsed .profileLink {
   grid-template-columns: var(--ui-control-size);
   width: 56px;
   padding: var(--ui-row-padding);
 }
 
-:global(.sidebar-collapsed) .profileLink span,
-:global(.sidebar-collapsed) .discordButton span,
-:global(.sidebar-collapsed) .navCopy {
+.collapsed .profileLink span,
+.collapsed .discordButton span,
+.collapsed .navCopy {
   position: absolute;
   inset: auto;
   max-width: 0;
@@ -354,24 +359,24 @@
   transition: none;
 }
 
-:global(.sidebar-collapsed) .discordButton,
-:global(.sidebar-collapsed) .navButton,
-:global(.sidebar-collapsed) .footerAction {
+.collapsed .discordButton,
+.collapsed .navButton,
+.collapsed .footerAction {
   grid-template-columns: 34px;
   justify-items: center;
   width: 56px;
   padding: 10px;
 }
 
-:global(.sidebar-collapsed) .discordButton {
+.collapsed .discordButton {
   gap: 0;
 }
 
 .toggle::after,
-:global(.sidebar-collapsed) .discordButton::after,
-:global(.sidebar-collapsed) .profileLink::after,
-:global(.sidebar-collapsed) .footerAction::after,
-:global(.sidebar-collapsed) .navButton::after {
+.collapsed .discordButton::after,
+.collapsed .profileLink::after,
+.collapsed .footerAction::after,
+.collapsed .navButton::after {
   position: absolute;
   left: calc(100% + 12px);
   top: 50%;
@@ -394,14 +399,14 @@
 
 .toggle:hover::after,
 .toggle:focus-visible::after,
-:global(.sidebar-collapsed) .discordButton:hover::after,
-:global(.sidebar-collapsed) .discordButton:focus-visible::after,
-:global(.sidebar-collapsed) .profileLink:hover::after,
-:global(.sidebar-collapsed) .profileLink:focus-visible::after,
-:global(.sidebar-collapsed) .footerAction:hover::after,
-:global(.sidebar-collapsed) .footerAction:focus-visible::after,
-:global(.sidebar-collapsed) .navButton:hover::after,
-:global(.sidebar-collapsed) .navButton:focus-visible::after {
+.collapsed .discordButton:hover::after,
+.collapsed .discordButton:focus-visible::after,
+.collapsed .profileLink:hover::after,
+.collapsed .profileLink:focus-visible::after,
+.collapsed .footerAction:hover::after,
+.collapsed .footerAction:focus-visible::after,
+.collapsed .navButton:hover::after,
+.collapsed .navButton:focus-visible::after {
   opacity: 1;
   transform: translate(0, -50%);
 }

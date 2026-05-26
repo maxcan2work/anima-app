@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 30" role="img" aria-label="Japanese flag">
+  <rect width="44" height="30" rx="7" fill="#f5f1e8"/>
+  <circle cx="22" cy="15" r="7.6" fill="#bc002d"/>
+  <rect width="43" height="29" x=".5" y=".5" rx="6.5" fill="none" stroke="rgba(255,255,255,.18)"/>
+</svg>

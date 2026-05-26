@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { checkWatchPartyRoom } from '@/api';
 import watchPartyIcon from '@assets/watch-party.svg';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { normalizeWatchPartyCode } from '@shared/navigation';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './WatchPartyEntry.module.css';
@@ -21,6 +22,7 @@ export function WatchPartyEntry({
   onJoinCheckingChange,
 }: WatchPartyEntryProps) {
   const toast = useToast();
+  const { t } = useI18n();
   const [joinCode, setJoinCode] = useState(code);
 
   useEffect(() => {
@@ -36,13 +38,13 @@ export function WatchPartyEntry({
     try {
       const { exists } = await checkWatchPartyRoom(normalized);
       if (!exists) {
-        toast({ message: 'Комната с таким кодом не найдена', variant: 'warning' });
+        toast({ message: t('watchParty.notFound'), variant: 'warning' });
         return;
       }
 
       onJoinRoom(normalized);
     } catch {
-      toast({ message: 'Не удалось проверить комнату', variant: 'danger' });
+      toast({ message: t('watchParty.checkFailed'), variant: 'danger' });
     } finally {
       onJoinCheckingChange(false);
     }
@@ -53,34 +55,34 @@ export function WatchPartyEntry({
       <div className={styles.entry}>
         <header className={styles.header}>
           <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
-          <h2>Совместный просмотр</h2>
+          <h2>{t('watchParty.title')}</h2>
         </header>
 
         <div className={styles.options}>
           <section className={styles.option}>
-            <h3>Создать комнату</h3>
-            <p>Собери друзей в одной комнате, выбери аниме и управляй сериями как хост.</p>
+            <h3>{t('watchParty.createTitle')}</h3>
+            <p>{t('watchParty.createDescription')}</p>
             <button className={styles.createButton} type="button" onClick={onCreateRoom}>
-              Создать комнату
+              {t('watchParty.createAction')}
             </button>
           </section>
 
           <div className={styles.divider} aria-hidden="true">
-            <span>или</span>
+            <span>{t('watchParty.or')}</span>
           </div>
 
           <section className={styles.option}>
-            <h3>Войти по коду</h3>
-            <p>Вставь код комнаты, который отправил хост, и подключайся к совместному просмотру.</p>
+            <h3>{t('watchParty.joinTitle')}</h3>
+            <p>{t('watchParty.joinDescription')}</p>
             <form className={styles.join} onSubmit={handleJoinRoom}>
               <input
                 value={joinCode}
                 onChange={(event) => setJoinCode(event.target.value)}
-                placeholder="Код комнаты"
+                placeholder={t('watchParty.roomCode')}
                 maxLength={12}
               />
               <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)} aria-busy={joinChecking}>
-                Подключиться
+                {t('watchParty.joinAction')}
               </button>
             </form>
           </section>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 30" role="img" aria-label="British flag">
+  <defs>
+    <clipPath id="flag-en-clip">
+      <rect width="44" height="30" rx="7"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#flag-en-clip)">
+    <rect width="44" height="30" fill="#012169"/>
+    <path stroke="#fff" stroke-width="8" d="m-5 0 54 30M49 0-5 30"/>
+    <path stroke="#c8102e" stroke-width="4.6" d="m-5 0 54 30M49 0-5 30"/>
+    <path stroke="#fff" stroke-width="12" d="M22 0v30M0 15h44"/>
+    <path stroke="#c8102e" stroke-width="7" d="M22 0v30M0 15h44"/>
+  </g>
+  <rect width="43" height="29" x=".5" y=".5" rx="6.5" fill="none" stroke="rgba(255,255,255,.18)"/>
+</svg>

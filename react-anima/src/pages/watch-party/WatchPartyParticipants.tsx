@@ -1,5 +1,7 @@
 import crownIcon from '@assets/crown.svg';
 import kickIcon from '@assets/kick.svg';
+import { useI18n } from '@shared/i18n/I18nProvider';
+import { Tooltip } from '@shared/ui/Tooltip';
 import type { WatchPartyParticipant } from './types';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
 import styles from './WatchPartyParticipants.module.css';
@@ -23,9 +25,11 @@ export function WatchPartyParticipants({
   onLeaveRoom: () => void;
   showActions?: boolean;
 }) {
+  const { t } = useI18n();
+
   return (
     <>
-      <h3 className={styles.title}>Участники ({participants.length}/16)</h3>
+      <h3 className={styles.title}>{t('watchParty.participants')} ({participants.length}/16)</h3>
       {connectionStatus ? <p className={styles.status}>{connectionStatus}</p> : null}
       <div className={styles.members}>
         {participants.map((participant) => (
@@ -38,12 +42,18 @@ export function WatchPartyParticipants({
             <strong>{participant.name}</strong>
             <span className={styles.actions}>
               {participant.isHost ? (
-                <span className={styles.hostBadge} aria-label="Хост" title="Хост">
-                  <img className={styles.hostIcon} src={crownIcon} alt="" aria-hidden="true" />
-                </span>
+                <Tooltip label={t('watchParty.host')} placement="left">
+                  <span className={styles.hostBadge} aria-label={t('watchParty.host')}>
+                    <img className={styles.hostIcon} src={crownIcon} alt="" aria-hidden="true" />
+                  </span>
+                </Tooltip>
               ) : null}
               {canKick && !participant.isHost && participant.id !== ownParticipantId ? (
-                <button type="button" onClick={() => onKickParticipant(participant.id)} aria-label={`Кикнуть ${participant.name}`}>
+                <button
+                  type="button"
+                  onClick={() => onKickParticipant(participant.id)}
+                  aria-label={t('watchParty.kickParticipant', { name: participant.name })}
+                >
                   <img src={kickIcon} alt="" aria-hidden="true" />
                 </button>
               ) : null}

@@ -4,6 +4,7 @@ import { AnimeHero } from '@pages/anime/AnimeHero';
 import watchPartyIcon from '@assets/watch-party.svg';
 import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
 import { mapServerAnime } from '@shared/animeMappers';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import type { WatchState } from '@shared/storage';
 import { WatchPartyEntry } from './WatchPartyEntry';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
@@ -30,6 +31,7 @@ export function WatchPartyPage({
   onCreateRoomConsumed,
 }: WatchPartyPageProps) {
   const [joinChecking, setJoinChecking] = useState(false);
+  const { t } = useI18n();
   const room = useWatchPartyRoom({
     code,
     createRoom,
@@ -87,8 +89,8 @@ export function WatchPartyPage({
         ) : room.isHost ? (
           <CatalogBrowser
             className={styles.catalog}
-            eyebrow="Совместный просмотр"
-            title="Выбери аниме"
+            eyebrow={t('watchParty.title')}
+            title={t('watchParty.chooseAnime')}
             browseResults={catalog.partyCatalogResults}
             browsePage={catalog.partyCatalogPage}
             browseHasNext={catalog.partyCatalogHasNext}
@@ -105,9 +107,9 @@ export function WatchPartyPage({
         ) : (
           <div className={clsx(styles.stage, styles.waitingHost)}>
             <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
-            <p className="eyebrow">Совместный просмотр</p>
-            <h2>Комната {code}</h2>
-            <p>Ждём, пока хост выберет аниме для просмотра.</p>
+            <p className="eyebrow">{t('watchParty.title')}</p>
+            <h2>{t('watchParty.room', { code })}</h2>
+            <p>{t('watchParty.waitingHost')}</p>
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { useConfirmModal } from '@shared/ui/ModalProvider';
 
 type UseWatchPartyLeaveGuardOptions = {
@@ -9,6 +10,7 @@ type UseWatchPartyLeaveGuardOptions = {
 
 export function useWatchPartyLeaveGuard({ active, onConfirm, onCancel }: UseWatchPartyLeaveGuardOptions) {
   const confirm = useConfirmModal();
+  const { t } = useI18n();
   const confirmOpenRef = useRef(false);
 
   useEffect(() => {
@@ -16,10 +18,10 @@ export function useWatchPartyLeaveGuard({ active, onConfirm, onCancel }: UseWatc
 
     confirmOpenRef.current = true;
     confirm({
-      title: 'Покинуть совместный просмотр?',
-      content: <p>Чтобы перейти в другой раздел, нужно выйти из комнаты. Текущий совместный просмотр будет отключен для тебя.</p>,
-      cancelLabel: 'Остаться',
-      confirmLabel: 'Выйти и перейти',
+      title: t('watchParty.leaveTitle'),
+      content: <p>{t('watchParty.leaveDescription')}</p>,
+      cancelLabel: t('watchParty.stay'),
+      confirmLabel: t('watchParty.leaveAndGo'),
       confirmVariant: 'danger',
     }).then((confirmed) => {
       confirmOpenRef.current = false;
@@ -29,5 +31,5 @@ export function useWatchPartyLeaveGuard({ active, onConfirm, onCancel }: UseWatc
         onCancel();
       }
     });
-  }, [active, confirm, onCancel, onConfirm]);
+  }, [active, confirm, onCancel, onConfirm, t]);
 }

@@ -9,6 +9,7 @@ import settingsIcon from '@assets/settings.svg';
 import watchPartyIcon from '@assets/watch-party.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import styles from './AppSidebar.module.css';
 
 type AppSidebarProps = {
@@ -24,9 +25,10 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
     requestRoute,
     openWatchParty,
   } = useNavigation();
+  const { t } = useI18n();
 
   return (
-    <aside className={styles.libraryPanel} aria-label="Каталог аниме">
+    <aside className={clsx(styles.libraryPanel, collapsed && styles.collapsed)} aria-label={t('sidebar.aria')}>
       <div className={styles.brandRow}>
         <div className={styles.brandCopy}>
           <p className="eyebrow">Anima</p>
@@ -35,43 +37,43 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
           className={styles.toggle}
           type="button"
           onClick={onToggleCollapsed}
-          aria-label={collapsed ? 'Развернуть сайдбар' : 'Свернуть сайдбар'}
-          data-tooltip={collapsed ? 'Развернуть' : 'Свернуть'}
+          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          data-tooltip={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
           <img src={collapsed ? sidebarExpandIcon : sidebarShrinkIcon} alt="" aria-hidden="true" />
         </button>
       </div>
 
-      <nav className={styles.nav} aria-label="Разделы">
+      <nav className={styles.nav} aria-label={t('sidebar.sections')}>
         <SideNavButton
           active={view === 'watch'}
           icon={nekoIcon}
-          title="Просмотр"
-          description="Список аниме"
+          title={t('sidebar.watch')}
+          description={t('sidebar.watchDescription')}
           collapsed={collapsed}
           onClick={requestWatchView}
         />
         <SideNavButton
           active={view === 'random'}
           icon={randomDiceIcon}
-          title="Случайное аниме"
-          description="Подборка наугад"
+          title={t('sidebar.random')}
+          description={t('sidebar.randomDescription')}
           collapsed={collapsed}
           onClick={() => requestRoute('/random', 'random')}
         />
         <SideNavButton
           active={view === 'watchParty'}
           icon={watchPartyIcon}
-          title="Совместный просмотр"
-          description="Комнаты и коды"
+          title={t('sidebar.party')}
+          description={t('sidebar.partyDescription')}
           collapsed={collapsed}
           onClick={() => openWatchParty(watchPartyCode ? `/watch-party/${watchPartyCode}` : '/watch-party')}
         />
         <SideNavButton
           disabled
           icon={musicNoteIcon}
-          title="Угадай опенинг"
-          description="Скоро"
+          title={t('sidebar.opening')}
+          description={t('sidebar.openingDescription')}
           collapsed={collapsed}
           onClick={() => undefined}
         />
@@ -81,15 +83,15 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         <button
           className={clsx(styles.footerAction, view === 'settings' && styles.footerActionActive)}
           type="button"
-          data-tooltip={collapsed ? 'Настройки' : undefined}
+          data-tooltip={collapsed ? t('sidebar.settings') : undefined}
           onClick={() => requestRoute('/settings', 'settings')}
         >
           <span className={styles.navIcon} aria-hidden="true">
             <img src={settingsIcon} alt="" />
           </span>
           <span className={styles.navCopy}>
-            <span>Настройки</span>
-            <small>Скоро</small>
+            <span>{t('sidebar.settings')}</span>
+            <small>{t('common.soon')}</small>
           </span>
         </button>
         <AuthPanel collapsed={collapsed} onProfile={() => requestRoute('/profile', 'profile')} />
@@ -100,6 +102,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
 
 function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: () => void }) {
   const { user, authStatus, login } = useAuth();
+  const { t } = useI18n();
 
   if (authStatus === 'loading') {
     return (
@@ -123,11 +126,11 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: ()
         <button
           className={styles.discordButton}
           onClick={login}
-          data-tooltip={collapsed ? 'Войти через Discord' : undefined}
+          data-tooltip={collapsed ? t('sidebar.loginDiscord') : undefined}
           type="button"
         >
           <img src={discordIcon} alt="" aria-hidden="true" />
-          <span>Войти через Discord</span>
+          <span>{t('sidebar.loginDiscord')}</span>
         </button>
       </div>
     );

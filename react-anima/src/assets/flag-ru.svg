@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 30" role="img" aria-label="Russian flag">
+  <defs>
+    <clipPath id="flag-ru-clip">
+      <rect width="44" height="30" rx="7"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#flag-ru-clip)">
+    <rect width="44" height="10" fill="#ffffff"/>
+    <rect width="44" height="10" y="10" fill="#1f57a4"/>
+    <rect width="44" height="10" y="20" fill="#d52b1e"/>
+  </g>
+  <rect width="43" height="29" x=".5" y=".5" rx="6.5" fill="none" stroke="rgba(255,255,255,.18)"/>
+</svg>
