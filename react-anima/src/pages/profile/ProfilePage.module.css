@@ -729,6 +729,7 @@
 .diaryRow > span {
   display: flex;
   min-width: 0;
+  max-width: 100%;
   flex-direction: column;
   align-self: stretch;
   padding: 4px 0;
@@ -758,14 +759,18 @@
   display: block;
 }
 
-.diaryRow strong {
-  display: -webkit-box;
+.diaryTitle {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: #fff7ec;
   font-size: 17px;
   line-height: 1.22;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .diaryRow small {

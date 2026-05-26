@@ -343,12 +343,13 @@ export function ProfilePage() {
               {(() => {
                 const startedDate = getStartedDate(entry);
                 const completedDate = getCompletedDate(entry);
+                const animeTitle = entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId;
 
                 return (
                   <>
               {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
               <span>
-                <strong>{entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId}</strong>
+                <strong className={styles.diaryTitle} title={animeTitle}>{animeTitle}</strong>
                 <small className={styles.diaryProgress}>
                   <span>{getEntryStatusLabel(entry)}</span>
                   <span>
