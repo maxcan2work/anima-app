@@ -15,6 +15,15 @@
   background: #060706;
 }
 
+.frame:focus {
+  outline: none;
+}
+
+.frame:focus-visible {
+  outline: 2px solid rgba(242, 192, 99, 0.7);
+  outline-offset: 3px;
+}
+
 .cursorHidden,
 .cursorHidden video {
   cursor: none;

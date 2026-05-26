@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import clsx from 'clsx';
 import Hls from 'hls.js';
 import type { PlayerProviderResult } from '@/api';
@@ -142,6 +142,41 @@ export function ControlledVideoPlayer({
     setControlsVisible(true);
   }
 
+  function handleHotkey(event: KeyboardEvent<HTMLDivElement>) {
+    if (!canControl) return;
+    const target = event.target;
+    if (target instanceof HTMLSelectElement || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+
+    if (event.code === 'Space' || event.code === 'KeyF' || event.code === 'KeyP' || event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+      event.preventDefault();
+      showControls();
+    }
+
+    if (event.code === 'Space') {
+      void togglePlayback();
+      return;
+    }
+
+    if (event.code === 'ArrowUp') {
+      handleVolume((muted ? 0 : volume) + 0.05);
+      return;
+    }
+
+    if (event.code === 'ArrowDown') {
+      handleVolume((muted ? 0 : volume) - 0.05);
+      return;
+    }
+
+    if (event.code === 'KeyF') {
+      void toggleFullscreen();
+      return;
+    }
+
+    if (event.code === 'KeyP') {
+      void togglePictureInPicture();
+    }
+  }
+
   function emitPlayback(status: PlaybackSyncState['status']) {
     const video = videoRef.current;
     if (!video || !playbackSync?.canControl) return;
@@ -274,13 +309,16 @@ export function ControlledVideoPlayer({
     <div
       className={clsx(styles.frame, !controlsVisible && !paused && styles.cursorHidden)}
       ref={frameRef}
+      tabIndex={canControl ? 0 : -1}
       onPointerMove={showControls}
       onPointerEnter={showControls}
+      onKeyDown={handleHotkey}
     >
       <video
         ref={videoRef}
         poster={anime.backdrop}
         onClick={togglePlayback}
+        onDoubleClick={toggleFullscreen}
         onCanPlay={() => {
           onReady();
           setSeeking(false);
