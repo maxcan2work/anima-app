@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from '@anima/core';
+import { saveAnimeProgress, type ServerWatchEntry } from '@/api';
 import detachIcon from '@assets/detach.svg';
 import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
@@ -18,14 +19,16 @@ import leaveRoomIcon from '@assets/leave-room.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { upsertDiaryEntry } from '@shared/animeMappers';
 import { animeRouteSlug } from '@shared/navigation';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
-  const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
+  const { user, authStatus, diaryEntries: entries, setDiaryEntries, login, logout } = useAuth();
   const { requestRoute } = useNavigation();
   const { language, t } = useI18n();
+  const toast = useToast();
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
     { status: 'watching', label: t('profile.status.watching'), count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
     { status: 'completed', label: t('profile.status.completed'), count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
@@ -42,11 +45,17 @@ export function ProfilePage() {
   const sortedFriends = [...profileFriends].sort((left, right) => Number(right.status === 'online') - Number(left.status === 'online'));
   const [selectedStatus, setSelectedStatus] = useState<WatchStatus>('watching');
   const [sidebarMode, setSidebarMode] = useState<'stats' | 'friends' | 'settings'>('stats');
+  const [activeRatingEntryId, setActiveRatingEntryId] = useState<string | null>(null);
+  const [savingRatingId, setSavingRatingId] = useState<string | null>(null);
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
   const stopDiaryAction = (event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
     event.stopPropagation();
+  };
+  const toggleRatingMenu = (event: MouseEvent<HTMLButtonElement>, entryId: string) => {
+    event.stopPropagation();
+    setActiveRatingEntryId((current) => (current === entryId ? null : entryId));
   };
   const openDiaryAnime = (entry: (typeof entries)[number]) => {
     if (!entry.anime) return;
@@ -77,6 +86,29 @@ export function ProfilePage() {
 
     event.preventDefault();
     openDiaryAnime(entry);
+  };
+  const saveEntryScore = async (event: MouseEvent<HTMLButtonElement>, entry: ServerWatchEntry, score: number | null) => {
+    event.stopPropagation();
+    if (savingRatingId) return;
+
+    setSavingRatingId(entry.id);
+    try {
+      const { entry: savedEntry } = await saveAnimeProgress(entry.animeId, {
+        status: entry.status,
+        currentEpisode: entry.currentEpisode,
+        score,
+        startedAt: entry.startedAt,
+        completedAt: entry.completedAt,
+        review: entry.review,
+      });
+      setDiaryEntries((current) => upsertDiaryEntry(current, savedEntry));
+      setActiveRatingEntryId(null);
+      toast({ message: t('profile.ratingSaved'), variant: 'success' });
+    } catch {
+      toast({ message: t('profile.ratingSaveFailed'), variant: 'danger' });
+    } finally {
+      setSavingRatingId(null);
+    }
   };
 
   if (authStatus === 'loading') {
@@ -135,12 +167,36 @@ export function ProfilePage() {
                 <button
                   className={clsx(styles.diaryActionButton, styles.diaryScore)}
                   type="button"
-                  onClick={stopDiaryAction}
+                  onClick={(event) => toggleRatingMenu(event, entry.id)}
                   onKeyDown={stopDiaryAction}
+                  aria-expanded={activeRatingEntryId === entry.id}
                 >
                   <img src={scoreIcon} alt="" aria-hidden="true" />
-                  {entry.score ? `${entry.score}/10` : t('common.none')}
+                  {savingRatingId === entry.id ? '...' : entry.score ? `${entry.score}/10` : t('common.none')}
                 </button>
+                {activeRatingEntryId === entry.id ? (
+                  <div className={styles.ratingMenu} onClick={(event) => event.stopPropagation()}>
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map((score) => (
+                      <button
+                        key={score}
+                        className={clsx(styles.ratingOption, entry.score === score && styles.activeRating)}
+                        type="button"
+                        onClick={(event) => saveEntryScore(event, entry, score)}
+                        disabled={savingRatingId === entry.id}
+                      >
+                        {score}
+                      </button>
+                    ))}
+                    <button
+                      className={clsx(styles.ratingOption, entry.score == null && styles.activeRating)}
+                      type="button"
+                      onClick={(event) => saveEntryScore(event, entry, null)}
+                      disabled={savingRatingId === entry.id}
+                    >
+                      {t('common.none')}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </article>
           ))

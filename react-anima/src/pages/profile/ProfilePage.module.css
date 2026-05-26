@@ -718,6 +718,58 @@
   padding: 0;
 }
 
+.ratingMenu {
+  position: absolute;
+  right: 0;
+  bottom: 42px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 40px);
+  padding: 6px;
+  border: 1px solid rgba(242, 192, 99, 0.24);
+  border-radius: 8px;
+  background: rgba(15, 13, 10, 0.94);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  animation: ratingMenuIn 140ms ease both;
+}
+
+.ratingOption {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 28px;
+  min-width: 24px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4ddae;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ratingOption:first-child {
+  width: 24px;
+}
+
+.ratingOption:hover,
+.ratingOption:focus-visible,
+.activeRating {
+  border-color: rgba(242, 192, 99, 0.5);
+  background: rgba(242, 192, 99, 0.16);
+  color: #fff7ec;
+}
+
+.ratingOption:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .diaryActionButton {
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
@@ -803,6 +855,18 @@
 @keyframes buttonSpin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes ratingMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
