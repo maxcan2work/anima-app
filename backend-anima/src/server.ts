@@ -34,6 +34,13 @@ type WatchPartyRoom = {
   participants: Map<string, WatchPartyParticipant>;
   selectedAnime: WatchPartyAnime | null;
   episode: number;
+  playback: WatchPartyPlaybackState;
+};
+
+type WatchPartyPlaybackState = {
+  status: 'paused' | 'playing';
+  position: number;
+  updatedAt: number;
 };
 
 type WatchPartyAnime = {
@@ -478,6 +485,7 @@ io.on('connection', (socket) => {
 
     room.selectedAnime = anime;
     room.episode = 1;
+    room.playback = createInitialPlaybackState();
     emitWatchPartyState(room);
   });
 
@@ -490,6 +498,25 @@ io.on('connection', (socket) => {
     if (!Number.isFinite(episode)) return;
 
     room.episode = Math.min(Math.max(Math.trunc(episode), 1), room.selectedAnime.episodes || 1);
+    room.playback = createInitialPlaybackState();
+    emitWatchPartyState(room);
+  });
+
+  socket.on('watch-party:set-playback', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id || !room.selectedAnime) return;
+
+    const status = getPayloadString(payload, 'status');
+    const position = Number(getPayloadValue(payload, 'position'));
+    if (status !== 'playing' && status !== 'paused') return;
+    if (!Number.isFinite(position)) return;
+
+    room.playback = {
+      status,
+      position: Math.max(0, position),
+      updatedAt: Date.now(),
+    };
     emitWatchPartyState(room);
   });
 
@@ -539,6 +566,7 @@ function createWatchPartyRoom(code: string, socketId: string) {
     participants: new Map(),
     selectedAnime: null,
     episode: 1,
+    playback: createInitialPlaybackState(),
   };
   watchPartyRooms.set(code, room);
   return room;
@@ -555,7 +583,16 @@ function emitWatchPartyState(room: WatchPartyRoom) {
     participants,
     selectedAnime: room.selectedAnime,
     episode: room.episode,
+    playback: room.playback,
   });
+}
+
+function createInitialPlaybackState(): WatchPartyPlaybackState {
+  return {
+    status: 'paused',
+    position: 0,
+    updatedAt: Date.now(),
+  };
 }
 
 function watchPartyRoomName(code: string) {

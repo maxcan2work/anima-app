@@ -67,6 +67,11 @@ export function WatchPartyPage({
             state={{ episode: room.partyEpisode, status: 'watching' }}
             onStateChange={(patch: Partial<WatchState>) => room.updatePartyState(patch)}
             mode="watchParty"
+            playbackSync={{
+              state: room.playbackState,
+              canControl: room.isHost,
+              onChange: room.updatePartyPlayback,
+            }}
             sidebarExtra={(
               <WatchPartyParticipants
                 code={code}

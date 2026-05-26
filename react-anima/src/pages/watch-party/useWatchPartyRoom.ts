@@ -5,7 +5,7 @@ import type { AnimeTitle } from '@/data';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useToast } from '@shared/ui/ToastProvider';
 import type { WatchState } from '@shared/storage';
-import type { WatchPartyParticipant, WatchPartyRoomState } from './types';
+import type { WatchPartyParticipant, WatchPartyPlaybackState, WatchPartyRoomState } from './types';
 
 type UseWatchPartyRoomOptions = {
   code: string;
@@ -28,6 +28,7 @@ export function useWatchPartyRoom({
   const [ownParticipantId, setOwnParticipantId] = useState('');
   const [selectedAnime, setSelectedAnime] = useState<AnimeTitle | null>(null);
   const [partyEpisode, setPartyEpisode] = useState(1);
+  const [playbackState, setPlaybackState] = useState<WatchPartyPlaybackState>(createInitialPlaybackState);
   const [connectionStatus, setConnectionStatus] = useState('');
   const socketRef = useRef<Socket | null>(null);
   const createRoomRef = useRef(createRoom);
@@ -54,6 +55,7 @@ export function useWatchPartyRoom({
       setOwnParticipantId('');
       setSelectedAnime(null);
       setPartyEpisode(1);
+      setPlaybackState(createInitialPlaybackState());
       setConnectionStatus('');
       return;
     }
@@ -84,6 +86,7 @@ export function useWatchPartyRoom({
       setParticipants(state.participants ?? []);
       setSelectedAnime(state.selectedAnime ? mapServerAnime(state.selectedAnime) : null);
       setPartyEpisode(state.episode ?? 1);
+      setPlaybackState(state.playback ?? createInitialPlaybackState());
     });
 
     socket.on('connect_error', () => {
@@ -130,15 +133,34 @@ export function useWatchPartyRoom({
     });
   }
 
+  function updatePartyPlayback(patch: Pick<WatchPartyPlaybackState, 'status' | 'position'>) {
+    if (!socketRef.current || !isHost || !selectedAnime) return;
+    socketRef.current.emit('watch-party:set-playback', {
+      code,
+      status: patch.status,
+      position: patch.position,
+    });
+  }
+
   return {
     participants,
     ownParticipantId,
     selectedAnime,
     partyEpisode,
+    playbackState,
     connectionStatus,
     isHost,
     kickParticipant,
     selectAnime,
     updatePartyState,
+    updatePartyPlayback,
+  };
+}
+
+function createInitialPlaybackState(): WatchPartyPlaybackState {
+  return {
+    status: 'paused',
+    position: 0,
+    updatedAt: Date.now(),
   };
 }

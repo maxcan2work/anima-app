@@ -12,6 +12,13 @@ export type WatchPartyRoomState = {
   participants: WatchPartyParticipant[];
   selectedAnime: ServerAnime | null;
   episode: number;
+  playback: WatchPartyPlaybackState;
 };
 
 export type WatchPartyAnime = AnimeTitle | null;
+
+export type WatchPartyPlaybackState = {
+  status: 'paused' | 'playing';
+  position: number;
+  updatedAt: number;
+};
