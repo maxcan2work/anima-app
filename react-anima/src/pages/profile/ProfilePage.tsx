@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { useState, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
 import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from '@anima/core';
 import { saveAnimeProgress, type ServerWatchEntry } from '@/api';
 import detachIcon from '@assets/detach.svg';
@@ -48,6 +48,9 @@ export function ProfilePage() {
   const [sidebarMode, setSidebarMode] = useState<'stats' | 'friends' | 'settings'>('stats');
   const [activeRatingEntryId, setActiveRatingEntryId] = useState<string | null>(null);
   const [savingRatingId, setSavingRatingId] = useState<string | null>(null);
+  const [activeDateEntryId, setActiveDateEntryId] = useState<string | null>(null);
+  const [savingDateId, setSavingDateId] = useState<string | null>(null);
+  const [dateDraft, setDateDraft] = useState({ startedAt: '', completedAt: '' });
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
@@ -66,6 +69,46 @@ export function ProfilePage() {
       year: '2-digit',
     }).format(new Date(value));
   };
+  const formatDateInput = (value: string | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    return [
+      String(date.getUTCDate()).padStart(2, '0'),
+      String(date.getUTCMonth() + 1).padStart(2, '0'),
+      String(date.getUTCFullYear()),
+    ].join('.');
+  };
+  const maskDateInput = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    const day = digits.slice(0, 2);
+    const month = digits.slice(2, 4);
+    const year = digits.slice(4, 8);
+
+    return [day, month, year].filter(Boolean).join('.');
+  };
+  const dateInputToIso = (value: string) => {
+    if (!value) return null;
+
+    const match = value.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (!match) return undefined;
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      return undefined;
+    }
+
+    return date.toISOString();
+  };
   const getStartedDate = (entry: ServerWatchEntry) => entry.startedAt ?? entry.createdAt;
   const getCompletedDate = (entry: ServerWatchEntry) => (
     entry.completedAt ?? (entry.status === 'COMPLETED' ? entry.updatedAt : null)
@@ -76,6 +119,39 @@ export function ProfilePage() {
   const toggleRatingMenu = (event: MouseEvent<HTMLButtonElement>, entryId: string) => {
     event.stopPropagation();
     setActiveRatingEntryId((current) => (current === entryId ? null : entryId));
+    setActiveDateEntryId(null);
+  };
+  const beginDateEdit = (entry: ServerWatchEntry) => {
+    if (activeDateEntryId !== entry.id) {
+      setDateDraft({
+        startedAt: formatDateInput(entry.startedAt ?? entry.createdAt),
+        completedAt: formatDateInput(entry.completedAt ?? (entry.status === 'COMPLETED' ? entry.updatedAt : null)),
+      });
+    }
+    setActiveDateEntryId(entry.id);
+    setActiveRatingEntryId(null);
+  };
+  const handleDateFocus = (entry: ServerWatchEntry) => {
+    beginDateEdit(entry);
+  };
+  const handleDateClick = (event: MouseEvent<HTMLInputElement>, entry: ServerWatchEntry) => {
+    event.stopPropagation();
+    beginDateEdit(entry);
+  };
+  const updateDateDraft = (field: 'startedAt' | 'completedAt') => (event: ChangeEvent<HTMLInputElement>) => {
+    setDateDraft((current) => ({ ...current, [field]: maskDateInput(event.target.value) }));
+  };
+  const handleDateKeyDown = (event: KeyboardEvent<HTMLInputElement>, entry: ServerWatchEntry) => {
+    event.stopPropagation();
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveEntryDates(entry);
+    }
+
+    if (event.key === 'Escape') {
+      setActiveDateEntryId(null);
+    }
   };
   const openDiaryAnime = (entry: (typeof entries)[number]) => {
     if (!entry.anime) return;
@@ -131,6 +207,41 @@ export function ProfilePage() {
       setSavingRatingId(null);
     }
   };
+  const saveEntryDates = async (entry: ServerWatchEntry) => {
+    if (savingDateId) return;
+    const startedAt = dateInputToIso(dateDraft.startedAt);
+    const completedAt = dateInputToIso(dateDraft.completedAt);
+
+    if (startedAt === undefined || completedAt === undefined) {
+      toast({ message: t('profile.invalidDate'), variant: 'danger' });
+      return;
+    }
+
+    if (startedAt && completedAt && new Date(startedAt).getTime() > new Date(completedAt).getTime()) {
+      toast({ message: t('profile.invalidDateRange'), variant: 'danger' });
+      return;
+    }
+
+    setSavingDateId(entry.id);
+    try {
+      const { entry: savedEntry } = await saveAnimeProgress(entry.animeId, {
+        status: entry.status,
+        currentEpisode: entry.currentEpisode,
+        score: entry.score,
+        rewatches: entry.rewatches,
+        startedAt,
+        completedAt,
+        review: entry.review,
+      });
+      setDiaryEntries((current) => upsertDiaryEntry(current, savedEntry));
+      setActiveDateEntryId(null);
+      toast({ message: t('profile.datesSaved'), variant: 'success' });
+    } catch {
+      toast({ message: t('profile.datesSaveFailed'), variant: 'danger' });
+    } finally {
+      setSavingDateId(null);
+    }
+  };
 
   if (authStatus === 'loading') {
     return <ProfilePageSkeleton />;
@@ -182,13 +293,29 @@ export function ProfilePage() {
                 </small>
               </span>
               <div className={styles.diaryDates}>
-                {startedDate ? (
-                  <span>{formatDiaryDate(startedDate)}</span>
-                ) : null}
-                {startedDate && completedDate ? <i aria-hidden="true">{'\u2014'}</i> : null}
-                {completedDate ? (
-                  <span>{formatDiaryDate(completedDate)}</span>
-                ) : null}
+                <input
+                  inputMode="numeric"
+                  placeholder={t('profile.startedAtPlaceholder')}
+                  value={activeDateEntryId === entry.id ? dateDraft.startedAt : formatDateInput(startedDate)}
+                  onFocus={() => handleDateFocus(entry)}
+                  onClick={(event) => handleDateClick(event, entry)}
+                  onChange={updateDateDraft('startedAt')}
+                  onKeyDown={(event) => handleDateKeyDown(event, entry)}
+                  aria-label={t('profile.startedAt')}
+                  disabled={savingDateId === entry.id}
+                />
+                <i aria-hidden="true">{'\u2014'}</i>
+                <input
+                  inputMode="numeric"
+                  placeholder={t('profile.completedAtPlaceholder')}
+                  value={activeDateEntryId === entry.id ? dateDraft.completedAt : formatDateInput(completedDate)}
+                  onFocus={() => handleDateFocus(entry)}
+                  onClick={(event) => handleDateClick(event, entry)}
+                  onChange={updateDateDraft('completedAt')}
+                  onKeyDown={(event) => handleDateKeyDown(event, entry)}
+                  aria-label={t('profile.completedAt')}
+                  disabled={savingDateId === entry.id}
+                />
               </div>
               <div className={styles.diaryActions}>
                 <button
