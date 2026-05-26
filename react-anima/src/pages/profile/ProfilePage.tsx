@@ -2,7 +2,9 @@ import clsx from 'clsx';
 import { useState, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
 import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from '@anima/core';
 import { saveAnimeProgress, type ServerWatchEntry } from '@/api';
+import clockIcon from '@assets/clock-three.svg';
 import detachIcon from '@assets/detach.svg';
+import directionIcon from '@assets/episode-arrow.svg';
 import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
 import profileEyeIcon from '@assets/profile-eye.svg';
@@ -24,6 +26,8 @@ import { animeRouteSlug } from '@shared/navigation';
 import { Tooltip } from '@shared/ui/Tooltip';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
+
+type SortDirection = 'desc' | 'asc';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, setDiaryEntries, login, logout } = useAuth();
@@ -51,8 +55,16 @@ export function ProfilePage() {
   const [activeDateEntryId, setActiveDateEntryId] = useState<string | null>(null);
   const [savingDateId, setSavingDateId] = useState<string | null>(null);
   const [dateDraft, setDateDraft] = useState({ startedAt: '', completedAt: '' });
+  const [diarySearchQuery, setDiarySearchQuery] = useState('');
+  const [reviewedOnly, setReviewedOnly] = useState(false);
+  const [scoreSortDirection, setScoreSortDirection] = useState<SortDirection>('desc');
+  const [recentSortDirection, setRecentSortDirection] = useState<SortDirection | null>(null);
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
-  const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
+  const statusEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
+  const filteredEntries = statusEntries
+    .filter((entry) => matchesDiarySearch(entry, diarySearchQuery))
+    .filter((entry) => !reviewedOnly || Boolean(entry.review))
+    .sort((left, right) => compareDiaryEntries(left, right, { scoreSortDirection, recentSortDirection }));
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
   const getEntryStatusLabel = (entry: ServerWatchEntry) => {
     const status = fromServerWatchStatus(entry.status);
@@ -260,11 +272,62 @@ export function ProfilePage() {
   return (
     <section className={styles.page}>
       <section className={styles.diaryList}>
-        <h3>{selectedFilter.label}</h3>
+        <div className={styles.diaryHeader}>
+          <h3>{selectedFilter.label}</h3>
+          <div className={styles.diaryToolbar}>
+            <label className={styles.diarySearch} aria-label={t('profile.search')}>
+              <input
+                type="search"
+                value={diarySearchQuery}
+                onChange={(event) => setDiarySearchQuery(event.target.value)}
+                placeholder={t('profile.search')}
+              />
+            </label>
+            <div className={styles.diarySorts} aria-label={t('profile.sort.label')}>
+              <Tooltip label={t('profile.sort.reviewed')} placement="bottom">
+                <button
+                  className={clsx(styles.iconSortButton, reviewedOnly && styles.activeSort)}
+                  type="button"
+                  onClick={() => setReviewedOnly((current) => !current)}
+                  aria-label={t('profile.sort.reviewed')}
+                  aria-pressed={reviewedOnly}
+                >
+                  <img src={reviewIcon} alt="" aria-hidden="true" />
+                </button>
+              </Tooltip>
+              <Tooltip key={`score-${scoreSortDirection}`} label={scoreSortDirection === 'asc' ? t('profile.sort.scoreAsc') : t('profile.sort.scoreDesc')} placement="bottom">
+                <button
+                  className={clsx(styles.iconSortButton, styles.activeSort)}
+                  type="button"
+                  onClick={() => setScoreSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
+                  aria-label={scoreSortDirection === 'asc' ? t('profile.sort.scoreAsc') : t('profile.sort.scoreDesc')}
+                  aria-pressed="true"
+                >
+                  <img src={scoreIcon} alt="" aria-hidden="true" />
+                  <img className={clsx(styles.sortDirection, scoreSortDirection === 'asc' && styles.sortDirectionUp)} src={directionIcon} alt="" aria-hidden="true" />
+                </button>
+              </Tooltip>
+              <Tooltip key={`recent-${recentSortDirection ?? 'off'}`} label={recentSortDirection === 'asc' ? t('profile.sort.recentAsc') : t('profile.sort.recentDesc')} placement="bottom" align="end">
+                <button
+                  className={clsx(styles.iconSortButton, recentSortDirection && styles.activeSort)}
+                  type="button"
+                  onClick={() => setRecentSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
+                  aria-label={recentSortDirection === 'asc' ? t('profile.sort.recentAsc') : t('profile.sort.recentDesc')}
+                  aria-pressed={Boolean(recentSortDirection)}
+                >
+                  <img src={clockIcon} alt="" aria-hidden="true" />
+                  <img className={clsx(styles.sortDirection, recentSortDirection === 'asc' && styles.sortDirectionUp)} src={directionIcon} alt="" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+        </div>
         {entries.length === 0 ? (
           <p className={styles.mutedCopy}>{t('profile.emptyAll')}</p>
-        ) : filteredEntries.length === 0 ? (
+        ) : statusEntries.length === 0 ? (
           <p className={styles.mutedCopy}>{t('profile.emptyStatus')}</p>
+        ) : filteredEntries.length === 0 ? (
+          <p className={styles.mutedCopy}>{t('profile.emptySearch')}</p>
         ) : (
           filteredEntries.map((entry) => (
             <article
@@ -482,6 +545,55 @@ export function ProfilePage() {
       </aside>
     </section>
   );
+}
+
+function matchesDiarySearch(entry: ServerWatchEntry, query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+
+  const titles = [
+    entry.anime?.title,
+    entry.anime?.originalTitle,
+    entry.anime?.titleRu,
+    entry.anime?.titleEn,
+    entry.anime?.titleJa,
+    entry.anime?.titleRomaji,
+    entry.animeId,
+  ];
+
+  return titles.some((title) => title?.toLowerCase().includes(normalizedQuery));
+}
+
+function compareDiaryEntries(
+  left: ServerWatchEntry,
+  right: ServerWatchEntry,
+  options: { scoreSortDirection: SortDirection; recentSortDirection: SortDirection | null },
+) {
+  if (options.recentSortDirection) {
+    const recentCompare = options.recentSortDirection === 'asc'
+      ? dateValue(left.completedAt ?? left.updatedAt) - dateValue(right.completedAt ?? right.updatedAt)
+      : dateValue(right.completedAt ?? right.updatedAt) - dateValue(left.completedAt ?? left.updatedAt);
+
+    if (recentCompare !== 0) return recentCompare;
+  }
+
+  const scoreCompare = options.scoreSortDirection === 'asc'
+    ? scoreValue(left.score, 11) - scoreValue(right.score, 11)
+    : scoreValue(right.score, -1) - scoreValue(left.score, -1);
+
+  return scoreCompare || compareUpdatedAt(left, right);
+}
+
+function compareUpdatedAt(left: ServerWatchEntry, right: ServerWatchEntry) {
+  return dateValue(right.updatedAt) - dateValue(left.updatedAt);
+}
+
+function scoreValue(score: number | null, fallback: number) {
+  return score ?? fallback;
+}
+
+function dateValue(value: string | null) {
+  return value ? new Date(value).getTime() || 0 : 0;
 }
 
 function ProfilePageSkeleton() {
