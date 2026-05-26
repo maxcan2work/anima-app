@@ -47,6 +47,10 @@ export function AppScreens() {
     return <SettingsPage />;
   }
 
+  if (displayedView === 'profile') {
+    return <ProfilePage />;
+  }
+
   if (displayedView === 'watch' && !displayedRouteAnimeId) {
     return <WatchHome />;
   }
@@ -69,5 +73,5 @@ export function AppScreens() {
     );
   }
 
-  return <ProfilePage />;
+  return <EmptyCatalog />;
 }

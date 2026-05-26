@@ -112,7 +112,7 @@ export function ProfilePage() {
   };
 
   if (authStatus === 'loading') {
-    return <section className={clsx(styles.page, styles.emptyState)}>{t('profile.loading')}</section>;
+    return <ProfilePageSkeleton />;
   }
 
   if (!user) {
@@ -307,6 +307,54 @@ export function ProfilePage() {
           <button className={clsx(styles.sidebarAction, styles.logout)} type="button" onClick={logout} aria-label={t('profile.logout')} data-tooltip={t('profile.logout')}>
             <img src={leaveRoomIcon} alt="" aria-hidden="true" />
           </button>
+        </div>
+      </aside>
+    </section>
+  );
+}
+
+function ProfilePageSkeleton() {
+  return (
+    <section className={styles.page} aria-hidden="true">
+      <section className={styles.diaryList}>
+        <span className={styles.diaryTitlePlaceholder} />
+        {Array.from({ length: 6 }, (_, index) => (
+          <article key={index} className={clsx(styles.diaryRow, styles.diarySkeleton)}>
+            <div className={styles.diaryPosterPlaceholder} />
+            <span className={styles.diarySkeletonContent}>
+              <span className={styles.diaryLineLarge} />
+              <span className={styles.diaryLineSmall} />
+              <span className={styles.diaryChipPlaceholder} />
+            </span>
+            <div className={styles.diaryActions}>
+              <span className={clsx(styles.diaryReviewAction, styles.diaryActionPlaceholder)} />
+              <span className={clsx(styles.diaryScore, styles.diaryActionPlaceholder)} />
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <aside className={styles.sidebar}>
+        <header className={styles.header}>
+          <div className={styles.avatarFrame}>
+            <span className={styles.avatarSkeleton} />
+            <span className={styles.nameSkeleton} />
+          </div>
+        </header>
+        <div className={styles.sidebarContent}>
+          <section className={styles.section}>
+            <span className={styles.sidebarTitlePlaceholder} />
+            <div className={styles.stats}>
+              {Array.from({ length: 4 }, (_, index) => (
+                <span key={index} className={styles.statPlaceholder} />
+              ))}
+            </div>
+          </section>
+        </div>
+        <div className={styles.actions}>
+          {Array.from({ length: 4 }, (_, index) => (
+            <span key={index} className={styles.sidebarActionPlaceholder} />
+          ))}
         </div>
       </aside>
     </section>

@@ -582,6 +582,30 @@
   grid-column: 1 / -1;
 }
 
+.diaryTitlePlaceholder,
+.sidebarTitlePlaceholder,
+.diaryPosterPlaceholder,
+.diaryLineLarge,
+.diaryLineSmall,
+.diaryChipPlaceholder,
+.diaryActionPlaceholder,
+.avatarSkeleton,
+.nameSkeleton,
+.statPlaceholder,
+.sidebarActionPlaceholder {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+  animation: placeholderPulse 1.2s linear infinite;
+}
+
+.diaryTitlePlaceholder {
+  grid-column: 1 / -1;
+  width: 140px;
+  height: 22px;
+}
+
 .diaryRow {
   position: relative;
   isolation: isolate;
@@ -628,6 +652,18 @@
   outline-offset: 2px;
 }
 
+.diarySkeleton {
+  pointer-events: none;
+}
+
+.diarySkeleton:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 22% 15%, rgba(242, 192, 99, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.028));
+  transform: none;
+}
+
 .posterFallback {
   width: 86px;
   height: 124px;
@@ -644,12 +680,38 @@
   box-shadow: 0 14px 26px rgba(0, 0, 0, 0.26);
 }
 
+.diaryPosterPlaceholder {
+  grid-row: 1 / 3;
+  width: 86px;
+  height: 124px;
+  border-radius: 6px;
+}
+
 .diaryRow > span {
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-self: stretch;
   padding: 4px 0;
+}
+
+.diarySkeletonContent {
+  gap: 10px;
+}
+
+.diaryLineLarge {
+  width: 82%;
+  height: 18px;
+}
+
+.diaryLineSmall {
+  width: 58%;
+  height: 14px;
+}
+
+.diaryChipPlaceholder {
+  width: 112px;
+  height: 28px;
 }
 
 .diaryRow strong,
@@ -820,6 +882,42 @@
 
 .diaryScore img {
   margin-right: 2px;
+}
+
+.diaryActionPlaceholder {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
+  background-size: 200% 100%;
+}
+
+.avatarSkeleton {
+  width: 124px;
+  height: 124px;
+}
+
+.nameSkeleton {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 30px;
+  transform: translateY(50%);
+}
+
+.sidebarTitlePlaceholder {
+  width: 124px;
+  height: 18px;
+}
+
+.statPlaceholder {
+  min-height: 92px;
+  border-radius: 8px;
+}
+
+.sidebarActionPlaceholder {
+  width: var(--ui-row-height);
+  height: var(--ui-row-height);
+  border-radius: var(--ui-radius);
 }
 
 @keyframes contentSlideUp {
