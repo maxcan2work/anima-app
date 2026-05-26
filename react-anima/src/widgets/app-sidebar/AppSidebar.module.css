@@ -233,6 +233,11 @@
   transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
 }
 
+.profileLinkActive {
+  border-color: rgba(242, 192, 99, 0.65);
+  background: rgba(242, 192, 99, 0.14);
+}
+
 .profileLink span {
   display: block;
   max-width: 220px;

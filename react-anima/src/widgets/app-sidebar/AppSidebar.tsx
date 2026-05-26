@@ -96,13 +96,25 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
             <small>{t('common.soon')}</small>
           </span>
         </button>
-        <AuthPanel collapsed={collapsed} onProfile={(userId) => requestRoute(profileRoute(userId), 'profile')} />
+        <AuthPanel
+          active={view === 'profile'}
+          collapsed={collapsed}
+          onProfile={(userId) => requestRoute(profileRoute(userId), 'profile')}
+        />
       </div>
     </aside>
   );
 }
 
-function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: (userId: string) => void }) {
+function AuthPanel({
+  active,
+  collapsed,
+  onProfile,
+}: {
+  active: boolean;
+  collapsed: boolean;
+  onProfile: (userId: string) => void;
+}) {
   const { user, authStatus, login } = useAuth();
   const { t } = useI18n();
 
@@ -140,7 +152,11 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: (u
 
   return (
     <div className={clsx(styles.authPanel, styles.authPanelSignedIn)}>
-      <button className={styles.profileLink} onClick={() => onProfile(user.id)} data-tooltip={user.displayName}>
+      <button
+        className={clsx(styles.profileLink, active && styles.profileLinkActive)}
+        onClick={() => onProfile(user.id)}
+        data-tooltip={user.displayName}
+      >
         {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className={styles.avatarFallback}>{user.displayName[0]}</div>}
         <span>
           <strong>{user.displayName}</strong>
