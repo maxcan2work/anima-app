@@ -46,7 +46,7 @@ export function AnimeHero({
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
-  const playablePlayers = players.filter(isPlayablePlayer);
+  const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
   const selectedPlayer = mode === 'watchParty'
@@ -93,7 +93,8 @@ export function AnimeHero({
         if (ignore) return;
 
         setPlayers(response.providers);
-        setPlayersStatus(response.providers.length ? '' : 'Видео с данным тайтлом не найдено');
+        const hasPlayableProvider = response.providers.some((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
+        setPlayersStatus(hasPlayableProvider ? '' : 'Видео с данным тайтлом не найдено');
       } catch {
         if (!ignore) {
           setPlayers([]);
@@ -107,7 +108,7 @@ export function AnimeHero({
     return () => {
       ignore = true;
     };
-  }, [anime.id, state.episode]);
+  }, [anime.id, mode, state.episode]);
 
   const episodeControls = (
     <section className={styles.episodes} aria-label="Серии">

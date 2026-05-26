@@ -17,6 +17,7 @@ type CatalogBrowserProps = {
   searchResults: CatalogSearchResult[];
   searchLoading: boolean;
   searchStatus: string;
+  note?: string;
   onSearchChange: (query: string) => void;
   onOpenAnime: (result: CatalogSearchResult) => void;
   onPageChange: (page: number) => void;
@@ -35,6 +36,7 @@ export function CatalogBrowser({
   searchResults,
   searchLoading,
   searchStatus,
+  note,
   onSearchChange,
   onOpenAnime,
   onPageChange,
@@ -75,6 +77,7 @@ export function CatalogBrowser({
         <div>
           <p className="eyebrow">{eyebrow}</p>
           <h2>{title}</h2>
+          {note ? <p className={styles.note}>{note}</p> : null}
         </div>
         <label className={styles.search} aria-label={t('catalog.search')}>
           <input

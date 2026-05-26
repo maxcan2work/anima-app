@@ -8,7 +8,7 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
-import { browseCatalog, importShikimoriAnime, searchCatalog } from './catalogProviders.js';
+import { browseCatalog, browsePlayableCatalog, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
 import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl, importLinkedShikimoriAnimeList } from './shikimori.js';
 
@@ -236,7 +236,8 @@ app.get('/anime/:animeId', async (request, response) => {
 app.get('/catalog/search', async (request, response, next) => {
   try {
     const query = String(request.query.q ?? '');
-    const results = await searchCatalog(query);
+    const playableProvider = String(request.query.playableProvider ?? '');
+    const results = playableProvider ? await searchPlayableCatalog(query, playableProvider) : await searchCatalog(query);
     response.json({ results });
   } catch (error) {
     next(error);
@@ -248,7 +249,10 @@ app.get('/catalog/browse', async (request, response, next) => {
     const page = Number(request.query.page ?? 1);
     const limit = Number(request.query.limit ?? 18);
     const order = String(request.query.order ?? 'popularity');
-    const result = await browseCatalog(page, limit, order);
+    const playableProvider = String(request.query.playableProvider ?? '');
+    const result = playableProvider
+      ? await browsePlayableCatalog(page, limit, order, playableProvider)
+      : await browseCatalog(page, limit, order);
 
     response.json(result);
   } catch (error) {

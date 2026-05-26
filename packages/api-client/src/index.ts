@@ -114,6 +114,10 @@ export type ShikimoriImportResult = {
   errors?: Array<{ shikimoriId: number | null; reason: string }>;
 };
 
+export type CatalogRequestOptions = {
+  playableProvider?: 'anilibria';
+};
+
 export type AnimaApiClientOptions = {
   baseUrl: string;
   fetchImpl?: typeof fetch;
@@ -160,16 +164,16 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
       }),
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
-    searchCatalog: (query: string) =>
-      apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?q=${encodeURIComponent(query)}`),
-    browseCatalog: (page: number, order = 'popularity') =>
+    searchCatalog: (query: string, options: CatalogRequestOptions = {}) =>
+      apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?${catalogSearchParams({ q: query, playableProvider: options.playableProvider })}`),
+    browseCatalog: (page: number, order = 'popularity', options: CatalogRequestOptions = {}) =>
       apiFetch<{
         page: number;
         limit: number;
         order: string;
         hasNextPage: boolean;
         results: CatalogSearchResult[];
-      }>(`/catalog/browse?page=${page}&limit=18&order=${encodeURIComponent(order)}`),
+      }>(`/catalog/browse?${catalogSearchParams({ page, limit: 18, order, playableProvider: options.playableProvider })}`),
     importCatalogAnime: (provider: CatalogSearchResult['provider'], providerId: number) =>
       apiFetch<{ anime: ServerAnime }>('/catalog/import', {
         method: 'POST',
@@ -185,6 +189,16 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
     checkWatchPartyRoom: (code: string) =>
       apiFetch<{ exists: boolean }>(`/watch-party/${encodeURIComponent(code)}`),
   };
+}
+
+function catalogSearchParams(params: Record<string, string | number | undefined>) {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value == null || value === '') continue;
+    searchParams.set(key, String(value));
+  }
+
+  return searchParams.toString();
 }
 
 export type AnimaApiClient = ReturnType<typeof createAnimaApiClient>;

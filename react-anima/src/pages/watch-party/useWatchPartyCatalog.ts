@@ -53,7 +53,7 @@ export function useWatchPartyCatalog({
 
     const timer = window.setTimeout(async () => {
       try {
-        const response = await searchCatalog(query);
+        const response = await searchCatalog(query, { playableProvider: 'anilibria' });
         if (ignore) return;
 
         setAnimeResults(response.results);
@@ -85,7 +85,7 @@ export function useWatchPartyCatalog({
 
     async function loadPartyCatalog() {
       try {
-        const response = await browseCatalog(partyCatalogPage, 'popularity');
+        const response = await browseCatalog(partyCatalogPage, 'popularity', { playableProvider: 'anilibria' });
         if (ignore) return;
 
         setPartyCatalogResults((current) => {

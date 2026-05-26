@@ -67,6 +67,7 @@ type KodikRelease = {
 const ANILIBERTY_BASE_URL = 'https://anilibria.top';
 const ANILIBERTY_API_URL = `${ANILIBERTY_BASE_URL}/api/v1`;
 const KODIK_API_URL = 'https://kodik-api.com';
+const ANILIBERTY_MIN_MATCH_SCORE = 70;
 
 export async function findPlayerProviders(animeId: string, episodeNumber: number) {
   const anime = await prisma.anime.findUnique({
@@ -81,7 +82,8 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
   if (anilibriaMatch) {
     anilibriaResults = await fetchAniLibertyRelease(anilibriaMatch.providerTitleId, episodeNumber);
   } else {
-    const autoMatch = await findAniLibriaMatch(anime.title, anime.originalTitle);
+    const animeQueries = getAnimeSearchTitles(anime);
+    const autoMatch = await findAniLibriaMatch(animeQueries);
 
     if (autoMatch) {
       await prisma.providerMatch.upsert({
@@ -106,7 +108,7 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
       });
       anilibriaResults = await fetchAniLibertyRelease(autoMatch.providerTitleId, episodeNumber);
     } else {
-      anilibriaResults = await searchAniLiberty(uniqueStrings([anime.originalTitle, anime.title]), episodeNumber);
+      anilibriaResults = await searchAniLiberty(animeQueries, episodeNumber);
     }
   }
   const kodikResults = await searchKodik(anime, episodeNumber);
@@ -118,14 +120,17 @@ export async function findPlayerProviders(animeId: string, episodeNumber: number
   };
 }
 
-export async function findAniLibriaMatch(title: string, originalTitle: string | null) {
-  const candidates = await searchAniLibertyCandidates(uniqueStrings([originalTitle, title]));
-  return candidates.find((candidate) => candidate.score >= 70)?.provider ?? null;
+export async function findAniLibriaMatch(title: string, originalTitle: string | null): Promise<PlayerProviderResult | null>;
+export async function findAniLibriaMatch(queries: string[]): Promise<PlayerProviderResult | null>;
+export async function findAniLibriaMatch(titleOrQueries: string | string[], originalTitle?: string | null) {
+  const queries = Array.isArray(titleOrQueries) ? titleOrQueries : uniqueStrings([originalTitle, titleOrQueries]);
+  const candidates = await searchAniLibertyCandidates(queries);
+  return candidates.find((candidate) => candidate.score >= ANILIBERTY_MIN_MATCH_SCORE)?.provider ?? null;
 }
 
 async function searchAniLiberty(queries: string[], episodeNumber: number): Promise<PlayerProviderResult[]> {
   const candidates = await searchAniLibertyCandidates(queries);
-  const selected = candidates.length > 0 ? candidates.slice(0, 5) : [];
+  const selected = candidates.filter((candidate) => candidate.score >= ANILIBERTY_MIN_MATCH_SCORE).slice(0, 5);
   const detailed = await Promise.all(
     selected.map((candidate) => fetchAniLibertyRelease(candidate.provider.providerTitleId, episodeNumber)),
   );
@@ -261,6 +266,24 @@ async function searchKodik(anime: { title: string; originalTitle: string | null;
   }
 
   return [...resultsById.values()].slice(0, 5).map((release) => mapKodikRelease(release, episodeNumber)).filter(Boolean);
+}
+
+function getAnimeSearchTitles(anime: {
+  title: string;
+  originalTitle: string | null;
+  titleRu?: string | null;
+  titleEn?: string | null;
+  titleJa?: string | null;
+  titleRomaji?: string | null;
+}) {
+  return uniqueStrings([
+    anime.titleRomaji,
+    anime.originalTitle,
+    anime.titleEn,
+    anime.titleRu,
+    anime.title,
+    anime.titleJa,
+  ]);
 }
 
 async function fetchKodikSearch(token: string, query: { shikimoriId?: number; title?: string }): Promise<KodikRelease[]> {

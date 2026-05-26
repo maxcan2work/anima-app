@@ -73,6 +73,11 @@ export async function searchCatalog(query: string) {
   return payload.map(mapShikimoriAnime);
 }
 
+export async function searchPlayableCatalog(query: string, provider: string) {
+  const results = await searchCatalog(query);
+  return filterPlayableCatalogResults(results, provider);
+}
+
 export async function browseCatalog(page: number, limit: number, order: string) {
   const safePage = Math.max(Math.trunc(page), 1);
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 30);
@@ -102,6 +107,14 @@ export async function browseCatalog(page: number, limit: number, order: string) 
     order: safeOrder,
     hasNextPage: payload.length === safeLimit,
     results: payload.map(mapShikimoriAnime),
+  };
+}
+
+export async function browsePlayableCatalog(page: number, limit: number, order: string, provider: string) {
+  const result = await browseCatalog(page, limit, order);
+  return {
+    ...result,
+    results: await filterPlayableCatalogResults(result.results, provider),
   };
 }
 
@@ -213,6 +226,30 @@ function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
     sourceUrl: anime.url ? `${SHIKIMORI_BASE_URL}${anime.url}` : `${SHIKIMORI_BASE_URL}/animes/${anime.id}`,
     airedOn: anime.aired_on ?? null,
   };
+}
+
+async function filterPlayableCatalogResults(results: CatalogSearchResult[], provider: string) {
+  if (provider !== 'anilibria') return results;
+
+  const checks = await Promise.all(
+    results.map(async (result) => ({
+      result,
+      match: await findAniLibriaMatch(getCatalogSearchTitles(result)),
+    })),
+  );
+
+  return checks.filter((item) => Boolean(item.match)).map((item) => item.result);
+}
+
+function getCatalogSearchTitles(result: CatalogSearchResult) {
+  return uniqueStrings([
+    result.titleRomaji,
+    result.originalTitle,
+    result.titleEn,
+    result.titleRu,
+    result.title,
+    result.titleJa,
+  ]);
 }
 
 function mapShikimoriGenres(genres: ShikimoriAnime['genres']) {

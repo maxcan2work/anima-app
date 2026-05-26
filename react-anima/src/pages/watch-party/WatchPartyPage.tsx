@@ -96,6 +96,7 @@ export function WatchPartyPage({
             className={styles.catalog}
             eyebrow={t('watchParty.title')}
             title={t('watchParty.chooseAnime')}
+            note={t('watchParty.anilibriaOnly')}
             browseResults={catalog.partyCatalogResults}
             browsePage={catalog.partyCatalogPage}
             browseHasNext={catalog.partyCatalogHasNext}
