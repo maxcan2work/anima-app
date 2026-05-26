@@ -286,7 +286,7 @@ export function ProfilePage() {
               />
             </label>
             <div className={styles.diarySorts} aria-label={t('profile.sort.label')}>
-              <Tooltip label={t('profile.sort.reviewed')} placement="bottom">
+              <Tooltip key={`reviewed-${reviewedOnly}`} label={t('profile.sort.reviewed')} placement="bottom">
                 <button
                   className={clsx(styles.iconSortButton, reviewedOnly && styles.activeSort)}
                   type="button"
