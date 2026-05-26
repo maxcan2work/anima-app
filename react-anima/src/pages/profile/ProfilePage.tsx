@@ -21,6 +21,7 @@ import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import { animeRouteSlug } from '@shared/navigation';
+import { Tooltip } from '@shared/ui/Tooltip';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
@@ -452,12 +453,16 @@ function ShikimoriIntegration() {
           </span>
         </a>
         <div className={styles.connectedActions}>
-          <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing} data-tooltip={importing ? t('profile.shikimori.importing') : t('profile.shikimori.importList')}>
-            {importing ? <span className={styles.buttonLoader} aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
-          </button>
-          <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting} data-tooltip={disconnecting ? t('profile.shikimori.disconnecting') : t('profile.shikimori.disconnect')}>
-            <img src={detachIcon} alt="" aria-hidden="true" />
-          </button>
+          <Tooltip className={styles.iconTooltip} label={importing ? t('profile.shikimori.importing') : t('profile.shikimori.importList')} placement="top">
+            <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing}>
+              {importing ? <span className={styles.buttonLoader} aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
+            </button>
+          </Tooltip>
+          <Tooltip className={styles.iconTooltip} label={disconnecting ? t('profile.shikimori.disconnecting') : t('profile.shikimori.disconnect')} placement="top" align="end">
+            <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting}>
+              <img src={detachIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </div>
     );

@@ -37,10 +37,33 @@
   transform: translate3d(-50%, 4px, 0);
 }
 
+.top.start .content,
+.bottom.start .content {
+  right: auto;
+  left: 0;
+  transform: translate3d(0, 4px, 0);
+}
+
+.top.end .content,
+.bottom.end .content {
+  right: 0;
+  left: auto;
+  transform: translate3d(0, 4px, 0);
+}
+
 .top:not(.disabled):hover .content,
 .top:not(.disabled):focus-within .content,
 .top.open .content {
   transform: translate3d(-50%, 0, 0);
+}
+
+.top.start:not(.disabled):hover .content,
+.top.start:not(.disabled):focus-within .content,
+.top.start.open .content,
+.top.end:not(.disabled):hover .content,
+.top.end:not(.disabled):focus-within .content,
+.top.end.open .content {
+  transform: translate3d(0, 0, 0);
 }
 
 .right .content {
@@ -61,10 +84,24 @@
   transform: translate3d(-50%, -4px, 0);
 }
 
+.bottom.start .content,
+.bottom.end .content {
+  transform: translate3d(0, -4px, 0);
+}
+
 .bottom:not(.disabled):hover .content,
 .bottom:not(.disabled):focus-within .content,
 .bottom.open .content {
   transform: translate3d(-50%, 0, 0);
+}
+
+.bottom.start:not(.disabled):hover .content,
+.bottom.start:not(.disabled):focus-within .content,
+.bottom.start.open .content,
+.bottom.end:not(.disabled):hover .content,
+.bottom.end:not(.disabled):focus-within .content,
+.bottom.end.open .content {
+  transform: translate3d(0, 0, 0);
 }
 
 .left .content {
