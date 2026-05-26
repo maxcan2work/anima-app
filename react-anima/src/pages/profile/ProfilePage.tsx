@@ -121,7 +121,9 @@ export function ProfilePage() {
 
     return date.toISOString();
   };
-  const getStartedDate = (entry: ServerWatchEntry) => entry.startedAt ?? entry.createdAt;
+  const getStartedDate = (entry: ServerWatchEntry) => (
+    entry.startedAt ?? (entry.status === 'PLANNED' ? null : entry.createdAt)
+  );
   const getCompletedDate = (entry: ServerWatchEntry) => (
     entry.completedAt ?? (entry.status === 'COMPLETED' ? entry.updatedAt : null)
   );
@@ -136,7 +138,7 @@ export function ProfilePage() {
   const beginDateEdit = (entry: ServerWatchEntry) => {
     if (activeDateEntryId !== entry.id) {
       setDateDraft({
-        startedAt: formatDateInput(entry.startedAt ?? entry.createdAt),
+        startedAt: formatDateInput(getStartedDate(entry)),
         completedAt: formatDateInput(entry.completedAt ?? (entry.status === 'COMPLETED' ? entry.updatedAt : null)),
       });
     }
