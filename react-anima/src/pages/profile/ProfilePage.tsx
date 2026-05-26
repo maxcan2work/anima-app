@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useState } from 'react';
-import { fromServerWatchStatus, type WatchStatus } from '@anima/core';
+import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from '@anima/core';
 import detachIcon from '@assets/detach.svg';
 import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
@@ -16,7 +16,7 @@ import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
     { status: 'watching', label: t('profile.status.watching'), count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
     { status: 'completed', label: t('profile.status.completed'), count: entries.filter((entry) => entry.status === 'COMPLETED').length, icon: profileCheckIcon },
@@ -64,7 +64,7 @@ export function ProfilePage() {
             <article key={entry.id} className={styles.diaryRow}>
               {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
               <span>
-                <strong>{entry.anime?.title ?? entry.animeId}</strong>
+                <strong>{entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId}</strong>
                 <small>{getStatusLabel(fromServerWatchStatus(entry.status))} · {t('profile.episode', { episode: entry.currentEpisode })}</small>
                 {entry.review ? <small className={styles.diaryReview}>{entry.review}</small> : null}
               </span>

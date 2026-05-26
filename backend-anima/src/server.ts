@@ -47,6 +47,10 @@ type WatchPartyAnime = {
   id: string;
   title: string;
   originalTitle: string | null;
+  titleRu: string | null;
+  titleEn: string | null;
+  titleJa: string | null;
+  titleRomaji: string | null;
   episodes: number;
   posterUrl: string | null;
   shikimoriId: number | null;
@@ -149,6 +153,7 @@ app.get('/me', requireAuth, async (request, response, next) => {
             id: true,
             providerUserId: true,
             accessToken: true,
+            refreshToken: true,
             updatedAt: true,
           },
           take: 1,
@@ -403,6 +408,10 @@ app.post('/me/random-history', requireAuth, async (request, response) => {
       providerId: Math.trunc(providerId),
       title: parseRequiredText(request.body.title, 'title'),
       originalTitle: parseRequiredText(request.body.originalTitle, 'originalTitle'),
+      titleRu: parseNullableText(request.body.titleRu),
+      titleEn: parseNullableText(request.body.titleEn),
+      titleJa: parseNullableText(request.body.titleJa),
+      titleRomaji: parseNullableText(request.body.titleRomaji),
       episodes: Math.max(Math.trunc(Number(request.body.episodes) || 1), 1),
       posterUrl: parseNullableText(request.body.posterUrl),
       kind: parseNullableText(request.body.kind),
@@ -414,6 +423,10 @@ app.post('/me/random-history', requireAuth, async (request, response) => {
     update: {
       title: parseRequiredText(request.body.title, 'title'),
       originalTitle: parseRequiredText(request.body.originalTitle, 'originalTitle'),
+      titleRu: parseNullableText(request.body.titleRu),
+      titleEn: parseNullableText(request.body.titleEn),
+      titleJa: parseNullableText(request.body.titleJa),
+      titleRomaji: parseNullableText(request.body.titleRomaji),
       episodes: Math.max(Math.trunc(Number(request.body.episodes) || 1), 1),
       posterUrl: parseNullableText(request.body.posterUrl),
       kind: parseNullableText(request.body.kind),

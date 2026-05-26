@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useState } from 'react';
+import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import randomDiceIcon from '@assets/random-dice.svg';
 import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
@@ -28,7 +29,7 @@ export function RandomAnimePage() {
     handleClearRandomHistory,
     handleDeleteRandomHistoryEntry,
   } = useRandomAnime(user);
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [removingHistoryKeys, setRemovingHistoryKeys] = useState<string[]>([]);
   const [clearAnimating, setClearAnimating] = useState(false);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
@@ -108,19 +109,20 @@ export function RandomAnimePage() {
               randomHistory.map((item) => {
                 const key = getRandomHistoryKey(item);
                 const removing = removingHistoryKeys.includes(key);
+                const title = getLocalizedAnimeTitle(item, language);
                 return (
                   <div key={key} className={clsx(styles.historyRow, removing && styles.historyRowRemoving)}>
                     <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button" disabled={removing || historyBusy}>
                       {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
                       <span>
-                        <strong>{item.title}</strong>
+                        <strong>{title}</strong>
                         <small>{item.score ?? t('common.noScore')}</small>
                       </span>
                     </button>
                     <button
                       className={styles.historyDelete}
                       type="button"
-                      aria-label={t('random.removeFromHistory', { title: item.title })}
+                      aria-label={t('random.removeFromHistory', { title })}
                       disabled={removing || historyBusy || deletingRandomKey === key}
                       onClick={() => handleDeleteHistoryEntry(item)}
                     >
@@ -143,8 +145,8 @@ export function RandomAnimePage() {
         <button className={styles.card} onClick={() => openCatalogAnime(randomAnime)} type="button">
           {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : null}
           <div>
-            <strong>{randomAnime.title}</strong>
-            <small>{randomAnime.originalTitle}</small>
+            <strong>{getLocalizedAnimeTitle(randomAnime, language)}</strong>
+            {getAnimeOriginalDisplayTitle(randomAnime, language) ? <small>{getAnimeOriginalDisplayTitle(randomAnime, language)}</small> : null}
             <small>
               {randomAnime.episodes} {t('common.episodesShort')} · {randomAnime.score ?? t('common.noScore')}
             </small>

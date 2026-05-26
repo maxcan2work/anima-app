@@ -1,9 +1,10 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
+import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import type { AnimeTitle } from '@/data';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
 
@@ -39,6 +40,7 @@ export function AnimeHero({
   sidebarExtra,
   footerExtra,
 }: AnimeHeroProps) {
+  const { language } = useI18n();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
@@ -51,6 +53,8 @@ export function AnimeHero({
     ? preferredPlayers[0]
     : selectedProviderPlayer ?? preferredPlayers[0] ?? players[0];
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
+  const animeTitle = getLocalizedAnimeTitle(anime, language);
+  const animeSecondaryTitle = getAnimeOriginalDisplayTitle(anime, language);
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -157,8 +161,8 @@ export function AnimeHero({
         <div className={styles.detailsPoster}>
           <img src={anime.poster} alt="" />
           <div>
-            <p className="eyebrow">{anime.originalTitle}</p>
-            <h2>{anime.title}</h2>
+            {animeSecondaryTitle ? <p className="eyebrow">{animeSecondaryTitle}</p> : null}
+            <h2>{animeTitle}</h2>
           </div>
         </div>
         <div className={styles.detailsContent}>

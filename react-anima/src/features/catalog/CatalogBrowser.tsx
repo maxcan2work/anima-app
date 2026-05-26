@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import type { CatalogSearchResult } from '@/api';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import styles from './CatalogBrowser.module.css';
@@ -38,7 +39,7 @@ export function CatalogBrowser({
   onOpenAnime,
   onPageChange,
 }: CatalogBrowserProps) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isSearching = searchQuery.trim().length >= 2;
   const visibleResults = isSearching ? searchResults : browseResults;
@@ -98,8 +99,8 @@ export function CatalogBrowser({
             >
               {result.posterUrl ? <img src={result.posterUrl} alt="" /> : null}
               <div>
-                <strong>{result.title}</strong>
-                <small>{result.originalTitle}</small>
+                <strong>{getLocalizedAnimeTitle(result, language)}</strong>
+                {getAnimeOriginalDisplayTitle(result, language) ? <small>{getAnimeOriginalDisplayTitle(result, language)}</small> : null}
                 <small>
                   {result.episodes} {t('common.episodesShort')} · {result.score ?? t('common.noScore')}
                 </small>

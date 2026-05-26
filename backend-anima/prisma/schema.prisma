@@ -50,6 +50,10 @@ model Anime {
   id            String      @id
   title         String
   originalTitle String?
+  titleRu       String?
+  titleEn       String?
+  titleJa       String?
+  titleRomaji   String?
   episodes      Int
   posterUrl     String?
   shikimoriId   Int?        @unique
@@ -106,6 +110,10 @@ model UserRandomAnime {
   providerId    Int
   title         String
   originalTitle String
+  titleRu       String?
+  titleEn       String?
+  titleJa       String?
+  titleRomaji   String?
   episodes      Int
   posterUrl     String?
   kind          String?

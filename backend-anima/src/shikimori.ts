@@ -51,7 +51,14 @@ type LinkedShikimoriAccount = {
   id: string;
   providerUserId: string;
   accessToken: string | null;
+  refreshToken: string | null;
 };
+
+class ShikimoriRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
 
 export function getShikimoriAuthUrl(userId: string) {
   assertShikimoriConfigured();
@@ -149,12 +156,13 @@ export async function getLinkedShikimoriProfile(account: LinkedShikimoriAccount)
   let avatarUrl: string | null = null;
 
   if (account.accessToken) {
-    const profile = await fetchShikimoriProfile(account.accessToken).catch((error) => {
+    const linkedProfile = await fetchLinkedShikimoriProfile(account).catch((error) => {
       console.warn('Failed to refresh linked Shikimori profile', error);
       return null;
     });
 
-    if (profile) {
+    if (linkedProfile) {
+      const { profile } = linkedProfile;
       avatarUrl = getShikimoriAvatarUrl(profile);
 
       if (/^\d+$/.test(nickname) || nickname !== profile.nickname) {
@@ -188,8 +196,8 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
     throw new Error('Shikimori account is not connected');
   }
 
-  const profile = await fetchShikimoriProfile(account.accessToken);
-  const rates = await fetchShikimoriAnimeRates(account.accessToken, profile.id);
+  const { accessToken, profile } = await fetchLinkedShikimoriProfile(account);
+  const rates = await fetchShikimoriAnimeRates(accessToken, profile.id);
   let imported = 0;
   let updated = 0;
   let skipped = 0;
@@ -320,10 +328,61 @@ async function fetchShikimoriProfile(accessToken: string) {
   });
 
   if (!profileResponse.ok) {
-    throw new Error(`Shikimori profile request failed: ${profileResponse.status}`);
+    throw new ShikimoriRequestError(`Shikimori profile request failed: ${profileResponse.status}`, profileResponse.status);
   }
 
   return (await profileResponse.json()) as ShikimoriProfileResponse;
+}
+
+async function fetchLinkedShikimoriProfile(account: LinkedShikimoriAccount) {
+  if (!account.accessToken) {
+    throw new Error('Shikimori account is not connected');
+  }
+
+  try {
+    const profile = await fetchShikimoriProfile(account.accessToken);
+    return { accessToken: account.accessToken, profile };
+  } catch (error) {
+    if (!(error instanceof ShikimoriRequestError) || error.status !== 401 || !account.refreshToken) {
+      throw error;
+    }
+
+    const token = await refreshShikimoriToken(account.refreshToken);
+    await prisma.authAccount.update({
+      where: { id: account.id },
+      data: {
+        accessToken: token.access_token,
+        refreshToken: token.refresh_token ?? account.refreshToken,
+      },
+    });
+
+    const profile = await fetchShikimoriProfile(token.access_token);
+    return { accessToken: token.access_token, profile };
+  }
+}
+
+async function refreshShikimoriToken(refreshToken: string) {
+  assertShikimoriConfigured();
+
+  const tokenResponse = await fetch(`${config.SHIKIMORI_BASE_URL}/oauth/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'Anima',
+    },
+    body: new URLSearchParams({
+      client_id: config.SHIKIMORI_CLIENT_ID!,
+      client_secret: config.SHIKIMORI_CLIENT_SECRET!,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new ShikimoriRequestError(`Shikimori token refresh failed: ${tokenResponse.status}`, tokenResponse.status);
+  }
+
+  return (await tokenResponse.json()) as ShikimoriTokenResponse;
 }
 
 async function fetchShikimoriAnimeRates(accessToken: string, userId: number) {

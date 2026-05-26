@@ -10,6 +10,10 @@ export type AnimeTitle = {
   id: string;
   title: string;
   originalTitle: string;
+  titleRu: string | null;
+  titleEn: string | null;
+  titleJa: string | null;
+  titleRomaji: string | null;
   year: number;
   episodes: number;
   studio: string;
@@ -26,6 +30,10 @@ export type ServerAnimeLike = {
   id: string;
   title: string;
   originalTitle: string | null;
+  titleRu?: string | null;
+  titleEn?: string | null;
+  titleJa?: string | null;
+  titleRomaji?: string | null;
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
@@ -40,6 +48,10 @@ export type CatalogSearchResultLike = {
   providerId: number;
   title: string;
   originalTitle: string;
+  titleRu?: string | null;
+  titleEn?: string | null;
+  titleJa?: string | null;
+  titleRomaji?: string | null;
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
@@ -54,6 +66,17 @@ export type ServerRandomHistoryEntryLike = CatalogSearchResultLike & {
   updatedAt: string;
 };
 
+export type AnimeTitleLanguage = 'ru' | 'en' | 'ja';
+
+export type LocalizedAnimeTitleLike = {
+  title: string;
+  originalTitle?: string | null;
+  titleRu?: string | null;
+  titleEn?: string | null;
+  titleJa?: string | null;
+  titleRomaji?: string | null;
+};
+
 const DEFAULT_POSTER_URL = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80';
 const DEFAULT_BACKDROP_URL = 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80';
 
@@ -64,6 +87,10 @@ export function mapServerAnime(anime: ServerAnimeLike): AnimeTitle {
     id: anime.id,
     title: anime.title,
     originalTitle: anime.originalTitle ?? anime.title,
+    titleRu: anime.titleRu ?? null,
+    titleEn: anime.titleEn ?? null,
+    titleJa: anime.titleJa ?? null,
+    titleRomaji: anime.titleRomaji ?? anime.originalTitle ?? null,
     year: Number.isFinite(year) && year > 0 ? year : new Date().getFullYear(),
     episodes: anime.episodes || 1,
     studio: anime.sourceUrl ? 'Shikimori' : 'Anima',
@@ -111,6 +138,10 @@ export function mapRandomHistoryEntry<T extends ServerRandomHistoryEntryLike>(en
     providerId: entry.providerId,
     title: entry.title,
     originalTitle: entry.originalTitle,
+    titleRu: entry.titleRu ?? null,
+    titleEn: entry.titleEn ?? null,
+    titleJa: entry.titleJa ?? null,
+    titleRomaji: entry.titleRomaji ?? null,
     episodes: entry.episodes,
     posterUrl: entry.posterUrl,
     kind: entry.kind,
@@ -128,6 +159,28 @@ export function mergeAnimeLibrary(current: AnimeTitle[], incoming: AnimeTitle[])
   }
 
   return [...byId.values()].sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+}
+
+export function getLocalizedAnimeTitle(anime: LocalizedAnimeTitleLike, language: AnimeTitleLanguage) {
+  if (language === 'ru') {
+    return firstTitle(anime.titleRu, anime.title, anime.titleRomaji, anime.titleEn, anime.titleJa, anime.originalTitle);
+  }
+
+  if (language === 'ja') {
+    return firstTitle(anime.titleJa, anime.titleRomaji, anime.originalTitle, anime.titleEn, anime.titleRu, anime.title);
+  }
+
+  return firstTitle(anime.titleEn, anime.titleRomaji, anime.originalTitle, anime.titleRu, anime.titleJa, anime.title);
+}
+
+export function getAnimeOriginalDisplayTitle(anime: LocalizedAnimeTitleLike, language: AnimeTitleLanguage) {
+  const primary = getLocalizedAnimeTitle(anime, language);
+  const secondary = firstTitle(anime.titleRomaji, anime.titleEn, anime.titleJa, anime.titleRu, anime.originalTitle, anime.title);
+  return secondary === primary ? '' : secondary;
+}
+
+function firstTitle(...titles: Array<string | null | undefined>) {
+  return titles.map((title) => title?.trim()).find(Boolean) ?? '';
 }
 
 export function upsertDiaryEntry<T extends { id: string }>(entries: T[], entry: T) {

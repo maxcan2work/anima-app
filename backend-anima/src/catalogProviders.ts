@@ -14,6 +14,8 @@ type ShikimoriAnime = {
   mal_id?: number | null;
   name: string;
   russian?: string | null;
+  english?: string | string[] | null;
+  japanese?: string | string[] | null;
   image?: ShikimoriImage | null;
   url?: string | null;
   kind?: string | null;
@@ -32,6 +34,10 @@ export type CatalogSearchResult = {
   providerId: number;
   title: string;
   originalTitle: string;
+  titleRu: string | null;
+  titleEn: string | null;
+  titleJa: string | null;
+  titleRomaji: string | null;
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
@@ -119,6 +125,10 @@ export async function importShikimoriAnime(providerId: number) {
     update: {
       title: anime.title,
       originalTitle: anime.originalTitle,
+      titleRu: anime.titleRu,
+      titleEn: anime.titleEn,
+      titleJa: anime.titleJa,
+      titleRomaji: anime.titleRomaji,
       episodes: anime.episodes,
       posterUrl: anime.posterUrl,
       shikimoriId: anime.providerId,
@@ -134,6 +144,10 @@ export async function importShikimoriAnime(providerId: number) {
       id: `shikimori-${anime.providerId}`,
       title: anime.title,
       originalTitle: anime.originalTitle,
+      titleRu: anime.titleRu,
+      titleEn: anime.titleEn,
+      titleJa: anime.titleJa,
+      titleRomaji: anime.titleRomaji,
       episodes: anime.episodes,
       posterUrl: anime.posterUrl,
       shikimoriId: anime.providerId,
@@ -175,11 +189,20 @@ export async function importShikimoriAnime(providerId: number) {
 }
 
 function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
+  const titleRu = cleanText(anime.russian);
+  const titleRomaji = cleanText(anime.name);
+  const titleEn = firstTitle(anime.english);
+  const titleJa = firstTitle(anime.japanese);
+
   return {
     provider: 'shikimori',
     providerId: anime.id,
-    title: anime.russian || anime.name,
-    originalTitle: anime.name,
+    title: titleRu || titleRomaji || titleEn || titleJa || `Shikimori ${anime.id}`,
+    originalTitle: titleRomaji || titleEn || titleJa || titleRu || `Shikimori ${anime.id}`,
+    titleRu,
+    titleEn,
+    titleJa,
+    titleRomaji,
     episodes: anime.episodes && anime.episodes > 0 ? anime.episodes : 1,
     posterUrl: buildShikimoriImageUrl(anime.image),
     kind: anime.kind ?? null,
@@ -202,6 +225,19 @@ function mapShikimoriGenres(genres: ShikimoriAnime['genres']) {
 
 function uniqueStrings(values: Array<string | null | undefined>) {
   return [...new Set(values.map((value) => value?.trim()).filter(Boolean))] as string[];
+}
+
+function firstTitle(value: string | string[] | null | undefined) {
+  if (Array.isArray(value)) {
+    return value.map(cleanText).find(Boolean) ?? null;
+  }
+
+  return cleanText(value);
+}
+
+function cleanText(value: string | null | undefined) {
+  const text = value?.trim();
+  return text && text.length > 0 ? text : null;
 }
 
 function buildShikimoriImageUrl(image: ShikimoriImage | null | undefined) {

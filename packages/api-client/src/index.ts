@@ -28,6 +28,10 @@ export type ServerWatchEntry = {
     id: string;
     title: string;
     originalTitle: string | null;
+    titleRu: string | null;
+    titleEn: string | null;
+    titleJa: string | null;
+    titleRomaji: string | null;
     episodes: number;
     posterUrl: string | null;
   };
@@ -54,6 +58,10 @@ export type ServerAnime = {
   id: string;
   title: string;
   originalTitle: string | null;
+  titleRu: string | null;
+  titleEn: string | null;
+  titleJa: string | null;
+  titleRomaji: string | null;
   episodes: number;
   posterUrl: string | null;
   shikimoriId: number | null;
@@ -71,6 +79,10 @@ export type CatalogSearchResult = {
   providerId: number;
   title: string;
   originalTitle: string;
+  titleRu: string | null;
+  titleEn: string | null;
+  titleJa: string | null;
+  titleRomaji: string | null;
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
