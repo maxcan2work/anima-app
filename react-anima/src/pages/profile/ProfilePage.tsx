@@ -13,7 +13,7 @@ import profileFriendsIcon from '@assets/circled-group.svg';
 import profileStatsIcon from '@assets/stats.svg';
 import reviewIcon from '@assets/chat-audio.svg';
 import scoreIcon from '@assets/star.svg';
-import settingsIcon from '@assets/settings.svg';
+import SettingsIcon from '@assets/settings.svg?react';
 import shikimoriIcon from '@assets/shikimori.png';
 import trashIcon from '@assets/trash.svg';
 import episodeIcon from '@assets/tv-alt.svg';
@@ -535,7 +535,7 @@ export function ProfilePage() {
               onClick={() => setSidebarMode('settings')}
               aria-label={t('profile.profileSettings')}
             >
-              <img src={settingsIcon} alt="" aria-hidden="true" />
+              <SettingsIcon aria-hidden="true" />
             </button>
           </Tooltip>
           <Tooltip className={styles.sidebarActionTooltip} label={t('profile.logout')} placement="top" align="end">

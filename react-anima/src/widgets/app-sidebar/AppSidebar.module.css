@@ -51,7 +51,7 @@
   font-weight: 900;
 }
 
-.toggle img {
+.toggle svg {
   width: 20px;
   height: 20px;
 }
@@ -109,7 +109,8 @@
   font-weight: 900;
 }
 
-.navIcon img {
+.navIcon img,
+.navIcon svg {
   width: 22px;
   height: 22px;
   object-fit: contain;

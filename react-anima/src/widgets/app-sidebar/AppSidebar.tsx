@@ -1,12 +1,13 @@
+import type { ComponentType, SVGProps } from 'react';
 import clsx from 'clsx';
 import discordIcon from '@assets/discord.svg';
-import musicNoteIcon from '@assets/music-note.svg';
-import nekoIcon from '@assets/neko.svg';
-import randomDiceIcon from '@assets/random-dice.svg';
-import sidebarExpandIcon from '@assets/sidebar-expand.svg';
-import sidebarShrinkIcon from '@assets/sidebar-shrink.svg';
-import settingsIcon from '@assets/settings.svg';
-import watchPartyIcon from '@assets/watch-party.svg';
+import MusicNoteIcon from '@assets/music-note.svg?react';
+import RandomDiceIcon from '@assets/random-dice.svg?react';
+import SidebarExpandIcon from '@assets/sidebar-expand.svg?react';
+import SidebarShrinkIcon from '@assets/sidebar-shrink.svg?react';
+import SettingsIcon from '@assets/settings.svg?react';
+import WatchPartyIcon from '@assets/watch-party.svg?react';
+import WatchIcon from '@assets/youtube.svg?react';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
@@ -40,14 +41,14 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           data-tooltip={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
-          <img src={collapsed ? sidebarExpandIcon : sidebarShrinkIcon} alt="" aria-hidden="true" />
+          {collapsed ? <SidebarExpandIcon aria-hidden="true" /> : <SidebarShrinkIcon aria-hidden="true" />}
         </button>
       </div>
 
       <nav className={styles.nav} aria-label={t('sidebar.sections')}>
         <SideNavButton
           active={view === 'watch'}
-          icon={nekoIcon}
+          icon={WatchIcon}
           title={t('sidebar.watch')}
           description={t('sidebar.watchDescription')}
           collapsed={collapsed}
@@ -55,7 +56,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         />
         <SideNavButton
           active={view === 'random'}
-          icon={randomDiceIcon}
+          icon={RandomDiceIcon}
           title={t('sidebar.random')}
           description={t('sidebar.randomDescription')}
           collapsed={collapsed}
@@ -63,7 +64,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         />
         <SideNavButton
           active={view === 'watchParty'}
-          icon={watchPartyIcon}
+          icon={WatchPartyIcon}
           title={t('sidebar.party')}
           description={t('sidebar.partyDescription')}
           collapsed={collapsed}
@@ -71,7 +72,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         />
         <SideNavButton
           disabled
-          icon={musicNoteIcon}
+          icon={MusicNoteIcon}
           title={t('sidebar.opening')}
           description={t('sidebar.openingDescription')}
           collapsed={collapsed}
@@ -87,7 +88,7 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
           onClick={() => requestRoute('/settings', 'settings')}
         >
           <span className={styles.navIcon} aria-hidden="true">
-            <img src={settingsIcon} alt="" />
+            <SettingsIcon />
           </span>
           <span className={styles.navCopy}>
             <span>{t('sidebar.settings')}</span>
@@ -151,7 +152,7 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: ()
 function SideNavButton({
   active,
   disabled,
-  icon,
+  icon: Icon,
   title,
   description,
   collapsed,
@@ -159,7 +160,7 @@ function SideNavButton({
 }: {
   active?: boolean;
   disabled?: boolean;
-  icon: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   title: string;
   description: string;
   collapsed: boolean;
@@ -175,7 +176,7 @@ function SideNavButton({
       data-tooltip={collapsed ? title : undefined}
     >
       <span className={styles.navIcon} aria-hidden="true">
-        <img src={icon} alt="" />
+        <Icon />
       </span>
       <span className={styles.navCopy}>
         <span>{title}</span>

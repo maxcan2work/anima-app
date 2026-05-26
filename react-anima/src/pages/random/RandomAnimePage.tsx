@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useState } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
-import randomDiceIcon from '@assets/random-dice.svg';
+import RandomDiceIcon from '@assets/random-dice.svg?react';
 import trashIcon from '@assets/trash.svg';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
@@ -136,7 +136,7 @@ export function RandomAnimePage() {
         </>
       )}
     >
-      <img className={styles.dice} src={randomDiceIcon} alt="" aria-hidden="true" />
+      <RandomDiceIcon className={styles.dice} aria-hidden="true" />
       <p className="eyebrow">{t('random.eyebrow')}</p>
       <h2>{t('random.title')}</h2>
       <p>{t('random.description')}</p>

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useState } from 'react';
 import { AnimeHero } from '@pages/anime/AnimeHero';
-import watchPartyIcon from '@assets/watch-party.svg';
+import WatchPartyIcon from '@assets/watch-party.svg?react';
 import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
 import { mapServerAnime } from '@shared/animeMappers';
 import { useI18n } from '@shared/i18n/I18nProvider';
@@ -112,7 +112,7 @@ export function WatchPartyPage({
           />
         ) : (
           <div className={clsx(styles.stage, styles.waitingHost)}>
-            <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
+            <WatchPartyIcon className={styles.icon} aria-hidden="true" />
             <p className="eyebrow">{t('watchParty.title')}</p>
             <h2>{t('watchParty.room', { code })}</h2>
             <p>{t('watchParty.waitingHost')}</p>

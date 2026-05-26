@@ -502,7 +502,8 @@
   color: #f1e7dc;
 }
 
-.sidebarAction img {
+.sidebarAction img,
+.sidebarAction svg {
   width: 18px;
   height: 18px;
   object-fit: contain;

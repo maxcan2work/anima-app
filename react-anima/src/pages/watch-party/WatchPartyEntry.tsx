@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { checkWatchPartyRoom } from '@/api';
-import watchPartyIcon from '@assets/watch-party.svg';
+import WatchPartyIcon from '@assets/watch-party.svg?react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { normalizeWatchPartyCode } from '@shared/navigation';
 import { useToast } from '@shared/ui/ToastProvider';
@@ -54,7 +54,7 @@ export function WatchPartyEntry({
     <section className={styles.page}>
       <div className={styles.entry}>
         <header className={styles.header}>
-          <img className={styles.icon} src={watchPartyIcon} alt="" aria-hidden="true" />
+          <WatchPartyIcon className={styles.icon} aria-hidden="true" />
           <h2>{t('watchParty.title')}</h2>
         </header>
 
