@@ -31,12 +31,22 @@ export function useWatchPartyRoom({
   const [connectionStatus, setConnectionStatus] = useState('');
   const socketRef = useRef<Socket | null>(null);
   const createRoomRef = useRef(createRoom);
+  const onCreateRoomConsumedRef = useRef(onCreateRoomConsumed);
+  const onLeaveRoomRef = useRef(onLeaveRoom);
   const ownParticipant = participants.find((participant) => participant.id === ownParticipantId);
   const isHost = Boolean(ownParticipant?.isHost);
 
   useEffect(() => {
     createRoomRef.current = createRoom;
   }, [createRoom]);
+
+  useEffect(() => {
+    onCreateRoomConsumedRef.current = onCreateRoomConsumed;
+  }, [onCreateRoomConsumed]);
+
+  useEffect(() => {
+    onLeaveRoomRef.current = onLeaveRoom;
+  }, [onLeaveRoom]);
 
   useEffect(() => {
     if (!code) {
@@ -65,7 +75,7 @@ export function useWatchPartyRoom({
         avatarUrl: user?.avatarUrl ?? null,
       });
       if (shouldCreateRoom) {
-        onCreateRoomConsumed();
+        onCreateRoomConsumedRef.current();
       }
     });
 
@@ -82,7 +92,7 @@ export function useWatchPartyRoom({
 
     socket.on('watch-party:kicked', () => {
       toast({ message: 'Тебя исключили из комнаты', variant: 'warning' });
-      onLeaveRoom();
+      onLeaveRoomRef.current();
     });
 
     socket.on('watch-party:join-rejected', (payload: { reason?: string }) => {
@@ -92,7 +102,7 @@ export function useWatchPartyRoom({
           ? 'Комната с таким кодом не найдена'
           : 'Не удалось войти в комнату';
       toast({ message, variant: 'warning' });
-      onLeaveRoom();
+      onLeaveRoomRef.current();
     });
 
     socketRef.current = socket;
@@ -101,7 +111,7 @@ export function useWatchPartyRoom({
       socketRef.current = null;
       socket.disconnect();
     };
-  }, [code, mapServerAnime, onCreateRoomConsumed, onLeaveRoom, toast, user?.avatarUrl, user?.displayName]);
+  }, [code, mapServerAnime, toast, user?.avatarUrl, user?.displayName]);
 
   function kickParticipant(participantId: string) {
     socketRef.current?.emit('watch-party:kick', { code, participantId });
