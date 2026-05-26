@@ -286,36 +286,41 @@ export function ProfilePage() {
         </div>
 
         <div className={styles.actions}>
-          <button
-            className={clsx(styles.sidebarAction, sidebarMode === 'stats' && styles.activeToggle)}
-            type="button"
-            onClick={() => setSidebarMode('stats')}
-            aria-label={t('profile.stats')}
-            data-tooltip={t('profile.stats')}
-          >
-            <img src={profileStatsIcon} alt="" aria-hidden="true" />
-          </button>
-          <button
-            className={clsx(styles.sidebarAction, sidebarMode === 'friends' && styles.activeToggle)}
-            type="button"
-            onClick={() => setSidebarMode('friends')}
-            aria-label={t('profile.friends')}
-            data-tooltip={t('profile.friends')}
-          >
-            <img src={profileFriendsIcon} alt="" aria-hidden="true" />
-          </button>
-          <button
-            className={clsx(styles.sidebarAction, sidebarMode === 'settings' && styles.activeToggle)}
-            type="button"
-            onClick={() => setSidebarMode('settings')}
-            aria-label={t('profile.profileSettings')}
-            data-tooltip={t('profile.profileSettings')}
-          >
-            <img src={settingsIcon} alt="" aria-hidden="true" />
-          </button>
-          <button className={clsx(styles.sidebarAction, styles.logout)} type="button" onClick={logout} aria-label={t('profile.logout')} data-tooltip={t('profile.logout')}>
-            <img src={leaveRoomIcon} alt="" aria-hidden="true" />
-          </button>
+          <Tooltip className={styles.sidebarActionTooltip} label={t('profile.stats')} placement="top" align="start">
+            <button
+              className={clsx(styles.sidebarAction, sidebarMode === 'stats' && styles.activeToggle)}
+              type="button"
+              onClick={() => setSidebarMode('stats')}
+              aria-label={t('profile.stats')}
+            >
+              <img src={profileStatsIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip className={styles.sidebarActionTooltip} label={t('profile.friends')} placement="top">
+            <button
+              className={clsx(styles.sidebarAction, sidebarMode === 'friends' && styles.activeToggle)}
+              type="button"
+              onClick={() => setSidebarMode('friends')}
+              aria-label={t('profile.friends')}
+            >
+              <img src={profileFriendsIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip className={styles.sidebarActionTooltip} label={t('profile.profileSettings')} placement="top">
+            <button
+              className={clsx(styles.sidebarAction, sidebarMode === 'settings' && styles.activeToggle)}
+              type="button"
+              onClick={() => setSidebarMode('settings')}
+              aria-label={t('profile.profileSettings')}
+            >
+              <img src={settingsIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip className={styles.sidebarActionTooltip} label={t('profile.logout')} placement="top" align="end">
+            <button className={clsx(styles.sidebarAction, styles.logout)} type="button" onClick={logout} aria-label={t('profile.logout')}>
+              <img src={leaveRoomIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </aside>
     </section>
