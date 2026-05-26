@@ -50,6 +50,13 @@ export function ProfilePage() {
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
+  const getEntryStatusLabel = (entry: ServerWatchEntry) => {
+    const status = fromServerWatchStatus(entry.status);
+    const label = getStatusLabel(status);
+    const totalViews = Math.max((entry.rewatches ?? 0) + 1, 1);
+
+    return status === 'completed' && totalViews > 1 ? `${label} x${totalViews}` : label;
+  };
   const stopDiaryAction = (event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
     event.stopPropagation();
   };
@@ -97,6 +104,7 @@ export function ProfilePage() {
         status: entry.status,
         currentEpisode: entry.currentEpisode,
         score,
+        rewatches: entry.rewatches,
         startedAt: entry.startedAt,
         completedAt: entry.completedAt,
         review: entry.review,
@@ -147,7 +155,7 @@ export function ProfilePage() {
               <span>
                 <strong>{entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId}</strong>
                 <small className={styles.diaryProgress}>
-                  <span>{getStatusLabel(fromServerWatchStatus(entry.status))}</span>
+                  <span>{getEntryStatusLabel(entry)}</span>
                   <span>
                     <img src={episodeIcon} alt="" aria-hidden="true" />
                     {t('profile.episode', { episode: entry.currentEpisode })}

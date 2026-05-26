@@ -20,6 +20,7 @@ export type ServerWatchEntry = {
   status: 'PLANNED' | 'WATCHING' | 'COMPLETED' | 'DROPPED';
   currentEpisode: number;
   score: number | null;
+  rewatches: number;
   startedAt: string | null;
   completedAt: string | null;
   review: string | null;
@@ -101,6 +102,7 @@ export type SaveAnimeProgressPayload = {
   status: string;
   currentEpisode: number;
   score?: number | null;
+  rewatches?: number | null;
   startedAt?: string | null;
   completedAt?: string | null;
   review?: string | null;

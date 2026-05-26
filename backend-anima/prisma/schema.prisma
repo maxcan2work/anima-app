@@ -92,6 +92,7 @@ model UserAnime {
   status         WatchStatus @default(PLANNED)
   currentEpisode Int         @default(1)
   score          Int?
+  rewatches      Int         @default(0)
   startedAt      DateTime?
   completedAt    DateTime?
   review         String?

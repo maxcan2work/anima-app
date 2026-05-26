@@ -36,6 +36,7 @@ type ShikimoriUserRate = {
   status: 'planned' | 'watching' | 'rewatching' | 'completed' | 'on_hold' | 'dropped';
   score?: number | null;
   episodes?: number | null;
+  rewatches?: number | null;
   text?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -237,6 +238,7 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
         status: toPrismaWatchStatus(fromShikimoriWatchStatus(rate.status)),
         currentEpisode: Math.max(Math.trunc(rate.episodes ?? 1), 1),
         score: rate.score && rate.score > 0 ? Math.trunc(rate.score) : null,
+        rewatches: Math.max(Math.trunc(rate.rewatches ?? 0), 0),
         review: rate.text?.trim() || null,
       };
 

@@ -316,9 +316,20 @@ app.put('/me/anime/:animeId', requireAuth, async (request, response) => {
   const status = parseWatchStatus(request.body.status);
   const currentEpisode = clampEpisode(Number(request.body.currentEpisode ?? 1), anime.episodes);
   const score = request.body.score == null ? null : clampScore(Number(request.body.score));
+  const rewatchesProvided = Object.prototype.hasOwnProperty.call(request.body ?? {}, 'rewatches');
+  const rewatches = rewatchesProvided ? clampRewatches(Number(request.body.rewatches)) : undefined;
   const startedAt = parseNullableDate(request.body.startedAt);
   const completedAt = parseNullableDate(request.body.completedAt);
   const review = parseNullableText(request.body.review);
+  const updateData = {
+    status,
+    currentEpisode,
+    score,
+    startedAt,
+    completedAt,
+    review,
+    ...(rewatches !== undefined ? { rewatches } : {}),
+  };
 
   const entry = await prisma.userAnime.upsert({
     where: {
@@ -333,18 +344,12 @@ app.put('/me/anime/:animeId', requireAuth, async (request, response) => {
       status,
       currentEpisode,
       score,
+      rewatches: rewatches ?? 0,
       startedAt,
       completedAt,
       review,
     },
-    update: {
-      status,
-      currentEpisode,
-      score,
-      startedAt,
-      completedAt,
-      review,
-    },
+    update: updateData,
     include: { anime: true },
   });
 
@@ -652,6 +657,11 @@ function clampEpisode(value: number, max: number) {
 function clampScore(value: number) {
   if (!Number.isFinite(value)) return null;
   return Math.min(Math.max(Math.trunc(value), 1), 10);
+}
+
+function clampRewatches(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(Math.trunc(value), 0);
 }
 
 function parseNullableDate(value: unknown) {
