@@ -24,6 +24,7 @@ export type ServerWatchEntry = {
   startedAt: string | null;
   completedAt: string | null;
   review: string | null;
+  createdAt: string;
   updatedAt: string;
   anime?: {
     id: string;

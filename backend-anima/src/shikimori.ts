@@ -239,6 +239,8 @@ export async function importLinkedShikimoriAnimeList(userId: string) {
         currentEpisode: Math.max(Math.trunc(rate.episodes ?? 1), 1),
         score: rate.score && rate.score > 0 ? Math.trunc(rate.score) : null,
         rewatches: Math.max(Math.trunc(rate.rewatches ?? 0), 0),
+        startedAt: parseShikimoriDate(rate.created_at),
+        completedAt: rate.status === 'completed' ? parseShikimoriDate(rate.updated_at) : null,
         review: rate.text?.trim() || null,
       };
 
@@ -308,6 +310,12 @@ function sleep(ms: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function parseShikimoriDate(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getShikimoriProfileUrl(nickname: string) {

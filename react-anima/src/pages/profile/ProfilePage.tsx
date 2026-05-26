@@ -58,6 +58,18 @@ export function ProfilePage() {
 
     return status === 'completed' && totalViews > 1 ? `${label} x${totalViews}` : label;
   };
+  const formatDiaryDate = (value: string | null) => {
+    if (!value) return '';
+    return new Intl.DateTimeFormat(language === 'ja' ? 'ja-JP' : language === 'en' ? 'en-US' : 'ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+    }).format(new Date(value));
+  };
+  const getStartedDate = (entry: ServerWatchEntry) => entry.startedAt ?? entry.createdAt;
+  const getCompletedDate = (entry: ServerWatchEntry) => (
+    entry.completedAt ?? (entry.status === 'COMPLETED' ? entry.updatedAt : null)
+  );
   const stopDiaryAction = (event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
     event.stopPropagation();
   };
@@ -152,6 +164,12 @@ export function ProfilePage() {
               onClick={() => openDiaryAnime(entry)}
               onKeyDown={(event) => handleDiaryKeyDown(event, entry)}
             >
+              {(() => {
+                const startedDate = getStartedDate(entry);
+                const completedDate = getCompletedDate(entry);
+
+                return (
+                  <>
               {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
               <span>
                 <strong>{entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId}</strong>
@@ -163,6 +181,15 @@ export function ProfilePage() {
                   </span>
                 </small>
               </span>
+              <div className={styles.diaryDates}>
+                {startedDate ? (
+                  <span>{formatDiaryDate(startedDate)}</span>
+                ) : null}
+                {startedDate && completedDate ? <i aria-hidden="true">{'\u2014'}</i> : null}
+                {completedDate ? (
+                  <span>{formatDiaryDate(completedDate)}</span>
+                ) : null}
+              </div>
               <div className={styles.diaryActions}>
                 <button
                   className={clsx(styles.diaryActionButton, styles.diaryReviewAction)}
@@ -207,6 +234,9 @@ export function ProfilePage() {
                   </div>
                 ) : null}
               </div>
+                  </>
+                );
+              })()}
             </article>
           ))
         )}
