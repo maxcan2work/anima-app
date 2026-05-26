@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from '@anima/core';
 import detachIcon from '@assets/detach.svg';
 import importIcon from '@assets/import.svg';
@@ -8,17 +8,23 @@ import profileEyeIcon from '@assets/profile-eye.svg';
 import profileNoteIcon from '@assets/profile-note.svg';
 import profileFriendsIcon from '@assets/circled-group.svg';
 import profileStatsIcon from '@assets/stats.svg';
+import reviewIcon from '@assets/chat-audio.svg';
+import scoreIcon from '@assets/star.svg';
 import settingsIcon from '@assets/settings.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import trashIcon from '@assets/trash.svg';
+import episodeIcon from '@assets/tv-alt.svg';
 import leaveRoomIcon from '@assets/leave-room.svg';
 import { useAuth } from '@features/auth/AuthProvider';
+import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { animeRouteSlug } from '@shared/navigation';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
 export function ProfilePage() {
   const { user, authStatus, diaryEntries: entries, login, logout } = useAuth();
+  const { requestRoute } = useNavigation();
   const { language, t } = useI18n();
   const profileFilters: Array<{ status: WatchStatus; label: string; count: number; icon: string }> = [
     { status: 'watching', label: t('profile.status.watching'), count: entries.filter((entry) => entry.status === 'WATCHING').length, icon: profileEyeIcon },
@@ -39,6 +45,39 @@ export function ProfilePage() {
   const selectedFilter = profileFilters.find((filter) => filter.status === selectedStatus) ?? profileFilters[0];
   const filteredEntries = entries.filter((entry) => fromServerWatchStatus(entry.status) === selectedStatus);
   const getStatusLabel = (status: WatchStatus) => profileFilters.find((filter) => filter.status === status)?.label ?? status;
+  const stopDiaryAction = (event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
+  const openDiaryAnime = (entry: (typeof entries)[number]) => {
+    if (!entry.anime) return;
+
+    requestRoute(`/anime/${animeRouteSlug({
+      id: entry.anime.id,
+      title: entry.anime.title,
+      originalTitle: entry.anime.originalTitle ?? entry.anime.title,
+      titleRu: entry.anime.titleRu,
+      titleEn: entry.anime.titleEn,
+      titleJa: entry.anime.titleJa,
+      titleRomaji: entry.anime.titleRomaji,
+      year: 0,
+      episodes: entry.anime.episodes,
+      studio: '',
+      rating: '',
+      genres: [],
+      description: '',
+      poster: entry.anime.posterUrl ?? '',
+      backdrop: '',
+      sampleEpisodeTitle: '',
+      watchSources: [],
+    })}`, 'watch');
+  };
+  const handleDiaryKeyDown = (event: KeyboardEvent<HTMLElement>, entry: (typeof entries)[number]) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    openDiaryAnime(entry);
+  };
 
   if (authStatus === 'loading') {
     return <section className={clsx(styles.page, styles.emptyState)}>{t('profile.loading')}</section>;
@@ -64,14 +103,45 @@ export function ProfilePage() {
           <p className={styles.mutedCopy}>{t('profile.emptyStatus')}</p>
         ) : (
           filteredEntries.map((entry) => (
-            <article key={entry.id} className={styles.diaryRow}>
+            <article
+              key={entry.id}
+              className={styles.diaryRow}
+              role="button"
+              tabIndex={0}
+              onClick={() => openDiaryAnime(entry)}
+              onKeyDown={(event) => handleDiaryKeyDown(event, entry)}
+            >
               {entry.anime?.posterUrl ? <img src={entry.anime.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
               <span>
                 <strong>{entry.anime ? getLocalizedAnimeTitle(entry.anime, language) : entry.animeId}</strong>
-                <small>{getStatusLabel(fromServerWatchStatus(entry.status))} · {t('profile.episode', { episode: entry.currentEpisode })}</small>
-                {entry.review ? <small className={styles.diaryReview}>{entry.review}</small> : null}
+                <small className={styles.diaryProgress}>
+                  <span>{getStatusLabel(fromServerWatchStatus(entry.status))}</span>
+                  <span>
+                    <img src={episodeIcon} alt="" aria-hidden="true" />
+                    {t('profile.episode', { episode: entry.currentEpisode })}
+                  </span>
+                </small>
               </span>
-              {entry.score ? <em>{entry.score}/10</em> : null}
+              <div className={styles.diaryActions}>
+                <button
+                  className={clsx(styles.diaryActionButton, styles.diaryReviewAction)}
+                  type="button"
+                  onClick={stopDiaryAction}
+                  onKeyDown={stopDiaryAction}
+                  aria-label="Review"
+                >
+                  <img src={reviewIcon} alt="" />
+                </button>
+                <button
+                  className={clsx(styles.diaryActionButton, styles.diaryScore)}
+                  type="button"
+                  onClick={stopDiaryAction}
+                  onKeyDown={stopDiaryAction}
+                >
+                  <img src={scoreIcon} alt="" aria-hidden="true" />
+                  {entry.score ? `${entry.score}/10` : t('common.none')}
+                </button>
+              </div>
             </article>
           ))
         )}

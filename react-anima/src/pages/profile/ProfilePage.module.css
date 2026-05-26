@@ -569,40 +569,87 @@
 
 .diaryList {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .diaryList h3 {
+  grid-column: 1 / -1;
   margin-bottom: 0;
 }
 
+.diaryList > .mutedCopy {
+  grid-column: 1 / -1;
+}
+
 .diaryRow {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: 48px 1fr auto;
-  align-items: center;
-  gap: 12px;
+  grid-template-columns: 86px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  align-items: stretch;
+  gap: 14px;
   width: 100%;
-  min-height: 68px;
-  padding: 10px;
-  border: 1px solid transparent;
+  min-height: 148px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    radial-gradient(circle at 22% 15%, rgba(242, 192, 99, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.028));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   color: inherit;
+  font: inherit;
   text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.diaryRow::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, rgba(20, 18, 16, 0.2), rgba(9, 9, 9, 0.74));
+  content: "";
+}
+
+.diaryRow:hover {
+  border-color: rgba(242, 192, 99, 0.38);
+  background:
+    radial-gradient(circle at 22% 15%, rgba(242, 192, 99, 0.18), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.035));
+  transform: scale(1.01);
+}
+
+.diaryRow:focus-visible {
+  outline: 2px solid rgba(242, 192, 99, 0.65);
+  outline-offset: 2px;
 }
 
 .posterFallback {
-  width: 48px;
-  height: 48px;
+  width: 86px;
+  height: 124px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.diaryRow img {
-  width: 48px;
-  height: 48px;
+.diaryRow > img {
+  grid-row: 1 / 3;
+  width: 86px;
+  height: 124px;
   border-radius: 6px;
   object-fit: cover;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.26);
+}
+
+.diaryRow > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-self: stretch;
+  padding: 4px 0;
 }
 
 .diaryRow strong,
@@ -610,22 +657,117 @@
   display: block;
 }
 
+.diaryRow strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #fff7ec;
+  font-size: 17px;
+  line-height: 1.22;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .diaryRow small {
-  margin-top: 4px;
+  margin-top: 8px;
   color: #aba399;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
 }
 
-.diaryReview {
-  max-width: 720px;
-  color: #d9d0c5;
-  line-height: 1.45;
+.diaryProgress {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
 }
 
-.diaryRow em {
+.diaryProgress span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid rgba(242, 192, 99, 0.18);
+  border-radius: 7px;
+  background: rgba(242, 192, 99, 0.1);
+  color: #f4ddae;
+}
+
+.diaryProgress img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.diaryActions {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: auto;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0;
+}
+
+.diaryActionButton {
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.diaryActionButton:hover,
+.diaryActionButton:focus-visible {
+  border-color: rgba(242, 192, 99, 0.55);
+  background: rgba(242, 192, 99, 0.14);
+  transform: scale(1.04);
+}
+
+.diaryScore,
+.diaryReviewAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 34px;
+  padding: 7px 9px;
+  border: 1px solid rgba(242, 192, 99, 0.3);
+  border-radius: 7px;
+  background: rgba(15, 13, 10, 0.72);
   color: #f2c063;
   font-size: 12px;
   font-style: normal;
   font-weight: 900;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.diaryScore {
+  width: 70px;
+  min-width: 70px;
+}
+
+.diaryReviewAction {
+  width: 34px;
+  min-width: 34px;
+  padding-inline: 8px;
+}
+
+.diaryScore img,
+.diaryReviewAction img {
+  width: 14px;
+  height: 14px;
+}
+
+.diaryScore img {
+  margin-right: 2px;
 }
 
 @keyframes contentSlideUp {
@@ -681,6 +823,12 @@
 
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .diaryList {
+    grid-template-columns: 1fr;
   }
 }
 

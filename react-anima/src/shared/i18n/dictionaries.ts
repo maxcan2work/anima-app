@@ -8,6 +8,7 @@ export const dictionaries = {
     'common.cancel': 'Отмена',
     'common.reload': 'Перезагрузить',
     'common.noScore': 'без оценки',
+    'common.none': 'нет',
     'common.episodesShort': 'сер.',
 
     'sidebar.aria': 'Каталог аниме',
@@ -126,6 +127,7 @@ export const dictionaries = {
     'common.cancel': 'Cancel',
     'common.reload': 'Reload',
     'common.noScore': 'no score',
+    'common.none': 'none',
     'common.episodesShort': 'eps.',
 
     'sidebar.aria': 'Anime catalog',
@@ -244,6 +246,7 @@ export const dictionaries = {
     'common.cancel': 'キャンセル',
     'common.reload': '再読み込み',
     'common.noScore': '評価なし',
+    'common.none': 'なし',
     'common.episodesShort': '話',
 
     'sidebar.aria': 'アニメカタログ',
