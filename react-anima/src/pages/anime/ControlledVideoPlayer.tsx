@@ -8,6 +8,7 @@ import volumeHighIcon from '@assets/volume-high.svg';
 import volumeMediumIcon from '@assets/volume-medium.svg';
 import volumeMutedIcon from '@assets/volume-muted.svg';
 import type { AnimeTitle } from '@/data';
+import { Tooltip } from '@shared/ui/Tooltip';
 import styles from './ControlledVideoPlayer.module.css';
 
 export type PlaybackSyncState = {
@@ -57,6 +58,8 @@ export function ControlledVideoPlayer({
   const [seeking, setSeeking] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [progressPreview, setProgressPreview] = useState<{ left: number; time: number } | null>(null);
+  const [volumeFeedbackVisible, setVolumeFeedbackVisible] = useState(false);
+  const [volumePopoverOpen, setVolumePopoverOpen] = useState(false);
   const canControl = playbackSync?.canControl ?? true;
 
   const progress = useMemo(() => {
@@ -136,6 +139,18 @@ export function ControlledVideoPlayer({
       window.clearTimeout(timeoutId);
     };
   }, [canControl, controlsVisible, paused]);
+
+  useEffect(() => {
+    if (!volumeFeedbackVisible) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setVolumeFeedbackVisible(false);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [volumeFeedbackVisible, volume, muted]);
 
   function showControls() {
     if (!canControl) return;
@@ -234,6 +249,7 @@ export function ControlledVideoPlayer({
     video.muted = nextVolume === 0;
     setVolume(nextVolume);
     setMuted(video.muted);
+    setVolumeFeedbackVisible(true);
   }
 
   function updateVolumeFromPointer(event: PointerEvent<HTMLDivElement>) {
@@ -247,6 +263,7 @@ export function ControlledVideoPlayer({
     if (!video || !canControl) return;
     video.muted = !video.muted;
     setMuted(video.muted);
+    setVolumeFeedbackVisible(true);
   }
 
   function changeQuality(value: number) {
@@ -409,10 +426,27 @@ export function ControlledVideoPlayer({
             ) : null}
           </div>
           <span className={styles.time}>{formatTime(duration)}</span>
-          <div className={styles.volumeControl}>
-            <button type="button" onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'}>
-              <img src={volumeIcon} alt="" aria-hidden="true" />
-            </button>
+          <div
+            className={styles.volumeControl}
+            onPointerEnter={() => setVolumePopoverOpen(true)}
+            onPointerLeave={() => setVolumePopoverOpen(false)}
+            onFocus={() => setVolumePopoverOpen(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setVolumePopoverOpen(false);
+              }
+            }}
+          >
+            <Tooltip
+              label={`${Math.round((muted ? 0 : volume) * 100)}%`}
+              placement="top"
+              open={volumeFeedbackVisible && !volumePopoverOpen}
+              disabled={volumePopoverOpen}
+            >
+              <button type="button" onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'}>
+                <img src={volumeIcon} alt="" aria-hidden="true" />
+              </button>
+            </Tooltip>
             <div className={styles.volumePopover}>
               <div
                 className={styles.volume}

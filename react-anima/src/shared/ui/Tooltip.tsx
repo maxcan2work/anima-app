@@ -9,15 +9,19 @@ type TooltipProps = {
   children: ReactNode;
   placement?: TooltipPlacement;
   className?: string;
+  open?: boolean;
+  disabled?: boolean;
 };
 
-export function Tooltip({ label, children, placement = 'top', className }: TooltipProps) {
+export function Tooltip({ label, children, placement = 'top', className, open, disabled = false }: TooltipProps) {
   return (
-    <span className={clsx(styles.tooltip, styles[placement], className)}>
+    <span className={clsx(styles.tooltip, styles[placement], open && styles.open, disabled && styles.disabled, className)}>
       {children}
-      <span className={styles.content} role="tooltip">
-        {label}
-      </span>
+      {!disabled ? (
+        <span className={styles.content} role="tooltip">
+          {label}
+        </span>
+      ) : null}
     </span>
   );
 }

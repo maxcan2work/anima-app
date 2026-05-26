@@ -25,8 +25,9 @@
   white-space: nowrap;
 }
 
-.tooltip:hover .content,
-.tooltip:focus-within .content {
+.tooltip:not(.disabled):hover .content,
+.tooltip:not(.disabled):focus-within .content,
+.open .content {
   opacity: 1;
 }
 
@@ -36,8 +37,9 @@
   transform: translate3d(-50%, 4px, 0);
 }
 
-.top:hover .content,
-.top:focus-within .content {
+.top:not(.disabled):hover .content,
+.top:not(.disabled):focus-within .content,
+.top.open .content {
   transform: translate3d(-50%, 0, 0);
 }
 
@@ -47,8 +49,9 @@
   transform: translate3d(4px, -50%, 0);
 }
 
-.right:hover .content,
-.right:focus-within .content {
+.right:not(.disabled):hover .content,
+.right:not(.disabled):focus-within .content,
+.right.open .content {
   transform: translate3d(0, -50%, 0);
 }
 
@@ -58,8 +61,9 @@
   transform: translate3d(-50%, -4px, 0);
 }
 
-.bottom:hover .content,
-.bottom:focus-within .content {
+.bottom:not(.disabled):hover .content,
+.bottom:not(.disabled):focus-within .content,
+.bottom.open .content {
   transform: translate3d(-50%, 0, 0);
 }
 
@@ -69,7 +73,8 @@
   transform: translate3d(-4px, -50%, 0);
 }
 
-.left:hover .content,
-.left:focus-within .content {
+.left:not(.disabled):hover .content,
+.left:not(.disabled):focus-within .content,
+.left.open .content {
   transform: translate3d(0, -50%, 0);
 }
