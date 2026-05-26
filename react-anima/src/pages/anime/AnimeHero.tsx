@@ -1,10 +1,10 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
-import Hls from 'hls.js';
 import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import type { AnimeTitle } from '@/data';
+import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
 
 type PlayerProvider = PlayerProviderResult['provider'];
@@ -19,6 +19,7 @@ type AnimeHeroProps = {
   state: WatchState;
   onStateChange: (patch: Partial<WatchState>) => void;
   mode?: 'default' | 'watchParty';
+  playbackSync?: PlaybackSync;
   sidebarExtra?: ReactNode;
   footerExtra?: ReactNode;
 };
@@ -34,6 +35,7 @@ export function AnimeHero({
   state,
   onStateChange,
   mode = 'default',
+  playbackSync,
   sidebarExtra,
   footerExtra,
 }: AnimeHeroProps) {
@@ -42,9 +44,12 @@ export function AnimeHero({
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
-  const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode === 'default' || player.provider === 'kodik'));
-  const selectedProviderPlayer = playablePlayers.find((player) => player.provider === selectedProviderName);
-  const selectedPlayer = selectedProviderPlayer ?? playablePlayers[0] ?? (mode === 'default' ? players[0] : undefined);
+  const playablePlayers = players.filter(isPlayablePlayer);
+  const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
+  const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
+  const selectedPlayer = mode === 'watchParty'
+    ? preferredPlayers[0]
+    : selectedProviderPlayer ?? preferredPlayers[0] ?? players[0];
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
@@ -138,7 +143,7 @@ export function AnimeHero({
     <div className={clsx(styles.layout, mode === 'watchParty' && styles.watchPartyLayout)}>
       <section className={styles.player}>
         {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
-          <VideoPlayer anime={anime} player={selectedPlayer} />
+          <VideoPlayer anime={anime} player={selectedPlayer} playbackSync={mode === 'watchParty' ? playbackSync : undefined} />
         ) : (
           <div className={styles.videoFrame}>
             {playersStatus ? <PlayerMessage message={playersStatus} /> : <PlayerLoader />}
@@ -337,7 +342,15 @@ function WatchStatusSelect({
   );
 }
 
-function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProviderResult }) {
+function VideoPlayer({
+  anime,
+  player,
+  playbackSync,
+}: {
+  anime: AnimeTitle;
+  player: PlayerProviderResult;
+  playbackSync?: PlaybackSync;
+}) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -359,7 +372,15 @@ function VideoPlayer({ anime, player }: { anime: AnimeTitle; player: PlayerProvi
     );
   }
 
-  return <HlsPlayer anime={anime} player={player} isLoading={isLoading} onReady={() => setIsLoading(false)} />;
+  return (
+    <ControlledVideoPlayer
+      anime={anime}
+      player={player}
+      isLoading={isLoading}
+      onReady={() => setIsLoading(false)}
+      playbackSync={playbackSync}
+    />
+  );
 }
 
 function PlayerLoader() {
@@ -378,49 +399,16 @@ function PlayerMessage({ message }: { message: string }) {
   );
 }
 
-function HlsPlayer({
-  anime,
-  player,
-  isLoading,
-  onReady,
-}: {
-  anime: AnimeTitle;
-  player: PlayerProviderResult;
-  isLoading: boolean;
-  onReady: () => void;
-}) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !player.streamUrl) return;
-
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = player.streamUrl;
-      return;
-    }
-
-    if (!Hls.isSupported()) return;
-
-    const hls = new Hls();
-    hls.loadSource(player.streamUrl);
-    hls.attachMedia(video);
-
-    return () => {
-      hls.destroy();
-    };
-  }, [player.streamUrl]);
-
-  return (
-    <div className={styles.videoFrame}>
-      <video ref={videoRef} controls poster={anime.backdrop} onCanPlay={onReady} />
-      {isLoading ? <PlayerLoader /> : null}
-    </div>
-  );
-}
-
 function isPlayablePlayer(player: PlayerProviderResult) {
   return Boolean(player.streamUrl || player.embedUrl);
+}
+
+function orderWatchPartyPlayers(players: PlayerProviderResult[]) {
+  return [...players].sort((left, right) => watchPartyProviderPriority(left.provider) - watchPartyProviderPriority(right.provider));
+}
+
+function watchPartyProviderPriority(provider: PlayerProvider) {
+  return provider === 'anilibria' ? 0 : 1;
 }
 
 function WatchSources({ anime }: { anime: AnimeTitle }) {

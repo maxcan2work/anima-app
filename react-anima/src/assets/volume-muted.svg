@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Volume muted">
+  <path d="M3 9.5v5h3.8l4.7 4.1V5.4L6.8 9.5H3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <path d="m16 9 5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="m21 9-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
