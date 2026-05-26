@@ -11,6 +11,7 @@ import WatchIcon from '@assets/youtube.svg?react';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { profileRoute } from '@shared/navigation';
 import styles from './AppSidebar.module.css';
 
 type AppSidebarProps = {
@@ -95,13 +96,13 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
             <small>{t('common.soon')}</small>
           </span>
         </button>
-        <AuthPanel collapsed={collapsed} onProfile={() => requestRoute('/profile', 'profile')} />
+        <AuthPanel collapsed={collapsed} onProfile={(userId) => requestRoute(profileRoute(userId), 'profile')} />
       </div>
     </aside>
   );
 }
 
-function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: () => void }) {
+function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: (userId: string) => void }) {
   const { user, authStatus, login } = useAuth();
   const { t } = useI18n();
 
@@ -139,7 +140,7 @@ function AuthPanel({ collapsed, onProfile }: { collapsed: boolean; onProfile: ()
 
   return (
     <div className={clsx(styles.authPanel, styles.authPanelSignedIn)}>
-      <button className={styles.profileLink} onClick={onProfile} data-tooltip={user.displayName}>
+      <button className={styles.profileLink} onClick={() => onProfile(user.id)} data-tooltip={user.displayName}>
         {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <div className={styles.avatarFallback}>{user.displayName[0]}</div>}
         <span>
           <strong>{user.displayName}</strong>

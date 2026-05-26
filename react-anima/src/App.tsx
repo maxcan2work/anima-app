@@ -4,6 +4,7 @@ import { AppProviders } from '@app/AppProviders';
 import { AppScreens } from '@app/AppScreens';
 import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
+import { profileRoute } from '@shared/navigation';
 import { loadSidebarCollapsed, saveSidebarCollapsed } from '@shared/storage';
 import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { AppSidebar } from '@widgets/app-sidebar/AppSidebar';
@@ -21,7 +22,7 @@ export function App() {
 
 function AppContent() {
   const { user, authStatus } = useAuth();
-  const { currentPath, redirectToWatchRoot, screenAnimation } = useNavigation();
+  const { currentPath, redirectToProfile, redirectToWatchRoot, screenAnimation } = useNavigation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(loadSidebarCollapsed);
 
   useEffect(() => {
@@ -29,9 +30,14 @@ function AppContent() {
   }, [sidebarCollapsed]);
 
   useEffect(() => {
-    if (authStatus === 'loading' || user || currentPath !== '/profile') return;
+    if (authStatus === 'loading' || user || !currentPath.startsWith('/profile')) return;
     redirectToWatchRoot();
   }, [authStatus, currentPath, redirectToWatchRoot, user]);
+
+  useEffect(() => {
+    if (authStatus !== 'ready' || !user || currentPath !== '/profile') return;
+    redirectToProfile(profileRoute(user.id));
+  }, [authStatus, currentPath, redirectToProfile, user]);
 
   return (
     <main className={clsx(styles.shell, sidebarCollapsed && styles.collapsed)}>

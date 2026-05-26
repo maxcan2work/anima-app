@@ -4,11 +4,13 @@ export {
   catalogRouteSlug,
   findAnimeByRoute,
   findCatalogResultByRoute,
+  getProfileIdFromPath,
   getRouteAnimeId,
   getViewFromPath,
   getWatchPartyCodeFromPath,
   normalizeWatchPartyCode,
   parseShikimoriRouteId,
+  profileRoute,
   slugifyAnimeTitle,
   type AppView,
 } from '@anima/core';

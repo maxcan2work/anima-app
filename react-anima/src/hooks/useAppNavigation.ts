@@ -78,6 +78,10 @@ export function useAppNavigation() {
     navigateRemembered('/anime', true);
   }, [navigateRemembered]);
 
+  const redirectToProfile = useCallback((path: string) => {
+    navigateRemembered(path, true);
+  }, [navigateRemembered]);
+
   const restoreScroll = useCallback((path: string) => {
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: scrollByPathRef.current[path] ?? 0 });
@@ -109,6 +113,7 @@ export function useAppNavigation() {
     closeWatchPartyLeaveModal,
     confirmLeaveWatchParty,
     redirectToWatchRoot,
+    redirectToProfile,
     restoreScroll,
   };
 }

@@ -9,11 +9,20 @@ export function getRouteAnimeId(pathname: string) {
 }
 
 export function getViewFromPath(pathname: string): AppView {
-  if (pathname === '/profile') return 'profile';
+  if (pathname === '/profile' || pathname.startsWith('/profile/')) return 'profile';
   if (pathname === '/random') return 'random';
   if (pathname === '/settings') return 'settings';
   if (pathname === '/watch-party' || pathname.startsWith('/watch-party/')) return 'watchParty';
   return 'watch';
+}
+
+export function getProfileIdFromPath(pathname: string) {
+  const match = pathname.match(/^\/profile\/([^/]+)$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : '';
+}
+
+export function profileRoute(profileId: string) {
+  return `/profile/${encodeURIComponent(profileId)}`;
 }
 
 export function getWatchPartyCodeFromPath(pathname: string) {
