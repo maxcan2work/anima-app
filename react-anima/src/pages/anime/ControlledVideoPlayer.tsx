@@ -381,9 +381,14 @@ export function ControlledVideoPlayer({
           onFocus={showControls}
           onPointerMove={showControls}
         >
-          <button type="button" onClick={togglePlayback} aria-label={paused ? 'Запустить' : 'Пауза'}>
-            {paused ? '▶' : '❚❚'}
-          </button>
+          <Tooltip label={paused ? 'Запустить' : 'Пауза'} placement="top">
+            <button type="button" onClick={(event) => {
+              event.currentTarget.blur();
+              void togglePlayback();
+            }} aria-label={paused ? 'Запустить' : 'Пауза'}>
+              {paused ? '▶' : '❚❚'}
+            </button>
+          </Tooltip>
           <span className={styles.time}>{formatTime(currentTime)}</span>
           <div className={styles.progressControl}>
             <div
@@ -483,12 +488,22 @@ export function ControlledVideoPlayer({
               </option>
             ))}
           </select>
-          <button type="button" onClick={togglePictureInPicture} aria-label="Картинка в картинке">
-            <img src={pictureInPictureIcon} alt="" aria-hidden="true" />
-          </button>
-          <button type="button" onClick={toggleFullscreen} aria-label={fullscreen ? 'Выйти из полноэкранного режима' : 'На весь экран'}>
-            <img src={fullscreenIcon} alt="" aria-hidden="true" />
-          </button>
+          <Tooltip label="Картинка в картинке" placement="top">
+            <button type="button" onClick={(event) => {
+              event.currentTarget.blur();
+              void togglePictureInPicture();
+            }} aria-label="Картинка в картинке">
+              <img src={pictureInPictureIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip label={fullscreen ? 'Выйти из полноэкранного режима' : 'На весь экран'} placement="left">
+            <button type="button" onClick={(event) => {
+              event.currentTarget.blur();
+              void toggleFullscreen();
+            }} aria-label={fullscreen ? 'Выйти из полноэкранного режима' : 'На весь экран'}>
+              <img src={fullscreenIcon} alt="" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       ) : null}
 
