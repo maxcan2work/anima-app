@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import RandomDiceIcon from '@assets/random-dice.svg?react';
 import clockIcon from '@assets/clock-three.svg';
+import shikimoriIcon from '@assets/shikimori.png';
 import starIcon from '@assets/star.svg';
 import trashIcon from '@assets/trash.svg';
 import tvIcon from '@assets/tv-alt.svg';
@@ -93,6 +94,7 @@ export function RandomAnimePage() {
     ? diaryEntries.some((entry) => entry.animeId === `${randomAnime.provider}-${randomAnime.providerId}` && entry.status === 'PLANNED')
     : false;
   const randomAnimeReleaseYear = randomAnime?.airedOn ? getReleaseYear(randomAnime.airedOn) : null;
+  const randomAnimeShikimoriUrl = randomAnime ? `https://shikimori.io/animes/${randomAnime.providerId}` : null;
   const randomActive = randomLoading || Boolean(randomAnime);
   const genreOptions = useMemo(() => genres.slice(0, 18), [genres]);
   const requestFilters = useMemo<CatalogRequestOptions>(() => ({
@@ -505,6 +507,19 @@ export function RandomAnimePage() {
               {randomAnimeOriginalTitle ? <small>{randomAnimeOriginalTitle}</small> : null}
               <p>{randomAnime.description ?? t('random.noDescription')}</p>
               <span className={styles.resultActions}>
+                {randomAnimeShikimoriUrl ? (
+                  <Tooltip label={t('random.openShikimori')} placement="top">
+                    <a
+                      className={styles.shikimoriAction}
+                      href={randomAnimeShikimoriUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={t('random.openShikimori')}
+                    >
+                      <img src={shikimoriIcon} alt="" aria-hidden="true" />
+                    </a>
+                  </Tooltip>
+                ) : null}
                 <button
                   className={clsx(randomAnimePlanned && styles.alreadyPlannedButton)}
                   type="button"

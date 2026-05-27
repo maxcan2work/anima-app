@@ -687,7 +687,9 @@
   margin-top: auto;
 }
 
-.resultActions button {
+.resultActions :where(a, button) {
+  display: inline-grid;
+  place-items: center;
   min-width: 150px;
   min-height: 44px;
   padding: 0 16px;
@@ -696,15 +698,16 @@
   background: rgba(255, 255, 255, 0.055);
   color: #f4efe7;
   font-weight: 950;
+  text-decoration: none;
 }
 
-.resultActions button:last-child {
+.resultActions :where(a, button):last-child {
   border-color: rgba(242, 192, 99, 0.34);
   background: rgba(242, 192, 99, 0.12);
   color: #fff7ec;
 }
 
-.resultActions button:hover {
+.resultActions :where(a, button):hover {
   border-color: rgba(242, 192, 99, 0.52);
   background: rgba(242, 192, 99, 0.14);
 }
@@ -716,6 +719,18 @@
 
 .resultActions .alreadyPlannedButton:disabled {
   cursor: not-allowed;
+}
+
+.resultActions .shikimoriAction {
+  min-width: 44px;
+  width: 44px;
+  padding: 0;
+}
+
+.shikimoriAction img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .metaGrid {
