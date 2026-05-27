@@ -29,6 +29,13 @@ type ShikimoriAnime = {
   }>;
 };
 
+type ShikimoriGenre = {
+  id: number;
+  name?: string | null;
+  russian?: string | null;
+  kind?: string | null;
+};
+
 export type CatalogSearchResult = {
   provider: 'shikimori';
   providerId: number;
@@ -53,20 +60,29 @@ export type CatalogBrowseFilters = {
   kind?: string;
   status?: string;
   scoredOnly?: boolean;
+  season?: string;
+  genre?: string;
+  score?: string;
+  rating?: string;
+};
+
+export type CatalogGenre = {
+  id: number;
+  name: string;
+  titleRu: string | null;
+  kind: string | null;
 };
 
 export async function searchCatalog(query: string, filters: CatalogBrowseFilters = {}) {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
-  const safeKind = normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special']);
-  const safeStatus = normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']);
+  const queryFilters = normalizeCatalogFilters(filters);
 
   const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
   url.searchParams.set('search', trimmed);
   url.searchParams.set('limit', '12');
   url.searchParams.set('order', 'popularity');
-  if (safeKind) url.searchParams.set('kind', safeKind);
-  if (safeStatus) url.searchParams.set('status', safeStatus);
+  appendCatalogFilters(url, queryFilters);
 
   const response = await fetch(url, {
     headers: {
@@ -92,9 +108,8 @@ export async function browseCatalog(page: number, limit: number, order: string, 
   const safePage = Math.max(Math.trunc(page), 1);
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 30);
   const safeOrder = ['popularity', 'ranked', 'ranked_random', 'aired_on'].includes(order) ? order : 'popularity';
-  const safeKind = normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special']);
-  const safeStatus = normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']);
-  const query = { order: safeOrder, kind: safeKind, status: safeStatus };
+  const queryFilters = normalizeCatalogFilters(filters);
+  const query = { order: safeOrder, filters: queryFilters };
   const payload = filters.scoredOnly
     ? await fetchScoredBrowsePage(safePage, safeLimit, query)
     : await fetchShikimoriBrowsePage(safePage, safeLimit, query);
@@ -106,12 +121,37 @@ export async function browseCatalog(page: number, limit: number, order: string, 
     order: safeOrder,
     hasNextPage: payload.hasNextPage,
     filters: {
-      kind: safeKind,
-      status: safeStatus,
+      ...queryFilters,
       scoredOnly: Boolean(filters.scoredOnly),
     },
     results,
   };
+}
+
+export async function getCatalogGenres(): Promise<CatalogGenre[]> {
+  const url = new URL('/api/genres', SHIKIMORI_BASE_URL);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AnimaCatalog/0.1',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shikimori genres failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as ShikimoriGenre[];
+  return payload
+    .filter((genre) => genre.kind === 'anime' && Number.isFinite(genre.id) && genre.name)
+    .map((genre) => ({
+      id: genre.id,
+      name: genre.name ?? String(genre.id),
+      titleRu: cleanText(genre.russian),
+      kind: genre.kind ?? null,
+    }))
+    .sort((left, right) => (left.titleRu ?? left.name).localeCompare(right.titleRu ?? right.name, 'ru'));
 }
 
 export async function browsePlayableCatalog(page: number, limit: number, order: string, provider: string, filters: CatalogBrowseFilters = {}) {
@@ -210,10 +250,46 @@ function normalizeCatalogParam(value: string | null | undefined, allowed: string
   return normalized && allowed.includes(normalized) ? normalized : undefined;
 }
 
+function normalizeCatalogFilters(filters: CatalogBrowseFilters) {
+  return {
+    kind: normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special', 'music', 'pv', 'cm']),
+    status: normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']),
+    season: normalizeSeason(filters.season),
+    genre: normalizeNumericParam(filters.genre),
+    score: normalizeCatalogParam(filters.score, ['1', '2', '3', '4', '5', '6', '7', '8', '9']),
+    rating: normalizeCatalogParam(filters.rating, ['none', 'g', 'pg', 'pg_13', 'r', 'r_plus', 'rx']),
+  };
+}
+
+function appendCatalogFilters(
+  url: URL,
+  filters: ReturnType<typeof normalizeCatalogFilters>,
+) {
+  if (filters.kind) url.searchParams.set('kind', filters.kind);
+  if (filters.status) url.searchParams.set('status', filters.status);
+  if (filters.season) url.searchParams.set('season', filters.season);
+  if (filters.genre) url.searchParams.set('genre', filters.genre);
+  if (filters.score) url.searchParams.set('score', filters.score);
+  if (filters.rating) url.searchParams.set('rating', filters.rating);
+}
+
+function normalizeSeason(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (/^\d{4}$/.test(normalized)) return normalized;
+  if (/^(winter|spring|summer|fall)_\d{4}$/.test(normalized)) return normalized;
+  return undefined;
+}
+
+function normalizeNumericParam(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized && /^\d+(,\d+)*$/.test(normalized) ? normalized : undefined;
+}
+
 async function fetchScoredBrowsePage(
   page: number,
   limit: number,
-  query: { order: string; kind?: string; status?: string },
+  query: { order: string; filters: ReturnType<typeof normalizeCatalogFilters> },
 ) {
   const end = page * limit;
   const start = end - limit;
@@ -237,14 +313,13 @@ async function fetchScoredBrowsePage(
 async function fetchShikimoriBrowsePage(
   page: number,
   limit: number,
-  query: { order: string; kind?: string; status?: string },
+  query: { order: string; filters: ReturnType<typeof normalizeCatalogFilters> },
 ) {
   const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
   url.searchParams.set('page', String(page));
   url.searchParams.set('limit', String(limit));
   url.searchParams.set('order', query.order);
-  if (query.kind) url.searchParams.set('kind', query.kind);
-  if (query.status) url.searchParams.set('status', query.status);
+  appendCatalogFilters(url, query.filters);
 
   const response = await fetch(url, {
     headers: {

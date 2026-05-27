@@ -1,8 +1,10 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useCatalog } from '@features/catalog/CatalogProvider';
 import { CatalogBrowser } from '@features/catalog/CatalogBrowser';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
+import { getCatalogGenres, type CatalogGenre } from '@/api';
 import type { CatalogBrowseOrder } from '@hooks/useCatalogBrowse';
 import styles from './WatchHome.module.css';
 
@@ -37,7 +39,9 @@ export function WatchHome() {
     setBrowseFilters,
   } = useCatalog();
   const { openCatalogAnime } = useWatchLibrary();
-  const { t } = useI18n();
+  const { language, t } = useI18n();
+  const [genres, setGenres] = useState<CatalogGenre[]>([]);
+  const yearOptions = useMemo(() => buildYearOptions(), []);
   const orderOptions: Array<{ value: CatalogBrowseOrder; label: string }> = [
     { value: 'popularity', label: t('catalog.order.popularity') },
     { value: 'ranked', label: t('catalog.order.ranked') },
@@ -58,6 +62,38 @@ export function WatchHome() {
     { value: 'ongoing', label: t('catalog.status.ongoing') },
     { value: 'anons', label: t('catalog.status.anons') },
   ];
+  const seasonOptions = [
+    { value: 'all', label: t('catalog.filter.all') },
+    ...yearOptions.map((year) => ({ value: String(year), label: String(year) })),
+  ];
+  const scoreOptions = [
+    { value: 'all', label: t('catalog.filter.all') },
+    ...[6, 7, 8, 9].map((score) => ({ value: String(score), label: `${score}+` })),
+  ];
+  const ratingOptions = [
+    { value: 'all', label: t('catalog.filter.all') },
+    { value: 'g', label: 'G' },
+    { value: 'pg', label: 'PG' },
+    { value: 'pg_13', label: 'PG-13' },
+    { value: 'r', label: 'R-17' },
+    { value: 'r_plus', label: 'R+' },
+  ];
+
+  useEffect(() => {
+    let ignore = false;
+
+    getCatalogGenres()
+      .then((response) => {
+        if (!ignore) setGenres(response.genres);
+      })
+      .catch(() => {
+        if (!ignore) setGenres([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   return (
     <SplitScreenLayout
@@ -104,6 +140,71 @@ export function WatchHome() {
                   className={browseFilters.kind === option.value ? styles.activeOption : undefined}
                   type="button"
                   onClick={() => setBrowseFilters({ ...browseFilters, kind: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.controlGroup}>
+            <h3>{t('catalog.season')}</h3>
+            <label className={styles.selectControl}>
+              <select
+                value={browseFilters.season}
+                onChange={(event) => setBrowseFilters({ ...browseFilters, season: event.target.value })}
+                aria-label={t('catalog.season')}
+              >
+                {seasonOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+          </section>
+
+          <section className={styles.controlGroup}>
+            <h3>{t('catalog.genre')}</h3>
+            <label className={styles.selectControl}>
+              <select
+                value={browseFilters.genre}
+                onChange={(event) => setBrowseFilters({ ...browseFilters, genre: event.target.value })}
+                aria-label={t('catalog.genre')}
+              >
+                <option value="all">{t('catalog.filter.all')}</option>
+                {genres.map((genre) => (
+                  <option key={genre.id} value={String(genre.id)}>
+                    {language === 'ru' ? genre.titleRu ?? genre.name : genre.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </section>
+
+          <section className={styles.controlGroup}>
+            <h3>{t('catalog.score')}</h3>
+            <div className={styles.chips}>
+              {scoreOptions.map((option) => (
+                <button
+                  key={option.value}
+                  className={browseFilters.score === option.value ? styles.activeOption : undefined}
+                  type="button"
+                  onClick={() => setBrowseFilters({ ...browseFilters, score: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.controlGroup}>
+            <h3>{t('catalog.rating')}</h3>
+            <div className={styles.chips}>
+              {ratingOptions.map((option) => (
+                <button
+                  key={option.value}
+                  className={browseFilters.rating === option.value ? styles.activeOption : undefined}
+                  type="button"
+                  onClick={() => setBrowseFilters({ ...browseFilters, rating: option.value })}
                 >
                   {option.label}
                 </button>
@@ -160,4 +261,9 @@ export function WatchHome() {
       />
     </SplitScreenLayout>
   );
+}
+
+function buildYearOptions() {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: 16 }, (_, index) => currentYear - index);
 }

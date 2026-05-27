@@ -8,7 +8,7 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
-import { browseCatalog, browsePlayableCatalog, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
+import { browseCatalog, browsePlayableCatalog, getCatalogGenres, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
 import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl, importLinkedShikimoriAnimeList } from './shikimori.js';
 
@@ -241,9 +241,22 @@ app.get('/catalog/search', async (request, response, next) => {
       kind: String(request.query.kind ?? ''),
       status: String(request.query.status ?? ''),
       scoredOnly: String(request.query.scoredOnly ?? '') === 'true',
+      season: String(request.query.season ?? ''),
+      genre: String(request.query.genre ?? ''),
+      score: String(request.query.score ?? ''),
+      rating: String(request.query.rating ?? ''),
     };
     const results = playableProvider ? await searchPlayableCatalog(query, playableProvider, filters) : await searchCatalog(query, filters);
     response.json({ results });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/catalog/genres', async (_request, response, next) => {
+  try {
+    const genres = await getCatalogGenres();
+    response.json({ genres });
   } catch (error) {
     next(error);
   }
@@ -259,6 +272,10 @@ app.get('/catalog/browse', async (request, response, next) => {
       kind: String(request.query.kind ?? ''),
       status: String(request.query.status ?? ''),
       scoredOnly: String(request.query.scoredOnly ?? '') === 'true',
+      season: String(request.query.season ?? ''),
+      genre: String(request.query.genre ?? ''),
+      score: String(request.query.score ?? ''),
+      rating: String(request.query.rating ?? ''),
     };
     const result = playableProvider
       ? await browsePlayableCatalog(page, limit, order, playableProvider, filters)

@@ -1,6 +1,7 @@
 import { createAnimaApiClient } from '@anima/api-client';
 
 export type {
+  CatalogGenre,
   CatalogSearchResult,
   CurrentUser,
   PlayerProviderResult,
@@ -35,6 +36,7 @@ export const {
   saveRandomHistoryEntry,
   getAnimeCatalog,
   getAnimeById,
+  getCatalogGenres,
   searchCatalog,
   browseCatalog,
   importCatalogAnime,

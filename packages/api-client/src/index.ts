@@ -94,6 +94,13 @@ export type CatalogSearchResult = {
   sourceUrl: string;
 };
 
+export type CatalogGenre = {
+  id: number;
+  name: string;
+  titleRu: string | null;
+  kind: string | null;
+};
+
 export type ServerRandomHistoryEntry = CatalogSearchResult & {
   id: string;
   updatedAt: string;
@@ -122,6 +129,10 @@ export type CatalogRequestOptions = {
   kind?: string;
   status?: string;
   scoredOnly?: boolean;
+  season?: string;
+  genre?: string;
+  score?: string;
+  rating?: string;
 };
 
 export type AnimaApiClientOptions = {
@@ -170,6 +181,7 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
       }),
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
+    getCatalogGenres: () => apiFetch<{ genres: CatalogGenre[] }>('/catalog/genres'),
     searchCatalog: (query: string, options: CatalogRequestOptions = {}) =>
       apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?${catalogSearchParams({
         q: query,
@@ -177,6 +189,10 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
         kind: options.kind,
         status: options.status,
         scoredOnly: options.scoredOnly ? 'true' : undefined,
+        season: options.season,
+        genre: options.genre,
+        score: options.score,
+        rating: options.rating,
       })}`),
     browseCatalog: (page: number, order = 'popularity', options: CatalogRequestOptions = {}) =>
       apiFetch<{
@@ -187,6 +203,10 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
           kind?: string;
           status?: string;
           scoredOnly: boolean;
+          season?: string;
+          genre?: string;
+          score?: string;
+          rating?: string;
         };
         hasNextPage: boolean;
         results: CatalogSearchResult[];
@@ -198,6 +218,10 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
         kind: options.kind,
         status: options.status,
         scoredOnly: options.scoredOnly ? 'true' : undefined,
+        season: options.season,
+        genre: options.genre,
+        score: options.score,
+        rating: options.rating,
       })}`),
     importCatalogAnime: (provider: CatalogSearchResult['provider'], providerId: number) =>
       apiFetch<{ anime: ServerAnime }>('/catalog/import', {

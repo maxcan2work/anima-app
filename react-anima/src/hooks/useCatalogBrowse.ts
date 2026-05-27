@@ -6,12 +6,20 @@ export type CatalogBrowseFilters = {
   kind: string;
   status: string;
   scoredOnly: boolean;
+  season: string;
+  genre: string;
+  score: string;
+  rating: string;
 };
 
 const defaultFilters: CatalogBrowseFilters = {
   kind: 'all',
   status: 'all',
   scoredOnly: false,
+  season: 'all',
+  genre: 'all',
+  score: 'all',
+  rating: 'all',
 };
 
 export function useCatalogBrowse() {
@@ -52,6 +60,10 @@ export function useCatalogBrowse() {
           kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
           status: browseFilters.status === 'all' ? undefined : browseFilters.status,
           scoredOnly: browseFilters.scoredOnly,
+          season: browseFilters.season === 'all' ? undefined : browseFilters.season,
+          genre: browseFilters.genre === 'all' ? undefined : browseFilters.genre,
+          score: browseFilters.score === 'all' ? undefined : browseFilters.score,
+          rating: browseFilters.rating === 'all' ? undefined : browseFilters.rating,
         });
         if (ignore) return;
 
@@ -105,6 +117,10 @@ export function useCatalogBrowse() {
           kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
           status: browseFilters.status === 'all' ? undefined : browseFilters.status,
           scoredOnly: browseFilters.scoredOnly,
+          season: browseFilters.season === 'all' ? undefined : browseFilters.season,
+          genre: browseFilters.genre === 'all' ? undefined : browseFilters.genre,
+          score: browseFilters.score === 'all' ? undefined : browseFilters.score,
+          rating: browseFilters.rating === 'all' ? undefined : browseFilters.rating,
         });
         if (ignore) return;
 
