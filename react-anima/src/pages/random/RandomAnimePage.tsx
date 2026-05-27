@@ -93,6 +93,7 @@ export function RandomAnimePage() {
     ? diaryEntries.some((entry) => entry.animeId === `${randomAnime.provider}-${randomAnime.providerId}` && entry.status === 'PLANNED')
     : false;
   const randomAnimeReleaseYear = randomAnime?.airedOn ? getReleaseYear(randomAnime.airedOn) : null;
+  const randomActive = randomLoading || Boolean(randomAnime);
   const genreOptions = useMemo(() => genres.slice(0, 18), [genres]);
   const requestFilters = useMemo<CatalogRequestOptions>(() => ({
     kind: toCatalogFilter(filters.kinds),
@@ -238,7 +239,7 @@ export function RandomAnimePage() {
   return (
     <SplitScreenLayout
       fixed
-      mainClassName={styles.stage}
+      mainClassName={clsx(styles.stage, !randomActive && styles.stageIntro)}
       sidebarClassName={styles.history}
       sidebarLabel={t('random.sidebarLabel')}
       sidebar={(
@@ -438,7 +439,7 @@ export function RandomAnimePage() {
         </div>
       )}
     >
-      <section className={styles.controlDeck} aria-label={t('random.filters')}>
+      <section className={clsx(styles.controlDeck, randomActive && styles.controlDeckCompact)} aria-label={t('random.filters')}>
         <div className={styles.rollAction}>
           <button
             className={clsx(styles.diceButton, randomLoading && styles.diceButtonRolling)}
@@ -449,7 +450,11 @@ export function RandomAnimePage() {
           >
             <RandomDiceIcon className={styles.dice} aria-hidden="true" />
           </button>
-          <span>{randomLoading ? t('random.rolling') : t('random.roll')}</span>
+        </div>
+        <div className={styles.controlCopy}>
+          <p className="eyebrow">{t('random.eyebrow')}</p>
+          <h2>{t('random.title')}</h2>
+          <p>{t('random.description')}</p>
         </div>
       </section>
 
@@ -515,11 +520,7 @@ export function RandomAnimePage() {
             </span>
           </article>
         ) : (
-          <div className={styles.emptyResult}>
-            <p className="eyebrow">{t('random.eyebrow')}</p>
-            <h2>{t('random.title')}</h2>
-            <p>{t('random.description')}</p>
-          </div>
+          <div className={styles.emptyResult} aria-hidden="true" />
         )}
       </section>
 
