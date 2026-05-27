@@ -5,6 +5,7 @@ import {
   deleteRandomHistoryEntry,
   getMyRandomHistory,
   saveRandomHistoryEntry,
+  type CatalogRequestOptions,
   type CatalogSearchResult,
   type CurrentUser,
 } from '@/api';
@@ -58,13 +59,13 @@ export function useRandomAnime(user: CurrentUser | null) {
     };
   }, [user]);
 
-  async function handleRandomAnime() {
+  async function handleRandomAnime(filters: CatalogRequestOptions = {}) {
     setRandomLoading(true);
     setRandomStatus('');
 
     try {
       const page = Math.floor(Math.random() * 20) + 1;
-      const response = await browseCatalog(page, 'ranked_random');
+      const response = await browseCatalog(page, 'ranked_random', filters);
       const candidates = response.results.filter((item) => item.posterUrl);
       const pool = candidates.length > 0 ? candidates : response.results;
       const next = pool[Math.floor(Math.random() * pool.length)];

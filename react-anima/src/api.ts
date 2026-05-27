@@ -2,6 +2,7 @@ import { createAnimaApiClient } from '@anima/api-client';
 
 export type {
   CatalogGenre,
+  CatalogRequestOptions,
   CatalogSearchResult,
   CurrentUser,
   PlayerProviderResult,

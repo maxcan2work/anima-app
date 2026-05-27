@@ -1,101 +1,413 @@
 .stage {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  min-height: calc(100vh - 56px);
+}
+
+.controlDeck {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 124px minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+  padding: 16px;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.024));
+}
+
+.filterColumn {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.filterGroup,
+.filterSelect {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  min-height: 88px;
+  padding: 12px;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.038);
+}
+
+.filterGroup > span,
+.filterSelect > span {
+  overflow: hidden;
+  color: #a99f92;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.filterGroup > div {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(42px, 1fr);
+  gap: 5px;
+  min-width: 0;
+}
+
+.filterGroup button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d9d0c5;
+  font-size: 11px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterGroup button:hover,
+.activeFilter {
+  border-color: rgba(242, 192, 99, 0.48) !important;
+  background: rgba(242, 192, 99, 0.12) !important;
+  color: #fff7ec !important;
+}
+
+.filterSelectTrigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff7ec;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.filterSelectTrigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterSelectTrigger:hover,
+.filterSelectTrigger[aria-expanded='true'] {
+  border-color: rgba(242, 192, 99, 0.52);
+  background: rgba(242, 192, 99, 0.1);
+}
+
+.filterSelectTrigger:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.filterSelectChevron {
+  justify-self: end;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #f2c063;
+  border-bottom: 2px solid #f2c063;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.filterSelectMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  gap: 4px;
+  max-height: 230px;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(24, 24, 22, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+  scrollbar-color: rgba(201, 166, 109, 0.42) transparent;
+  scrollbar-width: thin;
+}
+
+.filterSelectMenu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filterSelectMenu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filterSelectMenu::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(201, 166, 109, 0.42);
+}
+
+.filterSelectMenu button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 9px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #f9f1e6;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterSelectMenu button:hover,
+.selectedOption {
+  background: rgba(242, 192, 99, 0.14) !important;
+  color: #fffaf2 !important;
+}
+
+.rollAction {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.rollAction > span {
+  max-width: 124px;
+  overflow: hidden;
+  color: #f4ddae;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diceButton {
+  position: relative;
+  z-index: 1;
+  display: grid;
   place-items: center;
-  align-content: center;
-  gap: 14px;
+  justify-self: center;
+  width: 116px;
+  height: 116px;
+  padding: 0;
+  border: 1px solid rgba(242, 192, 99, 0.46);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(242, 192, 99, 0.2), transparent 58%),
+    linear-gradient(145deg, rgba(242, 192, 99, 0.16), rgba(255, 255, 255, 0.05));
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #f2c063;
+}
+
+.diceButton:hover {
+  border-color: rgba(242, 192, 99, 0.76);
+  background:
+    radial-gradient(circle at 50% 32%, rgba(242, 192, 99, 0.24), transparent 60%),
+    rgba(242, 192, 99, 0.14);
+}
+
+.diceButton:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.dice {
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
+}
+
+.diceButtonRolling .dice {
+  animation: diceRoll 720ms linear infinite;
+}
+
+.resultPanel {
+  display: grid;
+  min-width: 0;
   min-height: 0;
+}
+
+.emptyResult {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  min-height: 430px;
   text-align: center;
 }
 
-.stage h2 {
+.emptyResult h2 {
   margin-bottom: 0;
   font-size: 34px;
 }
 
-.stage p:not(.status):not(.eyebrow) {
+.emptyResult p:not(.eyebrow) {
   max-width: 500px;
   color: #cfc7ba;
   line-height: 1.6;
 }
 
-.dice {
-  width: 82px;
-  height: 82px;
-  object-fit: contain;
-  padding: 14px;
-  border: 1px solid rgba(242, 192, 99, 0.45);
-  border-radius: 8px;
-  background: rgba(242, 192, 99, 0.12);
-  color: #f2c063;
-}
-
-.card {
+.resultCard,
+.resultSkeleton {
   display: grid;
-  grid-template-columns: 150px minmax(0, 260px);
-  align-items: center;
-  gap: 16px;
-  max-width: 460px;
-  width: 100%;
-  margin: 12px 0 4px;
-  padding: 12px;
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 22px;
+  min-width: 0;
+  min-height: 430px;
+  padding: 18px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.028));
   color: inherit;
   font: inherit;
   text-align: left;
-  text-decoration: none;
+  animation: randomResultIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.card:hover,
-.historyRow:hover,
-.historyOpen:hover {
-  border-color: rgba(242, 192, 99, 0.55);
+.resultCard:hover {
+  border-color: rgba(242, 192, 99, 0.52);
 }
 
-.card img {
-  width: 150px;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
+.resultCard img,
+.cardPosterFallback,
+.resultSkeletonPoster {
+  width: 100%;
+  min-height: 0;
   border-radius: 8px;
+  background: var(--color-surface-strong);
+  object-fit: cover;
 }
 
-.card strong,
-.card small,
-.historyRow strong,
-.historyRow small {
+.resultContent {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.resultContent strong {
+  overflow: hidden;
+  color: #fff7ec;
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+}
+
+.resultContent small {
   display: block;
+  color: #bfb5a8;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.card strong {
-  font-size: 20px;
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.card small,
-.historyRow small {
-  margin-top: 5px;
-  color: var(--color-text-muted);
+.metaGrid span,
+.resultTags i {
+  display: grid;
+  place-items: center;
+  min-height: 38px;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 1px solid rgba(242, 192, 99, 0.16);
+  border-radius: 8px;
+  background: rgba(242, 192, 99, 0.08);
+  color: #f4ddae;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.resultSkeleton div {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.resultSkeletonPoster,
+.resultSkeletonEyebrow,
+.resultSkeletonTitle,
+.resultSkeletonLine,
+.resultSkeletonMeta,
+.historySkeletonRow span,
+.historySkeletonRow strong,
+.historySkeletonRow small {
+  display: block;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, transparent, rgba(242, 192, 99, 0.12), transparent),
+    rgba(255, 255, 255, 0.055);
+  background-size: 220% 100%, 100% 100%;
+  animation: randomSkeletonPulse 1.15s linear infinite;
+}
+
+.resultSkeletonEyebrow {
+  width: 96px;
+  height: 12px;
+}
+
+.resultSkeletonTitle {
+  width: 78%;
+  height: 42px;
+}
+
+.resultSkeletonLine {
+  width: 52%;
+  height: 16px;
+}
+
+.resultSkeletonMeta {
+  width: 88%;
+  height: 42px;
 }
 
 .status {
-  margin: -10px 0 0;
+  justify-self: center;
+  margin: 0;
   color: var(--color-text-muted);
   font-size: 13px;
-}
-
-.button {
-  min-width: 180px;
-  min-height: 48px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--color-danger);
-  color: white;
-  font-weight: 900;
-}
-
-.button:disabled {
-  cursor: wait;
-  opacity: 0.7;
 }
 
 .history {
@@ -112,6 +424,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 36px;
   margin-bottom: 2px;
 }
 
@@ -193,16 +506,6 @@
   background: var(--color-surface);
 }
 
-.historySkeletonRow span,
-.historySkeletonRow strong,
-.historySkeletonRow small {
-  display: block;
-  border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(242, 192, 99, 0.12), rgba(255, 255, 255, 0.05));
-  background-size: 220% 100%;
-  animation: historySkeletonPulse 1.25s linear infinite;
-}
-
 .historySkeletonRow span {
   width: 52px;
   height: 52px;
@@ -248,8 +551,13 @@
   background: var(--color-surface);
   color: inherit;
   font: inherit;
-  text-decoration: none;
   text-align: left;
+  text-decoration: none;
+}
+
+.historyRow:hover,
+.historyOpen:hover {
+  border-color: rgba(242, 192, 99, 0.55);
 }
 
 .historyOpen:disabled {
@@ -289,18 +597,52 @@
 .posterFallback {
   width: 52px;
   height: 52px;
-  object-fit: cover;
   border-radius: 6px;
   background: var(--color-surface-strong);
+  object-fit: cover;
 }
 
-@keyframes historySkeletonPulse {
+.historyRow strong,
+.historyRow small {
+  display: block;
+}
+
+.historyRow strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyRow small {
+  margin-top: 5px;
+  color: var(--color-text-muted);
+}
+
+@keyframes randomSkeletonPulse {
   from {
-    background-position: 100% 0;
+    background-position: 120% 0, 0 0;
   }
 
   to {
-    background-position: -120% 0;
+    background-position: -120% 0, 0 0;
+  }
+}
+
+@keyframes randomResultIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes diceRoll {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -330,8 +672,25 @@
 
 @media (prefers-reduced-motion: reduce) {
   .historyRow,
-  .historyRowRemoving {
+  .historyRowRemoving,
+  .resultCard,
+  .resultSkeleton,
+  .diceButtonRolling .dice {
     animation-duration: 1ms;
+  }
+}
+
+@media (max-width: 1200px) {
+  .controlDeck {
+    grid-template-columns: 1fr;
+  }
+
+  .filterColumn {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rollAction {
+    order: -1;
   }
 }
 
@@ -350,12 +709,25 @@
   }
 }
 
-@media (max-width: 700px) {
-  .card {
+@media (max-width: 760px) {
+  .filterColumn,
+  .resultCard,
+  .resultSkeleton,
+  .metaGrid {
     grid-template-columns: 1fr;
   }
 
-  .card img {
-    width: 100%;
+  .filterGroup > div {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .emptyResult {
+    min-height: 320px;
+  }
+
+  .resultCard,
+  .resultSkeleton {
+    min-height: 0;
   }
 }
