@@ -72,7 +72,7 @@ export function useRandomAnime(user: CurrentUser | null) {
       const picked = pool[Math.floor(Math.random() * pool.length)];
 
       if (!picked) {
-        setRandomStatus('Shikimori не вернул тайтлы для рандома.');
+        setRandomStatus('random.emptyPool');
         return;
       }
 

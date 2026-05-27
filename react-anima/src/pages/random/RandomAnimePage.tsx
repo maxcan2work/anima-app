@@ -84,9 +84,9 @@ export function RandomAnimePage() {
   const randomAnimeOriginalTitle = randomAnime ? getAnimeOriginalDisplayTitle(randomAnime, language) : '';
   const selectedGenres = genres.filter((genre) => filters.genres.includes(String(genre.id)));
   const resultGenres = randomAnime?.genres?.length
-    ? randomAnime.genres
+    ? randomAnime.genres.map((genre) => getLocalizedCatalogGenre(genre, genres, language))
     : selectedGenres.length > 0
-      ? selectedGenres.map((genre) => (language === 'ru' ? genre.titleRu ?? genre.name : genre.name))
+      ? selectedGenres.map((genre) => getCatalogGenreLabel(genre, language))
       : [];
   const randomAnimeStatus = randomAnime?.status ? getCatalogStatusLabel(randomAnime.status, t) : t('catalog.filter.all');
   const randomAnimeKind = randomAnime?.kind ? getCatalogKindLabel(randomAnime.kind, t) : t('catalog.filter.all');
@@ -131,6 +131,16 @@ export function RandomAnimePage() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!randomStatus) return;
+
+    const isEmptyPool = randomStatus === 'random.emptyPool';
+    toast({
+      message: isEmptyPool ? t('random.emptyPool') : randomStatus,
+      variant: isEmptyPool ? 'warning' : 'danger',
+    });
+  }, [randomStatus, t, toast]);
 
   useEffect(() => {
     if (sidebarTab !== 'history') {
@@ -538,8 +548,6 @@ export function RandomAnimePage() {
           <div className={styles.emptyResult} aria-hidden="true" />
         )}
       </section>
-
-      {randomStatus ? <p className={styles.status}>{randomStatus}</p> : null}
     </SplitScreenLayout>
   );
 }
@@ -787,6 +795,23 @@ function getReleaseYear(airedOn: string) {
 
 function toCatalogFilter(values: string[]) {
   return values.length > 0 ? values.join(',') : undefined;
+}
+
+function getCatalogGenreLabel(genre: CatalogGenre, language: string) {
+  return language === 'ru' ? genre.titleRu ?? genre.name : genre.name;
+}
+
+function getLocalizedCatalogGenre(name: string, genres: CatalogGenre[], language: string) {
+  const normalizedName = normalizeGenreName(name);
+  const matchedGenre = genres.find((genre) => {
+    return normalizeGenreName(genre.name) === normalizedName || normalizeGenreName(genre.titleRu) === normalizedName;
+  });
+
+  return matchedGenre ? getCatalogGenreLabel(matchedGenre, language) : name;
+}
+
+function normalizeGenreName(name: string | null | undefined) {
+  return name?.trim().toLocaleLowerCase() ?? '';
 }
 
 function ResultSkeleton() {
