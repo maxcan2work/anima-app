@@ -49,14 +49,24 @@ export type CatalogSearchResult = {
   airedOn: string | null;
 };
 
-export async function searchCatalog(query: string) {
+export type CatalogBrowseFilters = {
+  kind?: string;
+  status?: string;
+  scoredOnly?: boolean;
+};
+
+export async function searchCatalog(query: string, filters: CatalogBrowseFilters = {}) {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
+  const safeKind = normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special']);
+  const safeStatus = normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']);
 
   const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
   url.searchParams.set('search', trimmed);
   url.searchParams.set('limit', '12');
   url.searchParams.set('order', 'popularity');
+  if (safeKind) url.searchParams.set('kind', safeKind);
+  if (safeStatus) url.searchParams.set('status', safeStatus);
 
   const response = await fetch(url, {
     headers: {
@@ -70,48 +80,42 @@ export async function searchCatalog(query: string) {
   }
 
   const payload = (await response.json()) as ShikimoriAnime[];
-  return payload.map(mapShikimoriAnime);
+  return payload.map(mapShikimoriAnime).filter((result) => !filters.scoredOnly || hasCatalogScore(result));
 }
 
-export async function searchPlayableCatalog(query: string, provider: string) {
-  const results = await searchCatalog(query);
+export async function searchPlayableCatalog(query: string, provider: string, filters: CatalogBrowseFilters = {}) {
+  const results = await searchCatalog(query, filters);
   return filterPlayableCatalogResults(results, provider);
 }
 
-export async function browseCatalog(page: number, limit: number, order: string) {
+export async function browseCatalog(page: number, limit: number, order: string, filters: CatalogBrowseFilters = {}) {
   const safePage = Math.max(Math.trunc(page), 1);
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 30);
   const safeOrder = ['popularity', 'ranked', 'ranked_random', 'aired_on'].includes(order) ? order : 'popularity';
-
-  const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
-  url.searchParams.set('page', String(safePage));
-  url.searchParams.set('limit', String(safeLimit));
-  url.searchParams.set('order', safeOrder);
-
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'AnimaCatalog/0.1',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Shikimori browse failed: ${response.status}`);
-  }
-
-  const payload = (await response.json()) as ShikimoriAnime[];
+  const safeKind = normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special']);
+  const safeStatus = normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']);
+  const query = { order: safeOrder, kind: safeKind, status: safeStatus };
+  const payload = filters.scoredOnly
+    ? await fetchScoredBrowsePage(safePage, safeLimit, query)
+    : await fetchShikimoriBrowsePage(safePage, safeLimit, query);
+  const results = payload.results.map(mapShikimoriAnime);
 
   return {
     page: safePage,
     limit: safeLimit,
     order: safeOrder,
-    hasNextPage: payload.length === safeLimit,
-    results: payload.map(mapShikimoriAnime),
+    hasNextPage: payload.hasNextPage,
+    filters: {
+      kind: safeKind,
+      status: safeStatus,
+      scoredOnly: Boolean(filters.scoredOnly),
+    },
+    results,
   };
 }
 
-export async function browsePlayableCatalog(page: number, limit: number, order: string, provider: string) {
-  const result = await browseCatalog(page, limit, order);
+export async function browsePlayableCatalog(page: number, limit: number, order: string, provider: string, filters: CatalogBrowseFilters = {}) {
+  const result = await browseCatalog(page, limit, order, filters);
   return {
     ...result,
     results: await filterPlayableCatalogResults(result.results, provider),
@@ -199,6 +203,70 @@ export async function importShikimoriAnime(providerId: number) {
   }
 
   return savedAnime;
+}
+
+function normalizeCatalogParam(value: string | null | undefined, allowed: string[]) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized && allowed.includes(normalized) ? normalized : undefined;
+}
+
+async function fetchScoredBrowsePage(
+  page: number,
+  limit: number,
+  query: { order: string; kind?: string; status?: string },
+) {
+  const end = page * limit;
+  const start = end - limit;
+  const collected: ShikimoriAnime[] = [];
+  let sourcePage = 1;
+  let sourceHasNext = true;
+
+  while (collected.length < end && sourceHasNext) {
+    const payload = await fetchShikimoriBrowsePage(sourcePage, limit, query);
+    collected.push(...payload.results.filter((anime) => hasCatalogScore(mapShikimoriAnime(anime))));
+    sourceHasNext = payload.hasNextPage;
+    sourcePage += 1;
+  }
+
+  return {
+    results: collected.slice(start, end),
+    hasNextPage: collected.length > end || sourceHasNext,
+  };
+}
+
+async function fetchShikimoriBrowsePage(
+  page: number,
+  limit: number,
+  query: { order: string; kind?: string; status?: string },
+) {
+  const url = new URL('/api/animes', SHIKIMORI_BASE_URL);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('order', query.order);
+  if (query.kind) url.searchParams.set('kind', query.kind);
+  if (query.status) url.searchParams.set('status', query.status);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AnimaCatalog/0.1',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shikimori browse failed: ${response.status}`);
+  }
+
+  const results = (await response.json()) as ShikimoriAnime[];
+
+  return {
+    results,
+    hasNextPage: results.length === limit,
+  };
+}
+
+function hasCatalogScore(result: CatalogSearchResult) {
+  return Boolean(result.score && result.score !== '0' && result.score !== '0.0');
 }
 
 function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {

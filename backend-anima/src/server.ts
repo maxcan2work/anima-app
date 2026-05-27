@@ -237,7 +237,12 @@ app.get('/catalog/search', async (request, response, next) => {
   try {
     const query = String(request.query.q ?? '');
     const playableProvider = String(request.query.playableProvider ?? '');
-    const results = playableProvider ? await searchPlayableCatalog(query, playableProvider) : await searchCatalog(query);
+    const filters = {
+      kind: String(request.query.kind ?? ''),
+      status: String(request.query.status ?? ''),
+      scoredOnly: String(request.query.scoredOnly ?? '') === 'true',
+    };
+    const results = playableProvider ? await searchPlayableCatalog(query, playableProvider, filters) : await searchCatalog(query, filters);
     response.json({ results });
   } catch (error) {
     next(error);
@@ -250,9 +255,14 @@ app.get('/catalog/browse', async (request, response, next) => {
     const limit = Number(request.query.limit ?? 18);
     const order = String(request.query.order ?? 'popularity');
     const playableProvider = String(request.query.playableProvider ?? '');
+    const filters = {
+      kind: String(request.query.kind ?? ''),
+      status: String(request.query.status ?? ''),
+      scoredOnly: String(request.query.scoredOnly ?? '') === 'true',
+    };
     const result = playableProvider
-      ? await browsePlayableCatalog(page, limit, order, playableProvider)
-      : await browseCatalog(page, limit, order);
+      ? await browsePlayableCatalog(page, limit, order, playableProvider, filters)
+      : await browseCatalog(page, limit, order, filters);
 
     response.json(result);
   } catch (error) {

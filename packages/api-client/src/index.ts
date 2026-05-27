@@ -119,6 +119,9 @@ export type ShikimoriImportResult = {
 
 export type CatalogRequestOptions = {
   playableProvider?: 'anilibria';
+  kind?: string;
+  status?: string;
+  scoredOnly?: boolean;
 };
 
 export type AnimaApiClientOptions = {
@@ -168,15 +171,34 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
     searchCatalog: (query: string, options: CatalogRequestOptions = {}) =>
-      apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?${catalogSearchParams({ q: query, playableProvider: options.playableProvider })}`),
+      apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?${catalogSearchParams({
+        q: query,
+        playableProvider: options.playableProvider,
+        kind: options.kind,
+        status: options.status,
+        scoredOnly: options.scoredOnly ? 'true' : undefined,
+      })}`),
     browseCatalog: (page: number, order = 'popularity', options: CatalogRequestOptions = {}) =>
       apiFetch<{
         page: number;
         limit: number;
         order: string;
+        filters?: {
+          kind?: string;
+          status?: string;
+          scoredOnly: boolean;
+        };
         hasNextPage: boolean;
         results: CatalogSearchResult[];
-      }>(`/catalog/browse?${catalogSearchParams({ page, limit: 18, order, playableProvider: options.playableProvider })}`),
+      }>(`/catalog/browse?${catalogSearchParams({
+        page,
+        limit: 18,
+        order,
+        playableProvider: options.playableProvider,
+        kind: options.kind,
+        status: options.status,
+        scoredOnly: options.scoredOnly ? 'true' : undefined,
+      })}`),
     importCatalogAnime: (provider: CatalogSearchResult['provider'], providerId: number) =>
       apiFetch<{ anime: ServerAnime }>('/catalog/import', {
         method: 'POST',
