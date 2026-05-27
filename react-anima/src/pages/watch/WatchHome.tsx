@@ -170,6 +170,7 @@ export function WatchHome() {
             </section>
 
             <FilterSection
+              activeCount={browseFilters.status === 'all' ? 0 : 1}
               collapsed={Boolean(collapsedSections.status)}
               id="status"
               title={t('catalog.status')}
@@ -186,6 +187,7 @@ export function WatchHome() {
             </FilterSection>
 
             <FilterSection
+              activeCount={browseFilters.score === 'all' ? 0 : 1}
               collapsed={Boolean(collapsedSections.score)}
               id="score"
               title={t('catalog.score')}
@@ -199,6 +201,7 @@ export function WatchHome() {
             </FilterSection>
 
             <FilterSection
+              activeCount={browseFilters.kinds.length}
               collapsed={Boolean(collapsedSections.kind)}
               id="kind"
               title={t('catalog.kind')}
@@ -217,6 +220,7 @@ export function WatchHome() {
             </FilterSection>
 
             <FilterSection
+              activeCount={browseFilters.genres.length}
               collapsed={Boolean(collapsedSections.genre)}
               id="genre"
               title={t('catalog.genre')}
@@ -242,6 +246,7 @@ export function WatchHome() {
             </FilterSection>
 
             <FilterSection
+              activeCount={browseFilters.seasons.length}
               collapsed={Boolean(collapsedSections.season)}
               id="season"
               title={t('catalog.season')}
@@ -260,6 +265,7 @@ export function WatchHome() {
             </FilterSection>
 
             <FilterSection
+              activeCount={browseFilters.ratings.length}
               collapsed={Boolean(collapsedSections.rating)}
               id="rating"
               title={t('catalog.rating')}
@@ -313,12 +319,14 @@ function buildYearOptions() {
 }
 
 function FilterSection({
+  activeCount = 0,
   children,
   collapsed,
   id,
   title,
   onToggle,
 }: {
+  activeCount?: number;
   children: ReactNode;
   collapsed: boolean;
   id: string;
@@ -326,6 +334,7 @@ function FilterSection({
   onToggle: () => void;
 }) {
   const contentId = `catalog-filter-${id}`;
+  const showActiveBadge = collapsed && activeCount > 0;
 
   return (
     <section className={styles.controlGroup}>
@@ -336,7 +345,10 @@ function FilterSection({
         aria-controls={contentId}
         onClick={onToggle}
       >
-        <span>{title}</span>
+        <span className={styles.filterSectionTitle}>
+          <span>{title}</span>
+          {showActiveBadge ? <span className={styles.filterSectionBadge}>{activeCount}</span> : null}
+        </span>
         <span className={styles.filterSectionChevron} aria-hidden="true" />
       </button>
       <div

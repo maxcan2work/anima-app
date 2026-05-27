@@ -123,8 +123,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  min-height: 32px;
-  padding: 0 2px;
+  min-height: 38px;
+  padding: 3px 2px;
   border: 0;
   background: transparent;
   color: #fff7ec;
@@ -133,11 +133,37 @@
   text-align: left;
 }
 
-.filterSectionHeader span:first-child {
+.filterSectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.filterSectionTitle > span:first-child {
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.filterSectionBadge {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid rgba(242, 192, 99, 0.38);
+  border-radius: 999px;
+  background: rgba(242, 192, 99, 0.14);
+  color: #f7d08a;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: 0 0 0 3px rgba(242, 192, 99, 0.06);
 }
 
 .filterSectionHeader:hover {
@@ -166,8 +192,8 @@
   display: grid;
   grid-template-rows: 1fr;
   min-width: 0;
-  margin: -3px;
-  padding: 3px;
+  margin: -4px;
+  padding: 4px;
   overflow: visible;
   opacity: 1;
   transition:
@@ -192,8 +218,8 @@
 }
 
 .selectBuffer {
-  margin: -3px;
-  padding: 3px;
+  margin: -4px;
+  padding: 4px;
   overflow: visible;
 }
 
