@@ -530,13 +530,26 @@ function FilterSelect({
 function ResultSkeleton() {
   return (
     <div className={styles.resultSkeleton} aria-hidden="true">
-      <span className={styles.resultSkeletonPoster} />
-      <div>
+      <span className={styles.resultSkeletonAside}>
+        <span className={styles.resultSkeletonPoster} />
+        <span className={styles.resultSkeletonGenres} />
+        <span className={styles.resultSkeletonMetaGrid}>
+          {Array.from({ length: 4 }, (_, index) => (
+            <span className={styles.resultSkeletonMetaCard} key={`random-result-meta-${index}`} />
+          ))}
+        </span>
+        <span className={styles.resultSkeletonYear} />
+      </span>
+      <span className={styles.resultSkeletonContent}>
         <span className={styles.resultSkeletonEyebrow} />
         <span className={styles.resultSkeletonTitle} />
         <span className={styles.resultSkeletonLine} />
-        <span className={styles.resultSkeletonMeta} />
-      </div>
+        <span className={styles.resultSkeletonDescription} />
+        <span className={styles.resultSkeletonActions}>
+          <span />
+          <span />
+        </span>
+      </span>
     </div>
   );
 }
