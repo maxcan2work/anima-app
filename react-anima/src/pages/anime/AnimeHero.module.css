@@ -3,7 +3,10 @@
   grid-template-columns: minmax(0, 1fr) 330px;
   gap: 24px;
   align-items: stretch;
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .watchPartyLayout {
@@ -138,15 +141,41 @@
   align-self: stretch;
   min-width: 0;
   min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .detailsPanelContent {
+  box-sizing: border-box;
   display: grid;
   align-content: start;
   gap: 8px;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  margin: -3px 0 6px;
+  overflow-y: auto;
+  padding: 0 3px;
+  scrollbar-gutter: stable;
+  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+.detailsPanelContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.detailsPanelContent::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.detailsPanelContent::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(201, 166, 109, 0.48);
+}
+
+.detailsPanelContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 166, 109, 0.72);
 }
 
 .watchPartyLayout .detailsPanel {
@@ -214,9 +243,6 @@
   align-content: start;
   gap: 12px;
   min-width: 0;
-  max-height: 100%;
-  overflow-y: auto;
-  padding-right: 2px;
 }
 
 .sidebarInfoPanel h2 {
@@ -268,14 +294,33 @@
 }
 
 .watchContextGrid span {
+  position: relative;
   display: grid;
-  gap: 5px;
-  min-height: 54px;
-  padding: 10px;
+  align-content: end;
+  gap: 6px;
+  min-height: 78px;
+  padding: 30px 10px 10px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.watchContextGrid svg,
+.watchContextGrid img {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 18px;
+  height: 18px;
+  color: #9f968b;
+  opacity: 0.72;
+}
+
+.watchContextGrid svg path {
+  stroke: currentColor;
 }
 
 .watchContextGrid small,
@@ -300,6 +345,287 @@
   font-size: 14px;
   font-weight: 950;
   line-height: 1.05;
+}
+
+.extendedDetails {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.detailsSection {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.detailsSection h3 {
+  margin: 0;
+  color: #fff7ec;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.screenshotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.screenshotGrid a {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.screenshotGrid img,
+.similarList img,
+.roleGrid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.similarList,
+.roleGrid {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.characterGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.characterCard {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.026)),
+    rgba(255, 255, 255, 0.045);
+}
+
+.characterCard > a,
+.characterCard > div {
+  position: relative;
+  display: block;
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.characterCard img,
+.characterAvatarFallback {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.characterCard span {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: block;
+  min-width: 0;
+  padding: 7px 9px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(12, 13, 12, 0.7);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateY(calc(100% + 12px));
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.characterCard:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.characterCard strong,
+.characterCard small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.characterCard strong {
+  display: block;
+  color: #fff7ec;
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.similarList button {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.roleCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.roleCard > a,
+.roleCard > div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.similarList img,
+.roleGrid img,
+.roleAvatarFallback {
+  display: block;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.similarList span,
+.roleCard span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.similarList strong,
+.roleCard strong,
+.similarList small,
+.roleCard small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.similarList strong,
+.roleCard strong {
+  color: #fff7ec;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.similarList small,
+.roleCard small {
+  color: #a99f91;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.extendedDetailsSkeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.skeletonHeading,
+.skeletonSimilarList span,
+.skeletonCharacterGrid span,
+.skeletonScreenshotGrid span {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.055));
+  background-size: 220% 100%;
+  animation: shimmer 1.25s linear infinite;
+}
+
+.skeletonHeading {
+  width: 42%;
+  height: 18px;
+}
+
+.skeletonSimilarList {
+  display: grid;
+  gap: 8px;
+}
+
+.skeletonSimilarList span {
+  min-height: 54px;
+}
+
+.skeletonCharacterGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.skeletonCharacterGrid span {
+  aspect-ratio: 1 / 1;
+}
+
+.skeletonScreenshotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.skeletonScreenshotGrid span {
+  aspect-ratio: 16 / 9;
+}
+
+.detailsEmpty {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .genres {
@@ -797,6 +1123,19 @@
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .detailsPanel {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .detailsPanelContent {
+    overflow: visible;
+    padding: 0;
   }
 
   .watchPartyLayout {

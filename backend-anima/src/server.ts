@@ -8,7 +8,16 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
-import { browseCatalog, browsePlayableCatalog, getCatalogAnimeDetails, getCatalogGenres, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
+import {
+  browseCatalog,
+  browsePlayableCatalog,
+  getCatalogAnimeDetails,
+  getCatalogAnimeExtendedDetails,
+  getCatalogGenres,
+  importShikimoriAnime,
+  searchCatalog,
+  searchPlayableCatalog,
+} from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
 import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl, importLinkedShikimoriAnimeList } from './shikimori.js';
 
@@ -231,6 +240,30 @@ app.get('/anime/:animeId', async (request, response) => {
   }
 
   response.json({ anime });
+});
+
+app.get('/anime/:animeId/details', async (request, response, next) => {
+  try {
+    const anime = await prisma.anime.findUnique({
+      where: { id: String(request.params.animeId) },
+      select: { shikimoriId: true },
+    });
+
+    if (!anime) {
+      response.status(404).json({ error: 'Anime not found' });
+      return;
+    }
+
+    if (!anime.shikimoriId) {
+      response.json({ details: { similar: [], characters: [], people: [], screenshots: [] } });
+      return;
+    }
+
+    const details = await getCatalogAnimeExtendedDetails(anime.shikimoriId);
+    response.json({ details });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/catalog/search', async (request, response, next) => {

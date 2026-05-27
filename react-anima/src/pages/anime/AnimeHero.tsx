@@ -1,19 +1,20 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
-import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
+import { getAnimeExtendedDetails, getEpisodePlayers, importCatalogAnime, type AnimeExtendedDetails, type CatalogSearchResult, type PlayerProviderResult } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
 import DiaryIcon from '@assets/pencil.svg?react';
 import InfoIcon from '@assets/description.svg?react';
-import statusIcon from '@assets/profile-check.svg';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import starIcon from '@assets/star.svg';
+import StudioIcon from '@assets/studio.svg?react';
 import WatchTabIcon from '@assets/tv-alt.svg?react';
 import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
+import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { GenreMarquee } from '@shared/ui/GenreMarquee';
+import { animeRouteFromCatalog, animeRouteSlug } from '@shared/navigation';
 import { Tooltip } from '@shared/ui/Tooltip';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
@@ -53,12 +54,16 @@ export function AnimeHero({
   footerExtra,
 }: AnimeHeroProps) {
   const { language, t } = useI18n();
+  const { requestAnimeRoute } = useNavigation();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
   const [activeTab, setActiveTab] = useState<AnimePageTab>('watch');
+  const [details, setDetails] = useState<AnimeExtendedDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState(false);
   const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
@@ -123,6 +128,34 @@ export function AnimeHero({
     };
   }, [anime.id, mode, state.episode]);
 
+  useEffect(() => {
+    setDetails(null);
+    setDetailsError(false);
+  }, [anime.id]);
+
+  useEffect(() => {
+    if (mode !== 'default' || activeTab !== 'overview' || details) return;
+
+    let ignore = false;
+    setDetailsLoading(true);
+    setDetailsError(false);
+
+    getAnimeExtendedDetails(anime.id)
+      .then((response) => {
+        if (!ignore) setDetails(response.details);
+      })
+      .catch(() => {
+        if (!ignore) setDetailsError(true);
+      })
+      .finally(() => {
+        if (!ignore) setDetailsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, anime.id, details, mode]);
+
   const episodeControls = (
     <section className={styles.episodes} aria-label="Серии">
       <button
@@ -180,33 +213,12 @@ export function AnimeHero({
         <div className={styles.detailsPanelContent}>
           {activeTab === 'overview' ? (
             <div className={styles.sidebarInfoPanel}>
-              <p className="eyebrow">{t('anime.tab.overview')}</p>
-              <h2>{animeTitle}</h2>
-              {animeSecondaryTitle ? <small>{animeSecondaryTitle}</small> : null}
-              <GenreMarquee genres={anime.genres} ariaLabel={t('catalog.genre')} />
-              <div className={styles.metaGrid}>
-                <span>
-                  <CalendarIcon aria-hidden="true" />
-                  <small>{t('catalog.season')}</small>
-                  <strong>{anime.year}</strong>
-                </span>
-                <span>
-                  <img src={tvIcon} alt="" aria-hidden="true" />
-                  <small>{t('anime.episodesCount')}</small>
-                  <strong>{anime.episodes}</strong>
-                </span>
-                <span>
-                  <img src={statusIcon} alt="" aria-hidden="true" />
-                  <small>{t('anime.studio')}</small>
-                  <strong>{anime.studio}</strong>
-                </span>
-                <span>
-                  <img src={starIcon} alt="" aria-hidden="true" />
-                  <small>{t('catalog.score')}</small>
-                  <strong>{anime.rating}</strong>
-                </span>
-              </div>
-              <p>{anime.description || t('random.noDescription')}</p>
+              <section className={styles.detailsSection}>
+                <h3>{t('anime.description')}</h3>
+                <p>{anime.description || t('random.noDescription')}</p>
+              </section>
+              <AnimeDetailsSections details={details} loading={detailsLoading} error={detailsError} section="rest" onOpenSimilar={requestAnimeRoute} />
+              <AnimeDetailsSections details={details} loading={detailsLoading} error={detailsError} section="similar" onOpenSimilar={requestAnimeRoute} />
               <WatchSources anime={anime} />
             </div>
           ) : activeTab === 'diary' ? (
@@ -233,18 +245,22 @@ export function AnimeHero({
 
               <div className={styles.watchContextGrid}>
                 <span>
-                  <small>{t('anime.currentEpisode')}</small>
-                  <strong>{state.episode} / {anime.episodes}</strong>
-                </span>
-                <span>
-                  <small>{t('anime.provider')}</small>
-                  <strong>{PLAYER_PROVIDER_OPTIONS.find((option) => option.value === activeProviderName)?.label ?? activeProviderName}</strong>
-                </span>
-                <span>
+                  <CalendarIcon aria-hidden="true" />
                   <small>{t('catalog.season')}</small>
                   <strong>{anime.year}</strong>
                 </span>
                 <span>
+                  <img src={tvIcon} alt="" aria-hidden="true" />
+                  <small>{t('anime.episodesCount')}</small>
+                  <strong>{anime.episodes}</strong>
+                </span>
+                <span>
+                  <StudioIcon aria-hidden="true" />
+                  <small>{t('anime.studio')}</small>
+                  <strong>{anime.studio}</strong>
+                </span>
+                <span>
+                  <img src={starIcon} alt="" aria-hidden="true" />
                   <small>{t('catalog.score')}</small>
                   <strong>{anime.rating}</strong>
                 </span>
@@ -337,6 +353,224 @@ function GenreChips({ genres, ariaLabel }: { genres: string[]; ariaLabel: string
       {genres.map((genre) => (
         <span key={genre}>{genre}</span>
       ))}
+    </div>
+  );
+}
+
+function AnimeDetailsSections({
+  details,
+  loading,
+  error,
+  section = 'all',
+  onOpenSimilar,
+}: {
+  details: AnimeExtendedDetails | null;
+  loading: boolean;
+  error: boolean;
+  section?: 'all' | 'similar' | 'rest';
+  onOpenSimilar?: (path: string) => void;
+}) {
+  const { language, t } = useI18n();
+
+  if (loading) {
+    return <ExtendedDetailsSkeleton section={section} />;
+  }
+
+  if (error) {
+    if (section === 'rest') return null;
+    return <p className={styles.detailsEmpty}>{t('anime.detailsError')}</p>;
+  }
+
+  if (!details) return null;
+
+  const hasContent =
+    details.similar.length > 0 ||
+    details.characters.length > 0 ||
+    details.people.length > 0 ||
+    details.screenshots.length > 0;
+
+  if (!hasContent) {
+    if (section !== 'all') return null;
+    return <p className={styles.detailsEmpty}>{t('anime.detailsEmpty')}</p>;
+  }
+
+  return (
+    <div className={styles.extendedDetails}>
+      {section !== 'rest' && details.similar.length > 0 ? (
+        <DetailsSection title={t('anime.similar')}>
+          <div className={styles.similarList}>
+            {details.similar.map((item) => (
+              <button key={item.providerId} type="button" onClick={() => openSimilarAnime(item, onOpenSimilar)}>
+                {item.posterUrl ? <img src={item.posterUrl} alt="" loading="lazy" /> : null}
+                <span>
+                  <strong>{getLocalizedAnimeTitle(item, language)}</strong>
+                  <small>{item.score ? `${t('catalog.score')}: ${item.score}` : item.kind}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </DetailsSection>
+      ) : null}
+
+      {section !== 'similar' && details.characters.length > 0 ? (
+        <DetailsSection title={t('anime.characters')}>
+          <CharacterGrid items={details.characters} />
+        </DetailsSection>
+      ) : null}
+
+      {section !== 'similar' && details.screenshots.length > 0 ? (
+        <DetailsSection title={t('anime.screenshots')}>
+          <div className={styles.screenshotGrid}>
+            {details.screenshots.map((screenshot) => (
+              <a key={screenshot.originalUrl} href={screenshot.originalUrl} target="_blank" rel="noreferrer">
+                <img src={screenshot.previewUrl} alt="" loading="lazy" />
+              </a>
+            ))}
+          </div>
+        </DetailsSection>
+      ) : null}
+
+      {section !== 'similar' && details.people.length > 0 ? (
+        <DetailsSection title={t('anime.people')}>
+          <RoleGrid items={details.people} />
+        </DetailsSection>
+      ) : null}
+    </div>
+  );
+}
+
+function ExtendedDetailsSkeleton({ section }: { section: 'all' | 'similar' | 'rest' }) {
+  if (section === 'similar') {
+    return (
+      <div className={styles.extendedDetailsSkeleton} aria-hidden="true">
+        <section className={styles.detailsSection}>
+          <span className={styles.skeletonHeading} />
+          <div className={styles.skeletonSimilarList}>
+            <span />
+            <span />
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.extendedDetailsSkeleton} aria-hidden="true">
+      <section className={styles.detailsSection}>
+        <span className={styles.skeletonHeading} />
+        <div className={styles.skeletonCharacterGrid}>
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+      </section>
+      <section className={styles.detailsSection}>
+        <span className={styles.skeletonHeading} />
+        <div className={styles.skeletonScreenshotGrid}>
+          <span />
+          <span />
+        </div>
+      </section>
+      <section className={styles.detailsSection}>
+        <span className={styles.skeletonHeading} />
+        <div className={styles.skeletonSimilarList}>
+          <span />
+          <span />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+async function openSimilarAnime(item: CatalogSearchResult, onOpenSimilar?: (path: string) => void) {
+  if (!onOpenSimilar) return;
+  onOpenSimilar(animeRouteFromCatalog(item));
+
+  try {
+    const response = await importCatalogAnime(item.provider, item.providerId);
+    onOpenSimilar(`/anime/${animeRouteSlug({
+      id: response.anime.id,
+      title: response.anime.title,
+      originalTitle: response.anime.originalTitle,
+    } as AnimeTitle)}`);
+  } catch {
+    // The route loader can still import by catalog slug, so this is only an eager optimization.
+  }
+}
+
+function DetailsSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className={styles.detailsSection}>
+      <h3>{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function RoleGrid({
+  items,
+}: {
+  items: Array<{ id: number | null; name: string; imageUrl: string | null; url: string | null; roles: string[] }>;
+}) {
+  return (
+    <div className={styles.roleGrid}>
+      {items.map((item, index) => {
+        const profile = (
+          <>
+            {item.imageUrl ? <img src={item.imageUrl} alt="" loading="lazy" /> : <span className={styles.roleAvatarFallback} />}
+            <span>
+              <strong>{item.name}</strong>
+              {item.roles.length > 0 ? <small>{item.roles.join(', ')}</small> : null}
+            </span>
+          </>
+        );
+
+        return (
+          <div key={`${item.id ?? item.name}-${index}`} className={styles.roleCard}>
+            {item.url ? (
+              <a href={item.url} target="_blank" rel="noreferrer">
+                {profile}
+              </a>
+            ) : (
+              <div>{profile}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CharacterGrid({
+  items,
+}: {
+  items: Array<{ id: number | null; name: string; imageUrl: string | null; url: string | null; roles: string[] }>;
+}) {
+  return (
+    <div className={styles.characterGrid}>
+      {items.map((item, index) => {
+        const content = (
+          <>
+            {item.imageUrl ? <img src={item.imageUrl} alt="" loading="lazy" /> : <span className={styles.characterAvatarFallback} />}
+            <span>
+              <strong>{item.name}</strong>
+            </span>
+          </>
+        );
+
+        return (
+          <article key={`${item.id ?? item.name}-${index}`} className={styles.characterCard}>
+            {item.url ? (
+              <a href={item.url} target="_blank" rel="noreferrer">
+                {content}
+              </a>
+            ) : (
+              <div>{content}</div>
+            )}
+          </article>
+        );
+      })}
     </div>
   );
 }

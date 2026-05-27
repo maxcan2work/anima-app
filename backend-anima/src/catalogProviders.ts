@@ -35,6 +35,26 @@ type ShikimoriAnime = {
   }>;
 };
 
+type ShikimoriPerson = {
+  id?: number | null;
+  name?: string | null;
+  russian?: string | null;
+  image?: ShikimoriImage | null;
+  url?: string | null;
+};
+
+type ShikimoriRole = {
+  roles?: string[] | null;
+  roles_russian?: string[] | null;
+  person?: ShikimoriPerson | null;
+  character?: ShikimoriPerson | null;
+};
+
+type ShikimoriScreenshot = {
+  original?: string | null;
+  preview?: string | null;
+};
+
 type ShikimoriGenre = {
   id: number;
   name?: string | null;
@@ -62,6 +82,8 @@ const FALLBACK_ANIME_GENRES: CatalogGenre[] = [
 ];
 
 let cachedCatalogGenres: CatalogGenre[] | null = null;
+const animeDetailsCache = new Map<number, { expiresAt: number; details: CatalogAnimeDetails }>();
+const ANIME_DETAILS_CACHE_TTL_MS = 1000 * 60 * 30;
 
 export type CatalogSearchResult = {
   provider: 'shikimori';
@@ -100,6 +122,28 @@ export type CatalogGenre = {
   name: string;
   titleRu: string | null;
   kind: string | null;
+};
+
+export type CatalogAnimeDetails = {
+  similar: CatalogSearchResult[];
+  characters: Array<{
+    id: number | null;
+    name: string;
+    imageUrl: string | null;
+    url: string | null;
+    roles: string[];
+  }>;
+  people: Array<{
+    id: number | null;
+    name: string;
+    imageUrl: string | null;
+    url: string | null;
+    roles: string[];
+  }>;
+  screenshots: Array<{
+    originalUrl: string;
+    previewUrl: string;
+  }>;
 };
 
 export async function searchCatalog(query: string, filters: CatalogBrowseFilters = {}) {
@@ -204,6 +248,37 @@ export async function getCatalogAnimeDetails(providerId: number) {
   return fetchShikimoriAnimeDetails(providerId);
 }
 
+export async function getCatalogAnimeExtendedDetails(providerId: number): Promise<CatalogAnimeDetails> {
+  const cached = animeDetailsCache.get(providerId);
+  if (cached && cached.expiresAt > Date.now()) return cached.details;
+
+  const roles = await fetchShikimoriAnimeRoles(providerId).catch(() => []);
+  const similar = await fetchShikimoriAnimeSimilar(providerId).catch(() => []);
+  const screenshots = await fetchShikimoriAnimeScreenshots(providerId).catch(() => []);
+
+  const details = {
+    similar: similar.slice(0, 6),
+    characters: roles
+      .filter((role) => role.character)
+      .map((role) => mapShikimoriRoleEntity(role.character!, role.roles_russian ?? role.roles))
+      .filter((item): item is CatalogAnimeDetails['characters'][number] => Boolean(item))
+      .slice(0, 8),
+    people: roles
+      .filter((role) => role.person)
+      .map((role) => mapShikimoriRoleEntity(role.person!, role.roles_russian ?? role.roles))
+      .filter((item): item is CatalogAnimeDetails['people'][number] => Boolean(item))
+      .slice(0, 8),
+    screenshots: screenshots.slice(0, 6),
+  };
+
+  animeDetailsCache.set(providerId, {
+    expiresAt: Date.now() + ANIME_DETAILS_CACHE_TTL_MS,
+    details,
+  });
+
+  return details;
+}
+
 export async function importShikimoriAnime(providerId: number) {
   const anime = await fetchShikimoriAnimeDetails(providerId);
 
@@ -291,6 +366,42 @@ async function fetchShikimoriAnimeDetails(providerId: number) {
   }
 
   return mapShikimoriAnime((await response.json()) as ShikimoriAnime);
+}
+
+async function fetchShikimoriAnimeSimilar(providerId: number) {
+  const payload = await fetchShikimoriJson<ShikimoriAnime[]>(`/api/animes/${providerId}/similar`);
+  return payload.map(mapShikimoriAnime);
+}
+
+async function fetchShikimoriAnimeRoles(providerId: number) {
+  return fetchShikimoriJson<ShikimoriRole[]>(`/api/animes/${providerId}/roles`);
+}
+
+async function fetchShikimoriAnimeScreenshots(providerId: number) {
+  const payload = await fetchShikimoriJson<ShikimoriScreenshot[]>(`/api/animes/${providerId}/screenshots`);
+  return payload
+    .map((screenshot) => {
+      const originalUrl = buildAbsoluteShikimoriUrl(screenshot.original);
+      const previewUrl = buildAbsoluteShikimoriUrl(screenshot.preview) ?? originalUrl;
+      return originalUrl && previewUrl ? { originalUrl, previewUrl } : null;
+    })
+    .filter((item): item is CatalogAnimeDetails['screenshots'][number] => Boolean(item));
+}
+
+async function fetchShikimoriJson<T>(path: string): Promise<T> {
+  const url = new URL(path, SHIKIMORI_BASE_URL);
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AnimaCatalog/0.1',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shikimori details failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 function normalizeCatalogParam(value: string | null | undefined, allowed: string[]) {
@@ -519,6 +630,23 @@ function cleanText(value: string | null | undefined) {
 
 function buildShikimoriImageUrl(image: ShikimoriImage | null | undefined) {
   const path = image?.original ?? image?.preview ?? image?.x96;
+  return buildAbsoluteShikimoriUrl(path);
+}
+
+function buildAbsoluteShikimoriUrl(path: string | null | undefined) {
   if (!path) return null;
   return path.startsWith('http') ? path : `${SHIKIMORI_BASE_URL}${path}`;
+}
+
+function mapShikimoriRoleEntity(entity: ShikimoriPerson, roles: string[] | null | undefined) {
+  const name = cleanText(entity.russian) || cleanText(entity.name);
+  if (!name) return null;
+
+  return {
+    id: typeof entity.id === 'number' ? entity.id : null,
+    name,
+    imageUrl: buildShikimoriImageUrl(entity.image),
+    url: buildAbsoluteShikimoriUrl(entity.url),
+    roles: uniqueStrings((roles ?? []).map(cleanText).filter(Boolean)).slice(0, 2),
+  };
 }

@@ -106,6 +106,28 @@ export type CatalogGenre = {
   kind: string | null;
 };
 
+export type AnimeExtendedDetails = {
+  similar: CatalogSearchResult[];
+  characters: Array<{
+    id: number | null;
+    name: string;
+    imageUrl: string | null;
+    url: string | null;
+    roles: string[];
+  }>;
+  people: Array<{
+    id: number | null;
+    name: string;
+    imageUrl: string | null;
+    url: string | null;
+    roles: string[];
+  }>;
+  screenshots: Array<{
+    originalUrl: string;
+    previewUrl: string;
+  }>;
+};
+
 export type ServerRandomHistoryEntry = CatalogSearchResult & {
   id: string;
   updatedAt: string;
@@ -186,6 +208,7 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
       }),
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
+    getAnimeExtendedDetails: (animeId: string) => apiFetch<{ details: AnimeExtendedDetails }>(`/anime/${animeId}/details`),
     getCatalogAnimeDetails: (provider: CatalogSearchResult['provider'], providerId: number) =>
       apiFetch<{ anime: CatalogSearchResult }>(`/catalog/${encodeURIComponent(provider)}/${providerId}`),
     getCatalogGenres: () => apiFetch<{ genres: CatalogGenre[] }>('/catalog/genres'),
