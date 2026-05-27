@@ -293,8 +293,6 @@ export function WatchHome() {
     >
       <CatalogBrowser
         className={styles.watchHome}
-        eyebrow="Shikimori"
-        title={t('catalog.title')}
         browseResults={browseResults}
         browsePage={browsePage}
         browseHasNext={browseHasNext}

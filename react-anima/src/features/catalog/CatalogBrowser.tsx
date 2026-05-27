@@ -6,8 +6,8 @@ import styles from './CatalogBrowser.module.css';
 
 type CatalogBrowserProps = {
   className: string;
-  eyebrow: string;
-  title: string;
+  eyebrow?: string;
+  title?: string;
   browseResults: CatalogSearchResult[];
   browsePage: number;
   browseHasNext: boolean;
@@ -51,6 +51,7 @@ export function CatalogBrowser({
   const hasBrowseError = !isSearching && Boolean(browseStatus) && !browseLoading && browseResults.length === 0;
   const isLoadingMore = !isSearching && browseLoading && browseResults.length > 0;
   const isSearchLoading = isSearching && searchLoading;
+  const showHeader = Boolean(eyebrow || title || note || !hideSearch);
 
   useEffect(() => {
     if (isSearching) return;
@@ -75,23 +76,27 @@ export function CatalogBrowser({
 
   return (
     <section className={className}>
-      <header className={styles.header}>
-        <div>
-          <p className="eyebrow">{eyebrow}</p>
-          <h2>{title}</h2>
-          {note ? <p className={styles.note}>{note}</p> : null}
-        </div>
-        {!hideSearch ? (
-          <label className={styles.search} aria-label={t('catalog.search')}>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={t('catalog.search')}
-            />
-          </label>
-        ) : null}
-      </header>
+      {showHeader ? (
+        <header className={styles.header}>
+          {eyebrow || title || note ? (
+            <div>
+              {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+              {title ? <h2>{title}</h2> : null}
+              {note ? <p className={styles.note}>{note}</p> : null}
+            </div>
+          ) : null}
+          {!hideSearch ? (
+            <label className={styles.search} aria-label={t('catalog.search')}>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={t('catalog.search')}
+              />
+            </label>
+          ) : null}
+        </header>
+      ) : null}
 
       <div className={styles.grid} aria-busy={isInitialBrowseLoading || isLoadingMore || isSearchLoading}>
         {isSearchLoading || isInitialBrowseLoading || hasBrowseError ? (

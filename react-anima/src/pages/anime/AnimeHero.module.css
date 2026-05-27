@@ -2,7 +2,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
   gap: 24px;
-  align-items: center;
+  align-items: stretch;
+  min-height: calc(100vh - 56px);
 }
 
 .watchPartyLayout {
@@ -18,7 +19,15 @@
 
 .player {
   display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--ui-row-height);
+  align-items: stretch;
   gap: 14px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.player .videoFrame {
+  align-self: center;
 }
 
 .watchPartyLayout .player {
@@ -125,6 +134,7 @@
   display: grid;
   gap: 12px;
   align-content: center;
+  align-self: center;
 }
 
 .watchPartyLayout .detailsPanel {
@@ -384,8 +394,9 @@
   align-items: center;
   gap: var(--ui-grid-gap);
   width: 100%;
-  margin-top: 4px;
-  overflow: hidden;
+  margin: -3px;
+  padding: 3px;
+  overflow: visible;
 }
 
 .episodeScroll {
