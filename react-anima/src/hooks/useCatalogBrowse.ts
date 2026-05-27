@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react';
 import { browseCatalog, searchCatalog, type CatalogSearchResult } from '@/api';
 
+export type CatalogBrowseOrder = 'popularity' | 'ranked' | 'aired_on' | 'ranked_random';
+export type CatalogBrowseFilters = {
+  kind: string;
+  status: string;
+  scoredOnly: boolean;
+};
+
+const defaultFilters: CatalogBrowseFilters = {
+  kind: 'all',
+  status: 'all',
+  scoredOnly: false,
+};
+
 export function useCatalogBrowse() {
+  const [browseOrder, setBrowseOrder] = useState<CatalogBrowseOrder>('popularity');
+  const [browseFilters, setBrowseFiltersState] = useState<CatalogBrowseFilters>(defaultFilters);
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
   const [browsePage, setBrowsePage] = useState(1);
   const [browseHasNext, setBrowseHasNext] = useState(true);
@@ -12,6 +27,20 @@ export function useCatalogBrowse() {
   const [catalogSearchLoading, setCatalogSearchLoading] = useState(false);
   const [catalogSearchStatus, setCatalogSearchStatus] = useState('');
 
+  function updateBrowseOrder(order: CatalogBrowseOrder) {
+    setBrowseOrder(order);
+    setBrowseResults([]);
+    setBrowseHasNext(true);
+    setBrowsePage(1);
+  }
+
+  function setBrowseFilters(filters: CatalogBrowseFilters) {
+    setBrowseFiltersState(filters);
+    setBrowseResults([]);
+    setBrowseHasNext(true);
+    setBrowsePage(1);
+  }
+
   useEffect(() => {
     let ignore = false;
 
@@ -19,7 +48,11 @@ export function useCatalogBrowse() {
       setBrowseLoading(true);
       setBrowseStatus('');
       try {
-        const response = await browseCatalog(browsePage);
+        const response = await browseCatalog(browsePage, browseOrder, {
+          kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
+          status: browseFilters.status === 'all' ? undefined : browseFilters.status,
+          scoredOnly: browseFilters.scoredOnly,
+        });
         if (ignore) return;
 
         setBrowseResults((current) => {
@@ -50,7 +83,7 @@ export function useCatalogBrowse() {
     return () => {
       ignore = true;
     };
-  }, [browsePage]);
+  }, [browseFilters, browseOrder, browsePage]);
 
   useEffect(() => {
     const query = catalogSearchQuery.trim();
@@ -68,7 +101,11 @@ export function useCatalogBrowse() {
 
     const timeoutId = window.setTimeout(async () => {
       try {
-        const response = await searchCatalog(query);
+        const response = await searchCatalog(query, {
+          kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
+          status: browseFilters.status === 'all' ? undefined : browseFilters.status,
+          scoredOnly: browseFilters.scoredOnly,
+        });
         if (ignore) return;
 
         setCatalogSearchResults(response.results);
@@ -89,10 +126,12 @@ export function useCatalogBrowse() {
       ignore = true;
       window.clearTimeout(timeoutId);
     };
-  }, [catalogSearchQuery]);
+  }, [browseFilters, catalogSearchQuery]);
 
   return {
     browseResults,
+    browseOrder,
+    browseFilters,
     browsePage,
     browseHasNext,
     browseLoading,
@@ -102,6 +141,8 @@ export function useCatalogBrowse() {
     catalogSearchLoading,
     catalogSearchStatus,
     setBrowsePage,
+    setBrowseOrder: updateBrowseOrder,
+    setBrowseFilters,
     setCatalogSearchQuery,
   };
 }

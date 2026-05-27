@@ -4,6 +4,7 @@ import { fromServerWatchStatus, getLocalizedAnimeTitle, type WatchStatus } from 
 import { saveAnimeProgress, type ServerWatchEntry } from '@/api';
 import clockIcon from '@assets/clock-three.svg';
 import detachIcon from '@assets/detach.svg';
+import discordIcon from '@assets/discord.svg';
 import directionIcon from '@assets/episode-arrow.svg';
 import importIcon from '@assets/import.svg';
 import profileCheckIcon from '@assets/profile-check.svg';
@@ -502,6 +503,7 @@ export function ProfilePage() {
 
               <section className={clsx(styles.section, styles.integrationSection)} aria-labelledby="profile-integrations-section">
                 <h3 id="profile-integrations-section">{t('profile.integrations')}</h3>
+                <DiscordIntegration />
                 <ShikimoriIntegration />
               </section>
             </>
@@ -644,6 +646,40 @@ function ProfilePageSkeleton() {
         </div>
       </aside>
     </section>
+  );
+}
+
+function DiscordIntegration() {
+  const { user, authStatus } = useAuth();
+  const { t } = useI18n();
+
+  if (authStatus === 'loading') {
+    return (
+      <div className={clsx(styles.connectedAccount, styles.accountPlaceholder)} aria-hidden="true">
+        <span className={styles.placeholderAvatar} />
+        <span className={styles.placeholderCopy}>
+          <span />
+          <strong />
+        </span>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return (
+    <div className={styles.connectedAccount}>
+      <div className={styles.connectedMain}>
+        <span className={clsx(styles.connectedAvatar, styles.discordAvatar)}>
+          {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <span className={styles.connectedFallback}>{user.displayName[0]}</span>}
+          <img className={styles.connectedBadge} src={discordIcon} alt="" aria-hidden="true" />
+        </span>
+        <span>
+          <small>{t('profile.discord.connected')}</small>
+          <strong>{user.displayName}</strong>
+        </span>
+      </div>
+    </div>
   );
 }
 

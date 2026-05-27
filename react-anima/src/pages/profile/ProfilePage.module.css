@@ -286,6 +286,7 @@
 
 .integrationSection {
   align-self: start;
+  gap: 10px;
 }
 
 .integrationEmpty {
@@ -354,6 +355,18 @@
   text-decoration: none;
 }
 
+.connectedMain small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #aaa196;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .connectedAvatar {
   position: relative;
   display: block;
@@ -383,6 +396,10 @@
   border-radius: 6px;
   background: rgba(14, 13, 12, 0.9);
   object-fit: contain;
+}
+
+.discordAvatar .connectedBadge {
+  background: #5865f2;
 }
 
 .connectedFallback {

@@ -18,6 +18,7 @@ type CatalogBrowserProps = {
   searchLoading: boolean;
   searchStatus: string;
   note?: string;
+  hideSearch?: boolean;
   onSearchChange: (query: string) => void;
   onOpenAnime: (result: CatalogSearchResult) => void;
   onPageChange: (page: number) => void;
@@ -37,6 +38,7 @@ export function CatalogBrowser({
   searchLoading,
   searchStatus,
   note,
+  hideSearch = false,
   onSearchChange,
   onOpenAnime,
   onPageChange,
@@ -79,14 +81,16 @@ export function CatalogBrowser({
           <h2>{title}</h2>
           {note ? <p className={styles.note}>{note}</p> : null}
         </div>
-        <label className={styles.search} aria-label={t('catalog.search')}>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={t('catalog.search')}
-          />
-        </label>
+        {!hideSearch ? (
+          <label className={styles.search} aria-label={t('catalog.search')}>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder={t('catalog.search')}
+            />
+          </label>
+        ) : null}
       </header>
 
       <div className={styles.grid} aria-busy={isInitialBrowseLoading || isLoadingMore || isSearchLoading}>

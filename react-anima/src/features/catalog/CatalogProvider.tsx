@@ -1,9 +1,11 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { type CatalogSearchResult } from '@/api';
-import { useCatalogBrowse } from '@hooks/useCatalogBrowse';
+import { type CatalogBrowseFilters, type CatalogBrowseOrder, useCatalogBrowse } from '@hooks/useCatalogBrowse';
 
 type CatalogContextValue = {
   browseResults: CatalogSearchResult[];
+  browseOrder: CatalogBrowseOrder;
+  browseFilters: CatalogBrowseFilters;
   browsePage: number;
   browseHasNext: boolean;
   browseLoading: boolean;
@@ -13,6 +15,8 @@ type CatalogContextValue = {
   searchLoading: boolean;
   searchStatus: string;
   setBrowsePage: (page: number) => void;
+  setBrowseOrder: (order: CatalogBrowseOrder) => void;
+  setBrowseFilters: (filters: CatalogBrowseFilters) => void;
   setSearchQuery: (query: string) => void;
 };
 
@@ -21,6 +25,8 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const {
     browseResults,
+    browseOrder,
+    browseFilters,
     browsePage,
     browseHasNext,
     browseLoading,
@@ -30,6 +36,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     catalogSearchLoading,
     catalogSearchStatus,
     setBrowsePage,
+    setBrowseOrder,
+    setBrowseFilters,
     setCatalogSearchQuery,
   } = useCatalogBrowse();
 
@@ -37,6 +45,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     <CatalogContext.Provider
       value={{
         browseResults,
+        browseOrder,
+        browseFilters,
         browsePage,
         browseHasNext,
         browseLoading,
@@ -46,6 +56,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         searchLoading: catalogSearchLoading,
         searchStatus: catalogSearchStatus,
         setBrowsePage,
+        setBrowseOrder,
+        setBrowseFilters,
         setSearchQuery: setCatalogSearchQuery,
       }}
     >
