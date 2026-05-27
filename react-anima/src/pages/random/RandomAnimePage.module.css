@@ -910,39 +910,52 @@
   overflow: hidden;
 }
 
-.filtersPanel,
-.historyPanel {
+.filtersPanel {
   display: grid;
-  align-content: start;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
   gap: 12px;
   min-height: 0;
-  overflow-y: auto;
-  padding: 2px 10px 2px 2px;
-  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
-  scrollbar-width: thin;
+  overflow: hidden;
+  padding: 2px;
   animation: sidebarContentIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.filtersPanel::-webkit-scrollbar,
-.historyPanel::-webkit-scrollbar {
-  width: 6px;
+.historyPanel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+  padding: 2px 2px 2px 2px;
+  animation: sidebarContentIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.filtersPanel::-webkit-scrollbar-track,
-.historyPanel::-webkit-scrollbar-track {
+.filtersList::-webkit-scrollbar,
+.historyList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filtersList::-webkit-scrollbar-track,
+.historyList::-webkit-scrollbar-track {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
 }
 
-.filtersPanel::-webkit-scrollbar-thumb,
-.historyPanel::-webkit-scrollbar-thumb {
+.filtersList::-webkit-scrollbar-thumb,
+.historyList::-webkit-scrollbar-thumb {
+  min-height: 42px;
+  border: 2px solid rgba(18, 16, 13, 0.92);
   border-radius: 999px;
-  background: rgba(201, 166, 109, 0.48);
+  background: rgba(201, 166, 109, 0.72);
+  background-clip: padding-box;
 }
 
-.filtersPanel::-webkit-scrollbar-thumb:hover,
-.historyPanel::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 166, 109, 0.72);
+.filtersList::-webkit-scrollbar-thumb:hover,
+.historyList::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 192, 99, 0.86);
+  background-clip: padding-box;
 }
 
 .sidebarTabs {
@@ -1053,7 +1066,31 @@
   align-content: start;
   gap: 12px;
   min-height: 0;
+  margin: -4px -4px -4px -4px;
+  padding: 4px;
+  overflow: visible;
+  scrollbar-color: rgba(201, 166, 109, 0.72) rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
+}
+
+.filtersList {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  margin: -4px 0 -4px -4px;
+  padding: 4px 8px 4px 4px;
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgba(201, 166, 109, 0.72) rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
+}
+
+.historyListScrollable {
+  margin-right: 0;
+  padding-right: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .historyList > .mutedCopy {
@@ -1285,6 +1322,7 @@
     padding-right: 0;
   }
 
+  .filtersList,
   .historyList {
     overflow: visible;
     padding-right: 0;

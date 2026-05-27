@@ -75,6 +75,8 @@ export function RandomAnimePage() {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [sidebarTab, setSidebarTab] = useState<RandomSidebarTab>('history');
   const [addingToPlans, setAddingToPlans] = useState(false);
+  const [historyScrollable, setHistoryScrollable] = useState(false);
+  const historyListRef = useRef<HTMLDivElement | null>(null);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
   const historyBusy = randomClearing || clearAnimating;
   const randomAnimeTitle = randomAnime ? getLocalizedAnimeTitle(randomAnime, language) : '';
@@ -126,6 +128,34 @@ export function RandomAnimePage() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (sidebarTab !== 'history') {
+      setHistoryScrollable(false);
+      return undefined;
+    }
+
+    const node = historyListRef.current;
+    if (!node) return undefined;
+
+    let frameId = 0;
+    const updateScrollable = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        setHistoryScrollable(node.scrollHeight > node.clientHeight + 1);
+      });
+    };
+
+    updateScrollable();
+
+    const resizeObserver = new ResizeObserver(updateScrollable);
+    resizeObserver.observe(node);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+    };
+  }, [historyPending, randomHistory.length, removingHistoryKeys.length, sidebarTab]);
 
   async function handleDeleteHistoryEntry(item: CatalogSearchResult) {
     const key = getRandomHistoryKey(item);
@@ -222,113 +252,115 @@ export function RandomAnimePage() {
                     {t('common.clear')}
                   </button>
                 </div>
-                <FilterSection
-                  activeCount={filters.status === 'all' ? 0 : 1}
-                  collapsed={Boolean(collapsedSections.status)}
-                  id="random-status"
-                  title={t('catalog.status')}
-                  onToggle={() => toggleSection('status')}
-                >
-                  <div className={styles.selectBuffer}>
-                    <FilterSelect
-                      label={t('catalog.status')}
-                      options={[
-                        { value: 'all', label: t('catalog.filter.all') },
-                        { value: 'released', label: t('catalog.status.released') },
-                        { value: 'ongoing', label: t('catalog.status.ongoing') },
-                        { value: 'anons', label: t('catalog.status.anons') },
-                      ]}
-                      value={filters.status}
-                      onChange={(value) => setFilter('status', value)}
+                <div className={styles.filtersList}>
+                  <FilterSection
+                    activeCount={filters.status === 'all' ? 0 : 1}
+                    collapsed={Boolean(collapsedSections.status)}
+                    id="random-status"
+                    title={t('catalog.status')}
+                    onToggle={() => toggleSection('status')}
+                  >
+                    <div className={styles.selectBuffer}>
+                      <FilterSelect
+                        label={t('catalog.status')}
+                        options={[
+                          { value: 'all', label: t('catalog.filter.all') },
+                          { value: 'released', label: t('catalog.status.released') },
+                          { value: 'ongoing', label: t('catalog.status.ongoing') },
+                          { value: 'anons', label: t('catalog.status.anons') },
+                        ]}
+                        value={filters.status}
+                        onChange={(value) => setFilter('status', value)}
+                      />
+                    </div>
+                  </FilterSection>
+                  <FilterSection
+                    activeCount={filters.score === 'all' ? 0 : 1}
+                    collapsed={Boolean(collapsedSections.score)}
+                    id="random-score"
+                    title={t('catalog.score')}
+                    onToggle={() => toggleSection('score')}
+                  >
+                    <ScoreRange
+                      allLabel={t('catalog.filter.all')}
+                      value={filters.score}
+                      onChange={(value) => setFilter('score', value)}
                     />
-                  </div>
-                </FilterSection>
-                <FilterSection
-                  activeCount={filters.score === 'all' ? 0 : 1}
-                  collapsed={Boolean(collapsedSections.score)}
-                  id="random-score"
-                  title={t('catalog.score')}
-                  onToggle={() => toggleSection('score')}
-                >
-                  <ScoreRange
-                    allLabel={t('catalog.filter.all')}
-                    value={filters.score}
-                    onChange={(value) => setFilter('score', value)}
-                  />
-                </FilterSection>
-                <FilterSection
-                  activeCount={filters.kinds.length}
-                  collapsed={Boolean(collapsedSections.kind)}
-                  id="random-kind"
-                  title={t('catalog.kind')}
-                  onToggle={() => toggleSection('kind')}
-                >
-                  <div className={styles.optionGrid}>
-                    {[
-                      { value: 'tv', label: 'TV' },
-                      { value: 'movie', label: t('catalog.kind.movie') },
-                      { value: 'ova', label: 'OVA' },
-                      { value: 'ona', label: 'ONA' },
-                      { value: 'special', label: t('catalog.kind.special') },
-                    ].map((option) => (
-                      <FilterCheck
-                        key={option.value}
-                        checked={filters.kinds.includes(option.value)}
-                        label={option.label}
-                        onChange={() => toggleMultiFilter('kinds', option.value)}
-                      />
-                    ))}
-                  </div>
-                </FilterSection>
-                <FilterSection
-                  activeCount={filters.genres.length}
-                  collapsed={Boolean(collapsedSections.genre)}
-                  id="random-genre"
-                  title={t('catalog.genre')}
-                  onToggle={() => toggleSection('genre')}
-                >
-                  <div className={styles.genreGrid}>
-                    {genresLoading
-                      ? Array.from({ length: 8 }, (_, index) => (
-                        <span className={styles.filterCheckPlaceholder} key={index} />
-                      ))
-                      : genreOptions.map((genre) => {
-                        const genreId = String(genre.id);
-                        return (
-                          <FilterCheck
-                            key={genre.id}
-                            checked={filters.genres.includes(genreId)}
-                            label={language === 'ru' ? genre.titleRu ?? genre.name : genre.name}
-                            onChange={() => toggleMultiFilter('genres', genreId)}
-                          />
-                        );
-                      })}
-                  </div>
-                </FilterSection>
-                <FilterSection
-                  activeCount={filters.ratings.length}
-                  collapsed={Boolean(collapsedSections.rating)}
-                  id="random-rating"
-                  title={t('catalog.rating')}
-                  onToggle={() => toggleSection('rating')}
-                >
-                  <div className={styles.optionGrid}>
-                    {[
-                      { value: 'g', label: 'G' },
-                      { value: 'pg', label: 'PG' },
-                      { value: 'pg_13', label: 'PG-13' },
-                      { value: 'r', label: 'R-17' },
-                      { value: 'r_plus', label: 'R+' },
-                    ].map((option) => (
-                      <FilterCheck
-                        key={option.value}
-                        checked={filters.ratings.includes(option.value)}
-                        label={option.label}
-                        onChange={() => toggleMultiFilter('ratings', option.value)}
-                      />
-                    ))}
-                  </div>
-                </FilterSection>
+                  </FilterSection>
+                  <FilterSection
+                    activeCount={filters.kinds.length}
+                    collapsed={Boolean(collapsedSections.kind)}
+                    id="random-kind"
+                    title={t('catalog.kind')}
+                    onToggle={() => toggleSection('kind')}
+                  >
+                    <div className={styles.optionGrid}>
+                      {[
+                        { value: 'tv', label: 'TV' },
+                        { value: 'movie', label: t('catalog.kind.movie') },
+                        { value: 'ova', label: 'OVA' },
+                        { value: 'ona', label: 'ONA' },
+                        { value: 'special', label: t('catalog.kind.special') },
+                      ].map((option) => (
+                        <FilterCheck
+                          key={option.value}
+                          checked={filters.kinds.includes(option.value)}
+                          label={option.label}
+                          onChange={() => toggleMultiFilter('kinds', option.value)}
+                        />
+                      ))}
+                    </div>
+                  </FilterSection>
+                  <FilterSection
+                    activeCount={filters.genres.length}
+                    collapsed={Boolean(collapsedSections.genre)}
+                    id="random-genre"
+                    title={t('catalog.genre')}
+                    onToggle={() => toggleSection('genre')}
+                  >
+                    <div className={styles.genreGrid}>
+                      {genresLoading
+                        ? Array.from({ length: 8 }, (_, index) => (
+                          <span className={styles.filterCheckPlaceholder} key={index} />
+                        ))
+                        : genreOptions.map((genre) => {
+                          const genreId = String(genre.id);
+                          return (
+                            <FilterCheck
+                              key={genre.id}
+                              checked={filters.genres.includes(genreId)}
+                              label={language === 'ru' ? genre.titleRu ?? genre.name : genre.name}
+                              onChange={() => toggleMultiFilter('genres', genreId)}
+                            />
+                          );
+                        })}
+                    </div>
+                  </FilterSection>
+                  <FilterSection
+                    activeCount={filters.ratings.length}
+                    collapsed={Boolean(collapsedSections.rating)}
+                    id="random-rating"
+                    title={t('catalog.rating')}
+                    onToggle={() => toggleSection('rating')}
+                  >
+                    <div className={styles.optionGrid}>
+                      {[
+                        { value: 'g', label: 'G' },
+                        { value: 'pg', label: 'PG' },
+                        { value: 'pg_13', label: 'PG-13' },
+                        { value: 'r', label: 'R-17' },
+                        { value: 'r_plus', label: 'R+' },
+                      ].map((option) => (
+                        <FilterCheck
+                          key={option.value}
+                          checked={filters.ratings.includes(option.value)}
+                          label={option.label}
+                          onChange={() => toggleMultiFilter('ratings', option.value)}
+                        />
+                      ))}
+                    </div>
+                  </FilterSection>
+                </div>
               </div>
             ) : (
               <div className={styles.historyPanel}>
@@ -343,7 +375,7 @@ export function RandomAnimePage() {
                   )}
                 </div>
 
-                <div className={styles.historyList}>
+                <div ref={historyListRef} className={clsx(styles.historyList, historyScrollable && styles.historyListScrollable)}>
                   {historyPending ? (
                     <div className={styles.historySkeleton} aria-hidden="true">
                       {Array.from({ length: 5 }, (_, index) => (
