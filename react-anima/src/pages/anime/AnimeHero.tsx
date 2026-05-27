@@ -3,14 +3,18 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
+import DiaryIcon from '@assets/pencil.svg?react';
+import InfoIcon from '@assets/description.svg?react';
 import statusIcon from '@assets/profile-check.svg';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import starIcon from '@assets/star.svg';
+import WatchTabIcon from '@assets/tv-alt.svg?react';
 import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { GenreMarquee } from '@shared/ui/GenreMarquee';
+import { Tooltip } from '@shared/ui/Tooltip';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
 
@@ -20,6 +24,8 @@ type WatchState = {
   episode: number;
   status: WatchStatus;
 };
+
+type AnimePageTab = 'watch' | 'overview' | 'diary';
 
 type AnimeHeroProps = {
   anime: AnimeTitle;
@@ -52,6 +58,7 @@ export function AnimeHero({
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
   const [episodePage, setEpisodePage] = useState(0);
   const [episodePageDirection, setEpisodePageDirection] = useState<'next' | 'prev'>('next');
+  const [activeTab, setActiveTab] = useState<AnimePageTab>('watch');
   const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
@@ -149,6 +156,11 @@ export function AnimeHero({
       </button>
     </section>
   );
+  const pageTabs: Array<{ value: AnimePageTab; label: string; Icon: typeof WatchTabIcon }> = [
+    { value: 'watch', label: t('anime.tab.watch'), Icon: WatchTabIcon },
+    { value: 'overview', label: t('anime.tab.overview'), Icon: InfoIcon },
+    { value: 'diary', label: t('anime.tab.diary'), Icon: DiaryIcon },
+  ];
 
   return (
     <div className={clsx(styles.layout, mode === 'watchParty' && styles.watchPartyLayout)}>
@@ -165,53 +177,103 @@ export function AnimeHero({
       </section>
 
       <aside className={styles.detailsPanel}>
-        <div className={styles.detailsPoster}>
-          <img src={anime.poster} alt="" />
-          <div>
-            {animeSecondaryTitle ? <p className="eyebrow">{animeSecondaryTitle}</p> : null}
-            <h2>{animeTitle}</h2>
-          </div>
-        </div>
-        <div className={styles.detailsContent}>
-          <GenreMarquee genres={anime.genres} ariaLabel={t('catalog.genre')} />
-        </div>
+        <div className={styles.detailsPanelContent}>
+          {activeTab === 'overview' ? (
+            <div className={styles.sidebarInfoPanel}>
+              <p className="eyebrow">{t('anime.tab.overview')}</p>
+              <h2>{animeTitle}</h2>
+              {animeSecondaryTitle ? <small>{animeSecondaryTitle}</small> : null}
+              <GenreMarquee genres={anime.genres} ariaLabel={t('catalog.genre')} />
+              <div className={styles.metaGrid}>
+                <span>
+                  <CalendarIcon aria-hidden="true" />
+                  <small>{t('catalog.season')}</small>
+                  <strong>{anime.year}</strong>
+                </span>
+                <span>
+                  <img src={tvIcon} alt="" aria-hidden="true" />
+                  <small>{t('anime.episodesCount')}</small>
+                  <strong>{anime.episodes}</strong>
+                </span>
+                <span>
+                  <img src={statusIcon} alt="" aria-hidden="true" />
+                  <small>{t('anime.studio')}</small>
+                  <strong>{anime.studio}</strong>
+                </span>
+                <span>
+                  <img src={starIcon} alt="" aria-hidden="true" />
+                  <small>{t('catalog.score')}</small>
+                  <strong>{anime.rating}</strong>
+                </span>
+              </div>
+              <p>{anime.description || t('random.noDescription')}</p>
+              <WatchSources anime={anime} />
+            </div>
+          ) : activeTab === 'diary' ? (
+            <div className={styles.sidebarInfoPanel}>
+              <p className="eyebrow">{t('anime.tab.diary')}</p>
+              <h2>{t('anime.diaryTitle')}</h2>
+              <div className={styles.watchStatusTools}>
+                <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
+              </div>
+              <p>{t('anime.diaryDescription')}</p>
+            </div>
+          ) : mode === 'default' ? (
+            <>
+              <div className={styles.detailsPoster}>
+                <img src={anime.poster} alt="" />
+                <div>
+                  {animeSecondaryTitle ? <p className="eyebrow">{animeSecondaryTitle}</p> : null}
+                  <h2>{animeTitle}</h2>
+                </div>
+              </div>
+              <div className={styles.detailsContent}>
+                <GenreChips genres={anime.genres} ariaLabel={t('catalog.genre')} />
+              </div>
 
+              <div className={styles.watchContextGrid}>
+                <span>
+                  <small>{t('anime.currentEpisode')}</small>
+                  <strong>{state.episode} / {anime.episodes}</strong>
+                </span>
+                <span>
+                  <small>{t('anime.provider')}</small>
+                  <strong>{PLAYER_PROVIDER_OPTIONS.find((option) => option.value === activeProviderName)?.label ?? activeProviderName}</strong>
+                </span>
+                <span>
+                  <small>{t('catalog.season')}</small>
+                  <strong>{anime.year}</strong>
+                </span>
+                <span>
+                  <small>{t('catalog.score')}</small>
+                  <strong>{anime.rating}</strong>
+                </span>
+              </div>
+
+              <div className={styles.watchTools}>
+                <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
+              </div>
+            </>
+          ) : null}
+          {sidebarExtra ? <div className={styles.watchPartyPanel}>{sidebarExtra}</div> : null}
+        </div>
         {mode === 'default' ? (
-          <>
-            <div className={styles.watchStatusTools}>
-              <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
-            </div>
-
-            <div className={styles.metaGrid}>
-              <span>
-                <CalendarIcon aria-hidden="true" />
-                <small>{t('catalog.season')}</small>
-                <strong>{anime.year}</strong>
-              </span>
-              <span>
-                <img src={tvIcon} alt="" aria-hidden="true" />
-                <small>{t('anime.episodesCount')}</small>
-                <strong>{anime.episodes}</strong>
-              </span>
-              <span>
-                <img src={statusIcon} alt="" aria-hidden="true" />
-                <small>Студия</small>
-                <strong>{anime.studio}</strong>
-              </span>
-              <span>
-                <img src={starIcon} alt="" aria-hidden="true" />
-                <small>{t('catalog.score')}</small>
-                <strong>{anime.rating}</strong>
-              </span>
-            </div>
-
-            <div className={styles.watchTools}>
-              <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
-            </div>
-            <WatchSources anime={anime} />
-          </>
+          <div className={styles.localTabs} aria-label={t('anime.localNavigation')}>
+            {pageTabs.map((tab) => (
+              <Tooltip key={tab.value} label={tab.label} placement="top">
+                <button
+                  className={activeTab === tab.value ? styles.localTabActive : undefined}
+                  type="button"
+                  onClick={() => setActiveTab(tab.value)}
+                  aria-label={tab.label}
+                  aria-pressed={activeTab === tab.value}
+                >
+                  <tab.Icon aria-hidden="true" />
+                </button>
+              </Tooltip>
+            ))}
+          </div>
         ) : null}
-        {sidebarExtra ? <div className={styles.watchPartyPanel}>{sidebarExtra}</div> : null}
       </aside>
       {mode === 'watchParty' ? (
         <div className={styles.watchPartyFooter}>
@@ -263,6 +325,18 @@ export function AnimeHeroSkeleton() {
           <span className={styles.skeletonSource} />
         </div>
       </aside>
+    </div>
+  );
+}
+
+function GenreChips({ genres, ariaLabel }: { genres: string[]; ariaLabel: string }) {
+  if (genres.length === 0) return null;
+
+  return (
+    <div className={styles.genreChips} aria-label={ariaLabel}>
+      {genres.map((genre) => (
+        <span key={genre}>{genre}</span>
+      ))}
     </div>
   );
 }
