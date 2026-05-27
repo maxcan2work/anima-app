@@ -1,28 +1,52 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { browseCatalog, searchCatalog, type CatalogSearchResult } from '@/api';
 
 export type CatalogBrowseOrder = 'popularity' | 'ranked' | 'aired_on' | 'ranked_random';
 export type CatalogBrowseFilters = {
-  kind: string;
+  kinds: string[];
   status: string;
-  scoredOnly: boolean;
-  season: string;
-  genre: string;
+  seasons: string[];
+  genres: string[];
   score: string;
-  rating: string;
+  ratings: string[];
 };
 
 const defaultFilters: CatalogBrowseFilters = {
-  kind: 'all',
+  kinds: [],
   status: 'all',
-  scoredOnly: false,
-  season: 'all',
-  genre: 'all',
+  seasons: [],
+  genres: [],
   score: 'all',
-  rating: 'all',
+  ratings: [],
 };
 
+function requestFilters(filters: CatalogBrowseFilters) {
+  return {
+    kind: filters.kinds.length ? filters.kinds.join(',') : undefined,
+    status: filters.status === 'all' ? undefined : filters.status,
+    season: filters.seasons.length ? filters.seasons.join(',') : undefined,
+    genre: filters.genres.length ? filters.genres.join(',') : undefined,
+    score: filters.score === 'all' ? undefined : filters.score,
+    rating: filters.ratings.length ? filters.ratings.join(',') : undefined,
+  };
+}
+
+function mergeCatalogResults(
+  current: CatalogSearchResult[],
+  incoming: CatalogSearchResult[],
+  replace = false,
+) {
+  const next = replace ? incoming : [...current, ...incoming];
+  const seen = new Set<number>();
+  return next.filter((item) => {
+    if (seen.has(item.providerId)) return false;
+    seen.add(item.providerId);
+    return true;
+  });
+}
+
 export function useCatalogBrowse() {
+  const browseRequestIdRef = useRef(0);
   const [browseOrder, setBrowseOrder] = useState<CatalogBrowseOrder>('popularity');
   const [browseFilters, setBrowseFiltersState] = useState<CatalogBrowseFilters>(defaultFilters);
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
@@ -37,54 +61,37 @@ export function useCatalogBrowse() {
 
   function updateBrowseOrder(order: CatalogBrowseOrder) {
     setBrowseOrder(order);
-    setBrowseResults([]);
     setBrowseHasNext(true);
     setBrowsePage(1);
   }
 
   function setBrowseFilters(filters: CatalogBrowseFilters) {
     setBrowseFiltersState(filters);
-    setBrowseResults([]);
     setBrowseHasNext(true);
     setBrowsePage(1);
   }
 
   useEffect(() => {
     let ignore = false;
+    const requestId = browseRequestIdRef.current + 1;
+    browseRequestIdRef.current = requestId;
 
     async function loadBrowse() {
       setBrowseLoading(true);
       setBrowseStatus('');
       try {
-        const response = await browseCatalog(browsePage, browseOrder, {
-          kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
-          status: browseFilters.status === 'all' ? undefined : browseFilters.status,
-          scoredOnly: browseFilters.scoredOnly,
-          season: browseFilters.season === 'all' ? undefined : browseFilters.season,
-          genre: browseFilters.genre === 'all' ? undefined : browseFilters.genre,
-          score: browseFilters.score === 'all' ? undefined : browseFilters.score,
-          rating: browseFilters.rating === 'all' ? undefined : browseFilters.rating,
-        });
-        if (ignore) return;
+        const response = await browseCatalog(browsePage, browseOrder, requestFilters(browseFilters));
+        if (ignore || browseRequestIdRef.current !== requestId) return;
 
-        setBrowseResults((current) => {
-          const next = browsePage === 1 ? response.results : [...current, ...response.results];
-          const seen = new Set<number>();
-          return next.filter((item) => {
-            if (seen.has(item.providerId)) return false;
-            seen.add(item.providerId);
-            return true;
-          });
-        });
+        setBrowseResults((current) => mergeCatalogResults(current, response.results, browsePage === 1));
         setBrowseHasNext(response.hasNextPage);
         setBrowseStatus('');
       } catch {
-        if (!ignore) {
-          setBrowseResults([]);
+        if (!ignore && browseRequestIdRef.current === requestId) {
           setBrowseStatus('error');
         }
       } finally {
-        if (!ignore) {
+        if (!ignore && browseRequestIdRef.current === requestId) {
           setBrowseLoading(false);
         }
       }
@@ -113,15 +120,7 @@ export function useCatalogBrowse() {
 
     const timeoutId = window.setTimeout(async () => {
       try {
-        const response = await searchCatalog(query, {
-          kind: browseFilters.kind === 'all' ? undefined : browseFilters.kind,
-          status: browseFilters.status === 'all' ? undefined : browseFilters.status,
-          scoredOnly: browseFilters.scoredOnly,
-          season: browseFilters.season === 'all' ? undefined : browseFilters.season,
-          genre: browseFilters.genre === 'all' ? undefined : browseFilters.genre,
-          score: browseFilters.score === 'all' ? undefined : browseFilters.score,
-          rating: browseFilters.rating === 'all' ? undefined : browseFilters.rating,
-        });
+        const response = await searchCatalog(query, requestFilters(browseFilters));
         if (ignore) return;
 
         setCatalogSearchResults(response.results);
