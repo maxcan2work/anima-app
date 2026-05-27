@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import RandomDiceIcon from '@assets/random-dice.svg?react';
 import clockIcon from '@assets/clock-three.svg';
@@ -8,6 +8,8 @@ import trashIcon from '@assets/trash.svg';
 import tvIcon from '@assets/tv-alt.svg';
 import statusIcon from '@assets/profile-check.svg';
 import CalendarIcon from '@assets/calendar.svg?react';
+import FiltersIcon from '@assets/filters.svg?react';
+import HistoryIcon from '@assets/history.svg?react';
 import {
   getCatalogGenres,
   importCatalogAnime,
@@ -22,6 +24,7 @@ import { useRandomAnime } from '@hooks/useRandomAnime';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { GenreMarquee } from '@shared/ui/GenreMarquee';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
+import { Tooltip } from '@shared/ui/Tooltip';
 import { useToast } from '@shared/ui/ToastProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import styles from './RandomAnimePage.module.css';
@@ -30,19 +33,21 @@ const HISTORY_REMOVE_DURATION = 240;
 const HISTORY_CLEAR_STAGGER = 55;
 
 type RandomFilters = {
-  kind: string;
+  kinds: string[];
   status: string;
   score: string;
-  genre: string;
-  rating: string;
+  genres: string[];
+  ratings: string[];
 };
 
+type RandomSidebarTab = 'filters' | 'history';
+
 const defaultRandomFilters: RandomFilters = {
-  kind: 'all',
+  kinds: [],
   status: 'all',
   score: 'all',
-  genre: 'all',
-  rating: 'all',
+  genres: [],
+  ratings: [],
 };
 
 export function RandomAnimePage() {
@@ -67,16 +72,18 @@ export function RandomAnimePage() {
   const [genres, setGenres] = useState<CatalogGenre[]>([]);
   const [genresLoading, setGenresLoading] = useState(true);
   const [filters, setFilters] = useState<RandomFilters>(defaultRandomFilters);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [sidebarTab, setSidebarTab] = useState<RandomSidebarTab>('history');
   const [addingToPlans, setAddingToPlans] = useState(false);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
   const historyBusy = randomClearing || clearAnimating;
   const randomAnimeTitle = randomAnime ? getLocalizedAnimeTitle(randomAnime, language) : '';
   const randomAnimeOriginalTitle = randomAnime ? getAnimeOriginalDisplayTitle(randomAnime, language) : '';
-  const selectedGenre = genres.find((genre) => String(genre.id) === filters.genre);
+  const selectedGenres = genres.filter((genre) => filters.genres.includes(String(genre.id)));
   const resultGenres = randomAnime?.genres?.length
     ? randomAnime.genres
-    : selectedGenre
-      ? [language === 'ru' ? selectedGenre.titleRu ?? selectedGenre.name : selectedGenre.name]
+    : selectedGenres.length > 0
+      ? selectedGenres.map((genre) => (language === 'ru' ? genre.titleRu ?? genre.name : genre.name))
       : [];
   const randomAnimeStatus = randomAnime?.status ? getCatalogStatusLabel(randomAnime.status, t) : t('catalog.filter.all');
   const randomAnimeKind = randomAnime?.kind ? getCatalogKindLabel(randomAnime.kind, t) : t('catalog.filter.all');
@@ -86,12 +93,19 @@ export function RandomAnimePage() {
   const randomAnimeReleaseYear = randomAnime?.airedOn ? getReleaseYear(randomAnime.airedOn) : null;
   const genreOptions = useMemo(() => genres.slice(0, 18), [genres]);
   const requestFilters = useMemo<CatalogRequestOptions>(() => ({
-    kind: filters.kind === 'all' ? undefined : filters.kind,
+    kind: toCatalogFilter(filters.kinds),
     status: filters.status === 'all' ? undefined : filters.status,
     score: filters.score === 'all' ? undefined : filters.score,
-    genre: filters.genre === 'all' ? undefined : filters.genre,
-    rating: filters.rating === 'all' ? undefined : filters.rating,
+    genre: toCatalogFilter(filters.genres),
+    rating: toCatalogFilter(filters.ratings),
   }), [filters]);
+  const activeFilterCount = [
+    filters.status === 'all' ? 0 : 1,
+    filters.score === 'all' ? 0 : 1,
+    filters.kinds.length,
+    filters.genres.length,
+    filters.ratings.length,
+  ].reduce((sum, count) => sum + count, 0);
 
   useEffect(() => {
     let ignore = false;
@@ -153,6 +167,19 @@ export function RandomAnimePage() {
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
+  function toggleMultiFilter(key: 'kinds' | 'genres' | 'ratings', value: string) {
+    setFilters((current) => ({
+      ...current,
+      [key]: current[key].includes(value)
+        ? current[key].filter((item) => item !== value)
+        : [...current[key], value],
+    }));
+  }
+
+  function toggleSection(section: string) {
+    setCollapsedSections((current) => ({ ...current, [section]: !current[section] }));
+  }
+
   async function handleAddToPlans(anime: CatalogSearchResult) {
     if (addingToPlans || randomAnimePlanned) return;
 
@@ -185,90 +212,201 @@ export function RandomAnimePage() {
       sidebarClassName={styles.history}
       sidebarLabel={t('random.sidebarLabel')}
       sidebar={(
-        <>
-          <div className={styles.historyHeader}>
-            <h3>{t('random.history')}</h3>
-            {randomHistory.length > 0 ? (
-              <button type="button" onClick={handleClearHistory} disabled={historyBusy}>
-                {historyBusy ? t('common.clearing') : t('common.clear')}
-              </button>
+        <div className={styles.sidebarShell}>
+          <div className={styles.sidebarBody}>
+            {sidebarTab === 'filters' ? (
+              <div className={styles.filtersPanel}>
+                <div className={styles.historyHeader}>
+                  <h3>{t('random.filtersShort')}</h3>
+                  <button type="button" onClick={() => setFilters(defaultRandomFilters)} disabled={activeFilterCount === 0}>
+                    {t('common.clear')}
+                  </button>
+                </div>
+                <FilterSection
+                  activeCount={filters.status === 'all' ? 0 : 1}
+                  collapsed={Boolean(collapsedSections.status)}
+                  id="random-status"
+                  title={t('catalog.status')}
+                  onToggle={() => toggleSection('status')}
+                >
+                  <div className={styles.selectBuffer}>
+                    <FilterSelect
+                      label={t('catalog.status')}
+                      options={[
+                        { value: 'all', label: t('catalog.filter.all') },
+                        { value: 'released', label: t('catalog.status.released') },
+                        { value: 'ongoing', label: t('catalog.status.ongoing') },
+                        { value: 'anons', label: t('catalog.status.anons') },
+                      ]}
+                      value={filters.status}
+                      onChange={(value) => setFilter('status', value)}
+                    />
+                  </div>
+                </FilterSection>
+                <FilterSection
+                  activeCount={filters.score === 'all' ? 0 : 1}
+                  collapsed={Boolean(collapsedSections.score)}
+                  id="random-score"
+                  title={t('catalog.score')}
+                  onToggle={() => toggleSection('score')}
+                >
+                  <ScoreRange
+                    allLabel={t('catalog.filter.all')}
+                    value={filters.score}
+                    onChange={(value) => setFilter('score', value)}
+                  />
+                </FilterSection>
+                <FilterSection
+                  activeCount={filters.kinds.length}
+                  collapsed={Boolean(collapsedSections.kind)}
+                  id="random-kind"
+                  title={t('catalog.kind')}
+                  onToggle={() => toggleSection('kind')}
+                >
+                  <div className={styles.optionGrid}>
+                    {[
+                      { value: 'tv', label: 'TV' },
+                      { value: 'movie', label: t('catalog.kind.movie') },
+                      { value: 'ova', label: 'OVA' },
+                      { value: 'ona', label: 'ONA' },
+                      { value: 'special', label: t('catalog.kind.special') },
+                    ].map((option) => (
+                      <FilterCheck
+                        key={option.value}
+                        checked={filters.kinds.includes(option.value)}
+                        label={option.label}
+                        onChange={() => toggleMultiFilter('kinds', option.value)}
+                      />
+                    ))}
+                  </div>
+                </FilterSection>
+                <FilterSection
+                  activeCount={filters.genres.length}
+                  collapsed={Boolean(collapsedSections.genre)}
+                  id="random-genre"
+                  title={t('catalog.genre')}
+                  onToggle={() => toggleSection('genre')}
+                >
+                  <div className={styles.genreGrid}>
+                    {genresLoading
+                      ? Array.from({ length: 8 }, (_, index) => (
+                        <span className={styles.filterCheckPlaceholder} key={index} />
+                      ))
+                      : genreOptions.map((genre) => {
+                        const genreId = String(genre.id);
+                        return (
+                          <FilterCheck
+                            key={genre.id}
+                            checked={filters.genres.includes(genreId)}
+                            label={language === 'ru' ? genre.titleRu ?? genre.name : genre.name}
+                            onChange={() => toggleMultiFilter('genres', genreId)}
+                          />
+                        );
+                      })}
+                  </div>
+                </FilterSection>
+                <FilterSection
+                  activeCount={filters.ratings.length}
+                  collapsed={Boolean(collapsedSections.rating)}
+                  id="random-rating"
+                  title={t('catalog.rating')}
+                  onToggle={() => toggleSection('rating')}
+                >
+                  <div className={styles.optionGrid}>
+                    {[
+                      { value: 'g', label: 'G' },
+                      { value: 'pg', label: 'PG' },
+                      { value: 'pg_13', label: 'PG-13' },
+                      { value: 'r', label: 'R-17' },
+                      { value: 'r_plus', label: 'R+' },
+                    ].map((option) => (
+                      <FilterCheck
+                        key={option.value}
+                        checked={filters.ratings.includes(option.value)}
+                        label={option.label}
+                        onChange={() => toggleMultiFilter('ratings', option.value)}
+                      />
+                    ))}
+                  </div>
+                </FilterSection>
+              </div>
             ) : (
-              <span className={styles.historyHeaderActionPlaceholder} aria-hidden="true" />
+              <div className={styles.historyPanel}>
+                <div className={styles.historyHeader}>
+                  <h3>{t('random.history')}</h3>
+                  {randomHistory.length > 0 ? (
+                    <button type="button" onClick={handleClearHistory} disabled={historyBusy}>
+                      {historyBusy ? t('common.clearing') : t('common.clear')}
+                    </button>
+                  ) : (
+                    <span className={styles.historyHeaderActionPlaceholder} aria-hidden="true" />
+                  )}
+                </div>
+
+                <div className={styles.historyList}>
+                  {historyPending ? (
+                    <div className={styles.historySkeleton} aria-hidden="true">
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <div className={styles.historySkeletonRow} key={`random-history-skeleton-${index}`}>
+                          <span />
+                          <div>
+                            <strong />
+                            <small />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : randomHistory.length === 0 ? (
+                    <p className={styles.mutedCopy}>{t('random.emptyHistory')}</p>
+                  ) : (
+                    randomHistory.map((item) => {
+                      const key = getRandomHistoryKey(item);
+                      const removing = removingHistoryKeys.includes(key);
+                      const title = getLocalizedAnimeTitle(item, language);
+                      return (
+                        <div key={key} className={clsx(styles.historyRow, removing && styles.historyRowRemoving)}>
+                          <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button" disabled={removing || historyBusy}>
+                            {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
+                            <span>
+                              <strong>{title}</strong>
+                              <small>{item.score ?? t('common.noScore')}</small>
+                            </span>
+                          </button>
+                          <button
+                            className={styles.historyDelete}
+                            type="button"
+                            aria-label={t('random.removeFromHistory', { title })}
+                            disabled={removing || historyBusy || deletingRandomKey === key}
+                            onClick={() => handleDeleteHistoryEntry(item)}
+                          >
+                            <img src={trashIcon} alt="" aria-hidden="true" />
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          <div className={styles.historyList}>
-            {historyPending ? (
-              <div className={styles.historySkeleton} aria-hidden="true">
-                {Array.from({ length: 5 }, (_, index) => (
-                  <div className={styles.historySkeletonRow} key={`random-history-skeleton-${index}`}>
-                    <span />
-                    <div>
-                      <strong />
-                      <small />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : randomHistory.length === 0 ? (
-              <p className={styles.mutedCopy}>{t('random.emptyHistory')}</p>
-            ) : (
-              randomHistory.map((item) => {
-                const key = getRandomHistoryKey(item);
-                const removing = removingHistoryKeys.includes(key);
-                const title = getLocalizedAnimeTitle(item, language);
-                return (
-                  <div key={key} className={clsx(styles.historyRow, removing && styles.historyRowRemoving)}>
-                    <button className={styles.historyOpen} onClick={() => openCatalogAnime(item)} type="button" disabled={removing || historyBusy}>
-                      {item.posterUrl ? <img src={item.posterUrl} alt="" /> : <div className={styles.posterFallback} />}
-                      <span>
-                        <strong>{title}</strong>
-                        <small>{item.score ?? t('common.noScore')}</small>
-                      </span>
-                    </button>
-                    <button
-                      className={styles.historyDelete}
-                      type="button"
-                      aria-label={t('random.removeFromHistory', { title })}
-                      disabled={removing || historyBusy || deletingRandomKey === key}
-                      onClick={() => handleDeleteHistoryEntry(item)}
-                    >
-                      <img src={trashIcon} alt="" aria-hidden="true" />
-                    </button>
-                  </div>
-                );
-              })
-            )}
+          <div className={styles.sidebarTabs}>
+            <Tooltip className={styles.sidebarTabTooltip} label={t('random.history')} placement="top">
+              <button className={sidebarTab === 'history' ? styles.sidebarTabActive : undefined} type="button" onClick={() => setSidebarTab('history')} aria-label={t('random.history')}>
+                <HistoryIcon aria-hidden="true" />
+              </button>
+            </Tooltip>
+            <Tooltip className={styles.sidebarTabTooltip} label={t('random.filtersShort')} placement="top">
+              <button className={sidebarTab === 'filters' ? styles.sidebarTabActive : undefined} type="button" onClick={() => setSidebarTab('filters')} aria-label={t('random.filtersShort')}>
+                <FiltersIcon aria-hidden="true" />
+                {activeFilterCount > 0 ? <span className={styles.sidebarTabBadge}>{activeFilterCount}</span> : null}
+              </button>
+            </Tooltip>
           </div>
-        </>
+        </div>
       )}
     >
       <section className={styles.controlDeck} aria-label={t('random.filters')}>
-        <div className={styles.filterColumn}>
-          <FilterChips
-            label={t('catalog.score')}
-            options={[
-              { value: 'all', label: t('catalog.filter.all') },
-              { value: '6', label: '6+' },
-              { value: '7', label: '7+' },
-              { value: '8', label: '8+' },
-            ]}
-            value={filters.score}
-            onChange={(value) => setFilter('score', value)}
-          />
-          <FilterChips
-            label={t('catalog.kind')}
-            options={[
-              { value: 'all', label: t('catalog.filter.all') },
-              { value: 'tv', label: 'TV' },
-              { value: 'movie', label: t('catalog.kind.movie') },
-              { value: 'ona', label: 'ONA' },
-            ]}
-            value={filters.kind}
-            onChange={(value) => setFilter('kind', value)}
-          />
-        </div>
-
         <div className={styles.rollAction}>
           <button
             className={clsx(styles.diceButton, randomLoading && styles.diceButtonRolling)}
@@ -280,32 +418,6 @@ export function RandomAnimePage() {
             <RandomDiceIcon className={styles.dice} aria-hidden="true" />
           </button>
           <span>{randomLoading ? t('random.rolling') : t('random.roll')}</span>
-        </div>
-
-        <div className={styles.filterColumn}>
-          <FilterChips
-            label={t('catalog.status')}
-            options={[
-              { value: 'all', label: t('catalog.filter.all') },
-              { value: 'released', label: t('catalog.status.released') },
-              { value: 'ongoing', label: t('catalog.status.ongoing') },
-            ]}
-            value={filters.status}
-            onChange={(value) => setFilter('status', value)}
-          />
-          <FilterSelect
-            disabled={genresLoading}
-            label={t('catalog.genre')}
-            options={[
-              { value: 'all', label: genresLoading ? t('common.loading') : t('catalog.filter.all') },
-              ...genreOptions.map((genre) => ({
-                value: String(genre.id),
-                label: language === 'ru' ? genre.titleRu ?? genre.name : genre.name,
-              })),
-            ]}
-            value={filters.genre}
-            onChange={(value) => setFilter('genre', value)}
-          />
         </div>
       </section>
 
@@ -384,7 +496,139 @@ export function RandomAnimePage() {
   );
 }
 
-function FilterChips({
+function FilterSection({
+  activeCount = 0,
+  children,
+  collapsed,
+  id,
+  title,
+  onToggle,
+}: {
+  activeCount?: number;
+  children: ReactNode;
+  collapsed: boolean;
+  id: string;
+  title: string;
+  onToggle: () => void;
+}) {
+  const contentId = `random-filter-${id}`;
+  const showActiveBadge = collapsed && activeCount > 0;
+
+  return (
+    <section className={styles.filterSection}>
+      <button
+        className={styles.filterSectionHeader}
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls={contentId}
+        onClick={onToggle}
+      >
+        <span className={styles.filterSectionTitle}>
+          <span>{title}</span>
+          {showActiveBadge ? <span className={styles.filterSectionBadge}>{activeCount}</span> : null}
+        </span>
+        <span className={styles.filterSectionChevron} aria-hidden="true" />
+      </button>
+      <div
+        className={styles.filterSectionBody}
+        id={contentId}
+        aria-hidden={collapsed}
+        data-collapsed={collapsed ? 'true' : 'false'}
+      >
+        <div className={styles.filterSectionBodyInner}>
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FilterCheck({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: () => void;
+}) {
+  return (
+    <label className={styles.filterCheck}>
+      <input type="checkbox" checked={checked} onChange={onChange} />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function ScoreRange({
+  allLabel,
+  value,
+  onChange,
+}: {
+  allLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const onChangeRef = useRef(onChange);
+  const numericValue = value === 'all' ? 0 : Number(value);
+  const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+  const [draftValue, setDraftValue] = useState(safeValue);
+  const draftFilterValue = draftValue === 0 ? 'all' : String(draftValue);
+  const draftProgress = (draftValue / 9) * 100;
+  const draftLabel = draftValue === 0 ? allLabel : `${draftValue}+`;
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    setDraftValue(safeValue);
+  }, [safeValue]);
+
+  useEffect(() => {
+    if (draftFilterValue === value) return;
+
+    const timeoutId = window.setTimeout(() => {
+      onChangeRef.current(draftFilterValue);
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [draftFilterValue, value]);
+
+  return (
+    <label
+      className={styles.scoreRange}
+      style={{
+        '--score-progress': `${draftProgress}%`,
+        '--score-thumb-position': `calc(${draftProgress}% + ${(0.5 - draftValue / 9) * 20}px)`,
+      } as CSSProperties}
+    >
+      <span className={styles.scoreRangeTrack}>
+        <span className={styles.scoreRangeTooltip}>{draftLabel}</span>
+        <input
+          type="range"
+          min="0"
+          max="9"
+          step="1"
+          value={draftValue}
+          aria-label={allLabel}
+          onChange={(event) => {
+            const nextValue = Number(event.target.value);
+            setDraftValue(Number.isFinite(nextValue) ? nextValue : 0);
+          }}
+        />
+      </span>
+      <span className={styles.scoreRangeScale} aria-hidden="true">
+        <span>{allLabel}</span>
+        <span>3</span>
+        <span>6</span>
+        <span>9</span>
+      </span>
+    </label>
+  );
+}
+
+function FilterSelect({
   label,
   options,
   value,
@@ -395,21 +639,64 @@ function FilterChips({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className={styles.filterGroup}>
-      <span>{label}</span>
-      <div>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            className={option.value === value ? styles.activeFilter : undefined}
-            type="button"
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+    <div className={styles.filterSelect} ref={rootRef}>
+      <button
+        className={styles.filterSelectTrigger}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected.label}</span>
+        <span className={styles.filterSelectChevron} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className={styles.filterSelectMenu} role="listbox" aria-label={label}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              className={option.value === value ? styles.selectedOption : undefined}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -450,81 +737,8 @@ function getReleaseYear(airedOn: string) {
   return Number.isFinite(year) ? String(year) : null;
 }
 
-function FilterSelect({
-  disabled,
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  disabled?: boolean;
-  label: string;
-  options: Array<{ value: string; label: string }>;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const selected = options.find((option) => option.value === value) ?? options[0];
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <div className={styles.filterSelect} ref={rootRef}>
-      <span>{label}</span>
-      <button
-        className={styles.filterSelectTrigger}
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        disabled={disabled}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span>{selected.label}</span>
-        <span className={styles.filterSelectChevron} aria-hidden="true" />
-      </button>
-      {open ? (
-        <div className={styles.filterSelectMenu} role="listbox" aria-label={label}>
-          {options.map((option) => (
-            <button
-              key={option.value}
-              className={option.value === value ? styles.selectedOption : undefined}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+function toCatalogFilter(values: string[]) {
+  return values.length > 0 ? values.join(',') : undefined;
 }
 
 function ResultSkeleton() {

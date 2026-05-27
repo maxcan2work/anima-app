@@ -25,8 +25,8 @@
   white-space: nowrap;
 }
 
-.tooltip:not(.disabled):hover .content,
-.tooltip:not(.disabled):focus-within .content,
+.tooltip:not(.disabled):not(.dismissed):hover .content,
+.tooltip:not(.disabled):not(.dismissed):focus-within .content,
 .open .content {
   opacity: 1;
 }
@@ -51,17 +51,17 @@
   transform: translate3d(0, 4px, 0);
 }
 
-.top:not(.disabled):hover .content,
-.top:not(.disabled):focus-within .content,
+.top:not(.disabled):not(.dismissed):hover .content,
+.top:not(.disabled):not(.dismissed):focus-within .content,
 .top.open .content {
   transform: translate3d(-50%, 0, 0);
 }
 
-.top.start:not(.disabled):hover .content,
-.top.start:not(.disabled):focus-within .content,
+.top.start:not(.disabled):not(.dismissed):hover .content,
+.top.start:not(.disabled):not(.dismissed):focus-within .content,
 .top.start.open .content,
-.top.end:not(.disabled):hover .content,
-.top.end:not(.disabled):focus-within .content,
+.top.end:not(.disabled):not(.dismissed):hover .content,
+.top.end:not(.disabled):not(.dismissed):focus-within .content,
 .top.end.open .content {
   transform: translate3d(0, 0, 0);
 }
@@ -72,8 +72,8 @@
   transform: translate3d(4px, -50%, 0);
 }
 
-.right:not(.disabled):hover .content,
-.right:not(.disabled):focus-within .content,
+.right:not(.disabled):not(.dismissed):hover .content,
+.right:not(.disabled):not(.dismissed):focus-within .content,
 .right.open .content {
   transform: translate3d(0, -50%, 0);
 }
@@ -89,17 +89,17 @@
   transform: translate3d(0, -4px, 0);
 }
 
-.bottom:not(.disabled):hover .content,
-.bottom:not(.disabled):focus-within .content,
+.bottom:not(.disabled):not(.dismissed):hover .content,
+.bottom:not(.disabled):not(.dismissed):focus-within .content,
 .bottom.open .content {
   transform: translate3d(-50%, 0, 0);
 }
 
-.bottom.start:not(.disabled):hover .content,
-.bottom.start:not(.disabled):focus-within .content,
+.bottom.start:not(.disabled):not(.dismissed):hover .content,
+.bottom.start:not(.disabled):not(.dismissed):focus-within .content,
 .bottom.start.open .content,
-.bottom.end:not(.disabled):hover .content,
-.bottom.end:not(.disabled):focus-within .content,
+.bottom.end:not(.disabled):not(.dismissed):hover .content,
+.bottom.end:not(.disabled):not(.dismissed):focus-within .content,
 .bottom.end.open .content {
   transform: translate3d(0, 0, 0);
 }
@@ -110,8 +110,8 @@
   transform: translate3d(-4px, -50%, 0);
 }
 
-.left:not(.disabled):hover .content,
-.left:not(.disabled):focus-within .content,
+.left:not(.disabled):not(.dismissed):hover .content,
+.left:not(.disabled):not(.dismissed):focus-within .content,
 .left.open .content {
   transform: translate3d(0, -50%, 0);
 }

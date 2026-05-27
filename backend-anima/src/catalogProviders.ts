@@ -293,10 +293,10 @@ function normalizeCatalogParam(value: string | null | undefined, allowed: string
 function normalizeCatalogFilters(filters: CatalogBrowseFilters) {
   return {
     kind: normalizeCatalogList(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special', 'music', 'pv', 'cm']),
-    status: normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']),
+    status: normalizeCatalogList(filters.status, ['anons', 'ongoing', 'released']),
     season: normalizeSeasonList(filters.season),
     genre: normalizeNumericParam(filters.genre),
-    score: normalizeCatalogParam(filters.score, ['1', '2', '3', '4', '5', '6', '7', '8', '9']),
+    score: normalizeCatalogList(filters.score, ['1', '2', '3', '4', '5', '6', '7', '8', '9']),
     rating: normalizeCatalogList(filters.rating, ['none', 'g', 'pg', 'pg_13', 'r', 'r_plus', 'rx']),
   };
 }
