@@ -37,6 +37,7 @@ export type ServerAnimeLike = {
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
+  studio?: string | null;
   genres: string | null;
   score: string | null;
   sourceUrl: string | null;
@@ -93,7 +94,7 @@ export function mapServerAnime(anime: ServerAnimeLike): AnimeTitle {
     titleRomaji: anime.titleRomaji ?? anime.originalTitle ?? null,
     year: Number.isFinite(year) && year > 0 ? year : new Date().getFullYear(),
     episodes: anime.episodes || 1,
-    studio: anime.sourceUrl ? 'Shikimori' : 'Anima',
+    studio: anime.studio || '-',
     rating: anime.score ?? '-',
     genres: parseAnimeGenres(anime.genres, anime.kind),
     description: '',

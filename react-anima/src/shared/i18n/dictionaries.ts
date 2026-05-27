@@ -111,6 +111,7 @@ export const dictionaries = {
     'catalog.status.released': 'Вышло',
     'catalog.status.ongoing': 'Онгоинг',
     'catalog.status.anons': 'Анонс',
+    'anime.episodesCount': 'Количество серий',
 
     'random.sidebarLabel': 'История случайных аниме',
     'random.history': 'История',
@@ -284,6 +285,7 @@ export const dictionaries = {
     'catalog.status.released': 'Released',
     'catalog.status.ongoing': 'Ongoing',
     'catalog.status.anons': 'Announced',
+    'anime.episodesCount': 'Episode count',
 
     'random.sidebarLabel': 'Random anime history',
     'random.history': 'History',
@@ -457,6 +459,7 @@ export const dictionaries = {
     'catalog.status.released': '公開済み',
     'catalog.status.ongoing': '放送中',
     'catalog.status.anons': '発表済み',
+    'anime.episodesCount': '話数',
 
     'random.sidebarLabel': 'ランダム履歴',
     'random.history': '履歴',

@@ -2,7 +2,12 @@ import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
+import CalendarIcon from '@assets/calendar.svg?react';
+import statusIcon from '@assets/profile-check.svg';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
+import shikimoriIcon from '@assets/shikimori.png';
+import starIcon from '@assets/star.svg';
+import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { GenreMarquee } from '@shared/ui/GenreMarquee';
@@ -41,7 +46,7 @@ export function AnimeHero({
   sidebarExtra,
   footerExtra,
 }: AnimeHeroProps) {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
@@ -168,33 +173,40 @@ export function AnimeHero({
           </div>
         </div>
         <div className={styles.detailsContent}>
-          <GenreMarquee genres={anime.genres} ariaLabel="Жанры" />
-          {false ? null : null}
-          {false ? (
-            <>
-          <div className={styles.genres} tabIndex={0} aria-label="Жанры">
-            <div className={styles.genresTrack}>
-              {anime.genres.map((genre) => (
-                <span key={genre}>{genre}</span>
-              ))}
-            </div>
-          </div>
-            </>
-          ) : null}
+          <GenreMarquee genres={anime.genres} ariaLabel={t('catalog.genre')} />
         </div>
 
         {mode === 'default' ? (
           <>
+            <div className={styles.watchStatusTools}>
+              <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
+            </div>
+
             <div className={styles.metaGrid}>
-              <span>Год<strong>{anime.year}</strong></span>
-              <span>Серии<strong>{anime.episodes}</strong></span>
-              <span>Студия<strong>{anime.studio}</strong></span>
-              <span>Рейтинг<strong>{anime.rating}</strong></span>
+              <span>
+                <CalendarIcon aria-hidden="true" />
+                <small>{t('catalog.season')}</small>
+                <strong>{anime.year}</strong>
+              </span>
+              <span>
+                <img src={tvIcon} alt="" aria-hidden="true" />
+                <small>{t('anime.episodesCount')}</small>
+                <strong>{anime.episodes}</strong>
+              </span>
+              <span>
+                <img src={statusIcon} alt="" aria-hidden="true" />
+                <small>Студия</small>
+                <strong>{anime.studio}</strong>
+              </span>
+              <span>
+                <img src={starIcon} alt="" aria-hidden="true" />
+                <small>{t('catalog.score')}</small>
+                <strong>{anime.rating}</strong>
+              </span>
             </div>
 
             <div className={styles.watchTools}>
               <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
-              <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
             </div>
             <WatchSources anime={anime} />
           </>
@@ -427,13 +439,18 @@ function WatchSources({ anime }: { anime: AnimeTitle }) {
   return (
     <div className={styles.sourcesBlock}>
       <h3>Источники</h3>
-      {anime.watchSources.map((source) => (
-        <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-          <span>
-            <strong>{source.name}</strong>
-          </span>
-        </a>
-      ))}
+      {anime.watchSources.map((source) => {
+        const isShikimoriSource = source.name.toLocaleLowerCase().includes('shikimori');
+
+        return (
+          <a key={source.name} href={source.url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
+            {isShikimoriSource ? <img src={shikimoriIcon} alt="" aria-hidden="true" /> : null}
+            <span>
+              <strong>{source.name}</strong>
+            </span>
+          </a>
+        );
+      })}
     </div>
   );
 }

@@ -69,6 +69,7 @@ export type ServerAnime = {
   shikimoriId: number | null;
   malId: number | null;
   kind: string | null;
+  studio: string | null;
   genres: string | null;
   score: string | null;
   status: string | null;
@@ -88,6 +89,7 @@ export type CatalogSearchResult = {
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
+  studio: string | null;
   genres: string[];
   description: string | null;
   score: string | null;

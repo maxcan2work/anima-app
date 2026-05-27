@@ -28,6 +28,11 @@ type ShikimoriAnime = {
     name?: string | null;
     russian?: string | null;
   }>;
+  studios?: Array<{
+    name?: string | null;
+    filtered_name?: string | null;
+    real?: boolean | null;
+  }>;
 };
 
 type ShikimoriGenre = {
@@ -70,6 +75,7 @@ export type CatalogSearchResult = {
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
+  studio: string | null;
   genres: string[];
   description: string | null;
   score: string | null;
@@ -215,6 +221,7 @@ export async function importShikimoriAnime(providerId: number) {
       shikimoriId: anime.providerId,
       malId: anime.malId,
       kind: anime.kind,
+      studio: anime.studio,
       genres: JSON.stringify(anime.genres),
       score: anime.score,
       status: anime.status,
@@ -234,6 +241,7 @@ export async function importShikimoriAnime(providerId: number) {
       shikimoriId: anime.providerId,
       malId: anime.malId,
       kind: anime.kind,
+      studio: anime.studio,
       genres: JSON.stringify(anime.genres),
       score: anime.score,
       status: anime.status,
@@ -440,6 +448,7 @@ function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
     episodes: anime.episodes && anime.episodes > 0 ? anime.episodes : 1,
     posterUrl: buildShikimoriImageUrl(anime.image),
     kind: anime.kind ?? null,
+    studio: mapShikimoriStudios(anime.studios),
     genres: mapShikimoriGenres(anime.genres),
     description: cleanText(anime.description),
     score: anime.score ?? null,
@@ -480,6 +489,15 @@ function mapShikimoriGenres(genres: ShikimoriAnime['genres']) {
       .map((genre) => genre.russian || genre.name)
       .filter(Boolean),
   );
+}
+
+function mapShikimoriStudios(studios: ShikimoriAnime['studios']) {
+  return uniqueStrings(
+    (studios ?? [])
+      .filter((studio) => studio.real !== false)
+      .map((studio) => studio.name || studio.filtered_name)
+      .filter(Boolean),
+  ).join(', ') || null;
 }
 
 function uniqueStrings(values: Array<string | null | undefined>) {

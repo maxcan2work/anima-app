@@ -226,7 +226,7 @@ app.get('/anime/:animeId', async (request, response) => {
     return;
   }
 
-  if (!anime.genres && anime.shikimoriId) {
+  if ((!anime.genres || !anime.studio) && anime.shikimoriId) {
     anime = await importShikimoriAnime(anime.shikimoriId);
   }
 
