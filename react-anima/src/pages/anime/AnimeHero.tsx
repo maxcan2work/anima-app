@@ -5,6 +5,7 @@ import { getEpisodePlayers, type PlayerProviderResult } from '@/api';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { GenreMarquee } from '@shared/ui/GenreMarquee';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
 
@@ -167,6 +168,10 @@ export function AnimeHero({
           </div>
         </div>
         <div className={styles.detailsContent}>
+          <GenreMarquee genres={anime.genres} ariaLabel="Жанры" />
+          {false ? null : null}
+          {false ? (
+            <>
           <div className={styles.genres} tabIndex={0} aria-label="Жанры">
             <div className={styles.genresTrack}>
               {anime.genres.map((genre) => (
@@ -174,6 +179,8 @@ export function AnimeHero({
               ))}
             </div>
           </div>
+            </>
+          ) : null}
         </div>
 
         {mode === 'default' ? (

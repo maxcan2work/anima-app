@@ -23,6 +23,7 @@ type ShikimoriAnime = {
   status?: string | null;
   episodes?: number | null;
   aired_on?: string | null;
+  description?: string | null;
   genres?: Array<{
     name?: string | null;
     russian?: string | null;
@@ -70,6 +71,7 @@ export type CatalogSearchResult = {
   posterUrl: string | null;
   kind: string | null;
   genres: string[];
+  description: string | null;
   score: string | null;
   status: string | null;
   malId: number | null;
@@ -192,20 +194,12 @@ export async function browsePlayableCatalog(page: number, limit: number, order: 
   };
 }
 
+export async function getCatalogAnimeDetails(providerId: number) {
+  return fetchShikimoriAnimeDetails(providerId);
+}
+
 export async function importShikimoriAnime(providerId: number) {
-  const url = new URL(`/api/animes/${providerId}`, SHIKIMORI_BASE_URL);
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'AnimaCatalog/0.1',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Shikimori import failed: ${response.status}`);
-  }
-
-  const anime = mapShikimoriAnime((await response.json()) as ShikimoriAnime);
+  const anime = await fetchShikimoriAnimeDetails(providerId);
 
   const savedAnime = await prisma.anime.upsert({
     where: { id: `shikimori-${anime.providerId}` },
@@ -273,6 +267,22 @@ export async function importShikimoriAnime(providerId: number) {
   }
 
   return savedAnime;
+}
+
+async function fetchShikimoriAnimeDetails(providerId: number) {
+  const url = new URL(`/api/animes/${providerId}`, SHIKIMORI_BASE_URL);
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'AnimaCatalog/0.1',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shikimori import failed: ${response.status}`);
+  }
+
+  return mapShikimoriAnime((await response.json()) as ShikimoriAnime);
 }
 
 function normalizeCatalogParam(value: string | null | undefined, allowed: string[]) {
@@ -431,6 +441,7 @@ function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
     posterUrl: buildShikimoriImageUrl(anime.image),
     kind: anime.kind ?? null,
     genres: mapShikimoriGenres(anime.genres),
+    description: cleanText(anime.description),
     score: anime.score ?? null,
     status: anime.status ?? null,
     malId: anime.mal_id ?? null,

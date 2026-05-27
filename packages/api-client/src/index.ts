@@ -88,10 +88,13 @@ export type CatalogSearchResult = {
   episodes: number;
   posterUrl: string | null;
   kind: string | null;
+  genres: string[];
+  description: string | null;
   score: string | null;
   status: string | null;
   malId: number | null;
   sourceUrl: string;
+  airedOn: string | null;
 };
 
 export type CatalogGenre = {
@@ -181,6 +184,8 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
       }),
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
+    getCatalogAnimeDetails: (provider: CatalogSearchResult['provider'], providerId: number) =>
+      apiFetch<{ anime: CatalogSearchResult }>(`/catalog/${encodeURIComponent(provider)}/${providerId}`),
     getCatalogGenres: () => apiFetch<{ genres: CatalogGenre[] }>('/catalog/genres'),
     searchCatalog: (query: string, options: CatalogRequestOptions = {}) =>
       apiFetch<{ results: CatalogSearchResult[] }>(`/catalog/search?${catalogSearchParams({

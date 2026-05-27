@@ -37,6 +37,7 @@ export const {
   saveRandomHistoryEntry,
   getAnimeCatalog,
   getAnimeById,
+  getCatalogAnimeDetails,
   getCatalogGenres,
   searchCatalog,
   browseCatalog,

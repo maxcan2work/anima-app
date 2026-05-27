@@ -1,0 +1,51 @@
+.genres {
+  container-type: inline-size;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.genres::-webkit-scrollbar {
+  display: none;
+}
+
+.genres:focus-visible {
+  outline: none;
+}
+
+.track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.genres:hover .track,
+.genres:focus-visible .track {
+  animation: genresMarquee 2s linear infinite alternate both;
+}
+
+.track span {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028)),
+    rgba(255, 255, 255, 0.035);
+  color: #d7d0c7;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+@keyframes genresMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-100% + 100cqw));
+  }
+}

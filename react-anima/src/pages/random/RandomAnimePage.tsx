@@ -2,9 +2,15 @@ import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import RandomDiceIcon from '@assets/random-dice.svg?react';
+import clockIcon from '@assets/clock-three.svg';
+import starIcon from '@assets/star.svg';
 import trashIcon from '@assets/trash.svg';
+import tvIcon from '@assets/tv-alt.svg';
+import statusIcon from '@assets/profile-check.svg';
 import {
   getCatalogGenres,
+  importCatalogAnime,
+  saveAnimeProgress,
   type CatalogGenre,
   type CatalogRequestOptions,
   type CatalogSearchResult,
@@ -13,7 +19,10 @@ import { useAuth } from '@features/auth/AuthProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
 import { useRandomAnime } from '@hooks/useRandomAnime';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { GenreMarquee } from '@shared/ui/GenreMarquee';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
+import { useToast } from '@shared/ui/ToastProvider';
+import { upsertDiaryEntry } from '@shared/animeMappers';
 import styles from './RandomAnimePage.module.css';
 
 const HISTORY_REMOVE_DURATION = 240;
@@ -36,8 +45,9 @@ const defaultRandomFilters: RandomFilters = {
 };
 
 export function RandomAnimePage() {
-  const { user, authStatus } = useAuth();
-  const { openCatalogAnime } = useWatchLibrary();
+  const { user, authStatus, diaryEntries, setDiaryEntries } = useAuth();
+  const { openCatalogAnime, refreshLibrary } = useWatchLibrary();
+  const toast = useToast();
   const {
     randomAnime,
     randomHistory,
@@ -56,11 +66,22 @@ export function RandomAnimePage() {
   const [genres, setGenres] = useState<CatalogGenre[]>([]);
   const [genresLoading, setGenresLoading] = useState(true);
   const [filters, setFilters] = useState<RandomFilters>(defaultRandomFilters);
+  const [addingToPlans, setAddingToPlans] = useState(false);
   const historyPending = authStatus === 'loading' || randomHistoryLoading;
   const historyBusy = randomClearing || clearAnimating;
   const randomAnimeTitle = randomAnime ? getLocalizedAnimeTitle(randomAnime, language) : '';
   const randomAnimeOriginalTitle = randomAnime ? getAnimeOriginalDisplayTitle(randomAnime, language) : '';
   const selectedGenre = genres.find((genre) => String(genre.id) === filters.genre);
+  const resultGenres = randomAnime?.genres?.length
+    ? randomAnime.genres
+    : selectedGenre
+      ? [language === 'ru' ? selectedGenre.titleRu ?? selectedGenre.name : selectedGenre.name]
+      : [];
+  const randomAnimeStatus = randomAnime?.status ? getCatalogStatusLabel(randomAnime.status, t) : t('catalog.filter.all');
+  const randomAnimeKind = randomAnime?.kind ? getCatalogKindLabel(randomAnime.kind, t) : t('catalog.filter.all');
+  const randomAnimePlanned = randomAnime
+    ? diaryEntries.some((entry) => entry.animeId === `${randomAnime.provider}-${randomAnime.providerId}` && entry.status === 'PLANNED')
+    : false;
   const genreOptions = useMemo(() => genres.slice(0, 18), [genres]);
   const requestFilters = useMemo<CatalogRequestOptions>(() => ({
     kind: filters.kind === 'all' ? undefined : filters.kind,
@@ -128,6 +149,31 @@ export function RandomAnimePage() {
 
   function setFilter<Key extends keyof RandomFilters>(key: Key, value: RandomFilters[Key]) {
     setFilters((current) => ({ ...current, [key]: value }));
+  }
+
+  async function handleAddToPlans(anime: CatalogSearchResult) {
+    if (addingToPlans || randomAnimePlanned) return;
+
+    if (!user) {
+      toast({ message: t('random.loginToPlan'), variant: 'warning' });
+      return;
+    }
+
+    setAddingToPlans(true);
+    try {
+      const { anime: importedAnime } = await importCatalogAnime(anime.provider, anime.providerId);
+      const { entry } = await saveAnimeProgress(importedAnime.id, {
+        status: 'planned',
+        currentEpisode: 1,
+      });
+      setDiaryEntries((current) => upsertDiaryEntry(current, entry));
+      await refreshLibrary();
+      toast({ message: t('random.addedToPlans'), variant: 'success' });
+    } catch {
+      toast({ message: t('random.addToPlansFailed'), variant: 'danger' });
+    } finally {
+      setAddingToPlans(false);
+    }
   }
 
   return (
@@ -265,30 +311,58 @@ export function RandomAnimePage() {
         {randomLoading ? (
           <ResultSkeleton />
         ) : randomAnime ? (
-          <button
+          <article
             key={`${randomAnime.provider}-${randomAnime.providerId}`}
             className={styles.resultCard}
-            onClick={() => openCatalogAnime(randomAnime)}
-            type="button"
           >
-            {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : <div className={styles.cardPosterFallback} />}
+            <span className={styles.resultAside}>
+              {randomAnime.posterUrl ? <img src={randomAnime.posterUrl} alt="" /> : <div className={styles.cardPosterFallback} />}
+              {resultGenres.length > 0 ? (
+                <GenreMarquee className={styles.resultGenres} genres={resultGenres.slice(0, 8)} ariaLabel={t('catalog.genre')} />
+              ) : null}
+              <span className={styles.metaGrid}>
+                <span className={styles.metaCard}>
+                  <img src={tvIcon} alt="" aria-hidden="true" />
+                  <small>{t('common.episodesShort')}</small>
+                  <strong>{randomAnime.episodes}</strong>
+                </span>
+                <span className={styles.metaCard}>
+                  <img src={starIcon} alt="" aria-hidden="true" />
+                  <small>{t('catalog.score')}</small>
+                  <strong>{randomAnime.score ?? t('common.noScore')}</strong>
+                </span>
+                <span className={styles.metaCard}>
+                  <img src={statusIcon} alt="" aria-hidden="true" />
+                  <small>{t('catalog.status')}</small>
+                  <strong>{randomAnimeStatus}</strong>
+                </span>
+                <span className={styles.metaCard}>
+                  <img src={clockIcon} alt="" aria-hidden="true" />
+                  <small>{t('catalog.kind')}</small>
+                  <strong>{randomAnimeKind}</strong>
+                </span>
+              </span>
+            </span>
             <span className={styles.resultContent}>
               <span className="eyebrow">{t('random.result')}</span>
               <strong>{randomAnimeTitle}</strong>
               {randomAnimeOriginalTitle ? <small>{randomAnimeOriginalTitle}</small> : null}
-              <span className={styles.metaGrid}>
-                <span>{randomAnime.score ?? t('common.noScore')}</span>
-                <span>{randomAnime.episodes} {t('common.episodesShort')}</span>
-                <span>{randomAnime.kind ?? t('catalog.filter.all')}</span>
-                <span>{randomAnime.status ?? t('catalog.filter.all')}</span>
-              </span>
-              <span className={styles.resultTags}>
-                {selectedGenre ? <i>{language === 'ru' ? selectedGenre.titleRu ?? selectedGenre.name : selectedGenre.name}</i> : null}
-                {filters.score !== 'all' ? <i>{filters.score}+</i> : null}
-                {filters.rating !== 'all' ? <i>{filters.rating.toUpperCase()}</i> : null}
+              <p>{randomAnime.description ?? t('random.noDescription')}</p>
+              <span className={styles.resultActions}>
+                <button type="button" onClick={() => openCatalogAnime(randomAnime)}>
+                  {t('random.openWatch')}
+                </button>
+                <button
+                  className={clsx(randomAnimePlanned && styles.alreadyPlannedButton)}
+                  type="button"
+                  onClick={() => handleAddToPlans(randomAnime)}
+                  disabled={addingToPlans || randomAnimePlanned}
+                >
+                  {randomAnimePlanned ? t('random.alreadyPlanned') : addingToPlans ? t('common.loading') : t('random.addToPlans')}
+                </button>
               </span>
             </span>
-          </button>
+          </article>
         ) : (
           <div className={styles.emptyResult}>
             <p className="eyebrow">{t('random.eyebrow')}</p>
@@ -331,6 +405,37 @@ function FilterChips({
       </div>
     </div>
   );
+}
+
+function getCatalogStatusLabel(status: string, t: (key: string) => string) {
+  switch (status) {
+    case 'released':
+      return t('catalog.status.released');
+    case 'ongoing':
+      return t('catalog.status.ongoing');
+    case 'anons':
+      return t('catalog.status.anons');
+    default:
+      return status;
+  }
+}
+
+function getCatalogKindLabel(kind: string, t: (key: string) => string) {
+  switch (kind) {
+    case 'movie':
+      return t('catalog.kind.movie');
+    case 'special':
+    case 'tv_special':
+      return t('catalog.kind.special');
+    case 'tv':
+      return 'TV';
+    case 'ova':
+      return 'OVA';
+    case 'ona':
+      return 'ONA';
+    default:
+      return kind;
+  }
 }
 
 function FilterSelect({

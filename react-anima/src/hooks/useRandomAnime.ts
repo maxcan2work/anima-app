@@ -3,6 +3,7 @@ import {
   browseCatalog,
   clearMyRandomHistory,
   deleteRandomHistoryEntry,
+  getCatalogAnimeDetails,
   getMyRandomHistory,
   saveRandomHistoryEntry,
   type CatalogRequestOptions,
@@ -68,12 +69,17 @@ export function useRandomAnime(user: CurrentUser | null) {
       const response = await browseCatalog(page, 'ranked_random', filters);
       const candidates = response.results.filter((item) => item.posterUrl);
       const pool = candidates.length > 0 ? candidates : response.results;
-      const next = pool[Math.floor(Math.random() * pool.length)];
+      const picked = pool[Math.floor(Math.random() * pool.length)];
 
-      if (!next) {
+      if (!picked) {
         setRandomStatus('Shikimori не вернул тайтлы для рандома.');
         return;
       }
+
+      const next = await getCatalogAnimeDetails(picked.provider, picked.providerId).then(
+        ({ anime }) => anime,
+        () => picked,
+      );
 
       setRandomAnime(next);
       setRandomHistory((current) => {

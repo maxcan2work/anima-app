@@ -8,7 +8,7 @@ import { clearSessionCookie, optionalAuth, requireAuth, setSessionCookie, signSe
 import { config } from './config.js';
 import { prisma } from './db.js';
 import { exchangeDiscordCode, getDiscordAuthUrl } from './discord.js';
-import { browseCatalog, browsePlayableCatalog, getCatalogGenres, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
+import { browseCatalog, browsePlayableCatalog, getCatalogAnimeDetails, getCatalogGenres, importShikimoriAnime, searchCatalog, searchPlayableCatalog } from './catalogProviders.js';
 import { findPlayerProviders } from './playerProviders.js';
 import { exchangeShikimoriCode, getLinkedShikimoriProfile, getShikimoriAuthUrl, importLinkedShikimoriAnimeList } from './shikimori.js';
 
@@ -257,6 +257,23 @@ app.get('/catalog/genres', async (_request, response, next) => {
   try {
     const genres = await getCatalogGenres();
     response.json({ genres });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/catalog/:provider/:providerId', async (request, response, next) => {
+  try {
+    const provider = String(request.params.provider ?? '');
+    const providerId = Number(request.params.providerId);
+
+    if (provider !== 'shikimori' || !Number.isFinite(providerId)) {
+      response.status(400).json({ error: 'Invalid catalog provider' });
+      return;
+    }
+
+    const anime = await getCatalogAnimeDetails(Math.trunc(providerId));
+    response.json({ anime });
   } catch (error) {
     next(error);
   }

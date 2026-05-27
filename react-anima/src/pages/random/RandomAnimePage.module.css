@@ -274,12 +274,12 @@
 .resultCard,
 .resultSkeleton {
   display: grid;
-  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
-  align-items: stretch;
-  gap: 22px;
+  grid-template-columns: minmax(180px, 250px) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
   min-width: 0;
   min-height: 430px;
-  padding: 18px;
+  padding: 20px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -290,15 +290,19 @@
   animation: randomResultIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.resultCard:hover {
-  border-color: rgba(242, 192, 99, 0.52);
+.resultAside {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
 }
 
-.resultCard img,
+.resultAside > img,
 .cardPosterFallback,
 .resultSkeletonPoster {
   width: 100%;
-  min-height: 0;
+  aspect-ratio: 2 / 3;
+  max-height: 330px;
   border-radius: 8px;
   background: var(--color-surface-strong);
   object-fit: cover;
@@ -306,18 +310,17 @@
 
 .resultContent {
   display: grid;
-  align-content: center;
-  gap: 12px;
+  align-content: start;
+  gap: 14px;
   min-width: 0;
+  padding: 10px 2px;
 }
 
 .resultContent strong {
-  overflow: hidden;
   color: #fff7ec;
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 950;
-  line-height: 1.05;
-  text-overflow: ellipsis;
+  line-height: 1.08;
 }
 
 .resultContent small {
@@ -327,24 +330,71 @@
   font-weight: 800;
 }
 
-.metaGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 4px;
+.resultContent p {
+  max-width: 760px;
+  margin: 2px 0 0;
+  color: #cfc7ba;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.65;
 }
 
-.metaGrid span,
+.resultActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.resultActions button {
+  min-width: 150px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #f4efe7;
+  font-weight: 950;
+}
+
+.resultActions button:first-child {
+  border-color: rgba(242, 192, 99, 0.34);
+  background: rgba(242, 192, 99, 0.12);
+  color: #fff7ec;
+}
+
+.resultActions button:hover {
+  border-color: rgba(242, 192, 99, 0.52);
+  background: rgba(242, 192, 99, 0.14);
+}
+
+.resultActions button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.resultActions .alreadyPlannedButton:disabled {
+  cursor: not-allowed;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metaCard,
 .resultTags i {
   display: grid;
-  place-items: center;
-  min-height: 38px;
-  padding: 0 10px;
+  min-height: 76px;
+  padding: 10px;
   overflow: hidden;
-  border: 1px solid rgba(242, 192, 99, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(242, 192, 99, 0.08);
-  color: #f4ddae;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.035);
+  color: #d7d0c7;
   font-size: 12px;
   font-style: normal;
   font-weight: 900;
@@ -352,11 +402,71 @@
   white-space: nowrap;
 }
 
+.metaCard {
+  position: relative;
+  align-content: end;
+  gap: 4px;
+}
+
+.metaCard img {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  opacity: 0.64;
+  filter: saturate(0.25) brightness(0.92);
+}
+
+.metaCard small,
+.metaCard strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaCard small {
+  color: #998f82;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.metaCard strong {
+  color: #fff7ec;
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
 .resultTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.resultGenres {
+  margin-top: 0;
+}
+
+.resultGenres span {
+  min-height: 34px;
+  font-size: 12px;
+}
+
+.resultTags i {
+  place-items: center;
+  min-height: 34px;
+  padding: 0 9px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028)),
+    rgba(255, 255, 255, 0.035);
+  color: #d7d0c7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .resultSkeleton div {
