@@ -34,7 +34,28 @@ type ShikimoriGenre = {
   name?: string | null;
   russian?: string | null;
   kind?: string | null;
+  entry_type?: string | null;
 };
+
+const FALLBACK_ANIME_GENRES: CatalogGenre[] = [
+  { id: 1, name: 'Action', titleRu: 'Экшен', kind: 'Anime' },
+  { id: 2, name: 'Adventure', titleRu: 'Приключения', kind: 'Anime' },
+  { id: 4, name: 'Comedy', titleRu: 'Комедия', kind: 'Anime' },
+  { id: 8, name: 'Drama', titleRu: 'Драма', kind: 'Anime' },
+  { id: 10, name: 'Fantasy', titleRu: 'Фэнтези', kind: 'Anime' },
+  { id: 14, name: 'Horror', titleRu: 'Ужасы', kind: 'Anime' },
+  { id: 19, name: 'Music', titleRu: 'Музыка', kind: 'Anime' },
+  { id: 22, name: 'Romance', titleRu: 'Романтика', kind: 'Anime' },
+  { id: 24, name: 'Sci-Fi', titleRu: 'Фантастика', kind: 'Anime' },
+  { id: 30, name: 'Sports', titleRu: 'Спорт', kind: 'Anime' },
+  { id: 36, name: 'Slice of Life', titleRu: 'Повседневность', kind: 'Anime' },
+  { id: 37, name: 'Supernatural', titleRu: 'Сверхъестественное', kind: 'Anime' },
+  { id: 41, name: 'Thriller', titleRu: 'Триллер', kind: 'Anime' },
+  { id: 42, name: 'Seinen', titleRu: 'Сэйнэн', kind: 'Anime' },
+  { id: 543, name: 'Gourmet', titleRu: 'Гурман', kind: 'Anime' },
+];
+
+let cachedCatalogGenres: CatalogGenre[] | null = null;
 
 export type CatalogSearchResult = {
   provider: 'shikimori';
@@ -96,7 +117,7 @@ export async function searchCatalog(query: string, filters: CatalogBrowseFilters
   }
 
   const payload = (await response.json()) as ShikimoriAnime[];
-  return payload.map(mapShikimoriAnime).filter((result) => !filters.scoredOnly || hasCatalogScore(result));
+  return filterCatalogResults(payload.map(mapShikimoriAnime), queryFilters, filters);
 }
 
 export async function searchPlayableCatalog(query: string, provider: string, filters: CatalogBrowseFilters = {}) {
@@ -111,9 +132,9 @@ export async function browseCatalog(page: number, limit: number, order: string, 
   const queryFilters = normalizeCatalogFilters(filters);
   const query = { order: safeOrder, filters: queryFilters };
   const payload = filters.scoredOnly
-    ? await fetchScoredBrowsePage(safePage, safeLimit, query)
+    ? await fetchScoredBrowsePage(safePage, safeLimit, query, filters)
     : await fetchShikimoriBrowsePage(safePage, safeLimit, query);
-  const results = payload.results.map(mapShikimoriAnime);
+  const results = filterCatalogResults(payload.results.map(mapShikimoriAnime), queryFilters, filters);
 
   return {
     page: safePage,
@@ -139,19 +160,28 @@ export async function getCatalogGenres(): Promise<CatalogGenre[]> {
   });
 
   if (!response.ok) {
-    throw new Error(`Shikimori genres failed: ${response.status}`);
+    if (cachedCatalogGenres?.length) return cachedCatalogGenres;
+    return FALLBACK_ANIME_GENRES;
   }
 
   const payload = (await response.json()) as ShikimoriGenre[];
-  return payload
-    .filter((genre) => genre.kind === 'anime' && Number.isFinite(genre.id) && genre.name)
+  const genres = payload
+    .filter((genre) => genre.entry_type === 'Anime' && Number.isFinite(genre.id) && genre.name)
     .map((genre) => ({
       id: genre.id,
       name: genre.name ?? String(genre.id),
       titleRu: cleanText(genre.russian),
-      kind: genre.kind ?? null,
+      kind: genre.entry_type ?? genre.kind ?? null,
     }))
     .sort((left, right) => (left.titleRu ?? left.name).localeCompare(right.titleRu ?? right.name, 'ru'));
+
+  if (genres.length > 0) {
+    cachedCatalogGenres = genres;
+    return genres;
+  }
+
+  if (cachedCatalogGenres?.length) return cachedCatalogGenres;
+  return FALLBACK_ANIME_GENRES;
 }
 
 export async function browsePlayableCatalog(page: number, limit: number, order: string, provider: string, filters: CatalogBrowseFilters = {}) {
@@ -252,12 +282,12 @@ function normalizeCatalogParam(value: string | null | undefined, allowed: string
 
 function normalizeCatalogFilters(filters: CatalogBrowseFilters) {
   return {
-    kind: normalizeCatalogParam(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special', 'music', 'pv', 'cm']),
+    kind: normalizeCatalogList(filters.kind, ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special', 'music', 'pv', 'cm']),
     status: normalizeCatalogParam(filters.status, ['anons', 'ongoing', 'released']),
-    season: normalizeSeason(filters.season),
+    season: normalizeSeasonList(filters.season),
     genre: normalizeNumericParam(filters.genre),
     score: normalizeCatalogParam(filters.score, ['1', '2', '3', '4', '5', '6', '7', '8', '9']),
-    rating: normalizeCatalogParam(filters.rating, ['none', 'g', 'pg', 'pg_13', 'r', 'r_plus', 'rx']),
+    rating: normalizeCatalogList(filters.rating, ['none', 'g', 'pg', 'pg_13', 'r', 'r_plus', 'rx']),
   };
 }
 
@@ -273,12 +303,30 @@ function appendCatalogFilters(
   if (filters.rating) url.searchParams.set('rating', filters.rating);
 }
 
+function normalizeSeasonList(value: string | null | undefined) {
+  const seasons = value
+    ?.split(',')
+    .map(normalizeSeason)
+    .filter(Boolean);
+
+  return seasons?.length ? seasons.join(',') : undefined;
+}
+
 function normalizeSeason(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase();
   if (!normalized) return undefined;
   if (/^\d{4}$/.test(normalized)) return normalized;
   if (/^(winter|spring|summer|fall)_\d{4}$/.test(normalized)) return normalized;
   return undefined;
+}
+
+function normalizeCatalogList(value: string | null | undefined, allowed: string[]) {
+  const values = value
+    ?.split(',')
+    .map((item) => normalizeCatalogParam(item, allowed))
+    .filter(Boolean);
+
+  return values?.length ? [...new Set(values)].join(',') : undefined;
 }
 
 function normalizeNumericParam(value: string | null | undefined) {
@@ -290,6 +338,7 @@ async function fetchScoredBrowsePage(
   page: number,
   limit: number,
   query: { order: string; filters: ReturnType<typeof normalizeCatalogFilters> },
+  filters: CatalogBrowseFilters,
 ) {
   const end = page * limit;
   const start = end - limit;
@@ -299,7 +348,9 @@ async function fetchScoredBrowsePage(
 
   while (collected.length < end && sourceHasNext) {
     const payload = await fetchShikimoriBrowsePage(sourcePage, limit, query);
-    collected.push(...payload.results.filter((anime) => hasCatalogScore(mapShikimoriAnime(anime))));
+    collected.push(
+      ...payload.results.filter((anime) => filterCatalogResults([mapShikimoriAnime(anime)], query.filters, filters).length > 0),
+    );
     sourceHasNext = payload.hasNextPage;
     sourcePage += 1;
   }
@@ -342,6 +393,23 @@ async function fetchShikimoriBrowsePage(
 
 function hasCatalogScore(result: CatalogSearchResult) {
   return Boolean(result.score && result.score !== '0' && result.score !== '0.0');
+}
+
+function filterCatalogResults(
+  results: CatalogSearchResult[],
+  normalizedFilters: ReturnType<typeof normalizeCatalogFilters>,
+  rawFilters: CatalogBrowseFilters,
+) {
+  return results.filter((result) => {
+    if (rawFilters.scoredOnly && !hasCatalogScore(result)) return false;
+    if (!normalizedFilters.score) return true;
+
+    const score = Number(result.score);
+    const targetScore = Number(normalizedFilters.score);
+    if (!Number.isFinite(score) || !Number.isFinite(targetScore)) return false;
+
+    return score >= targetScore;
+  });
 }
 
 function mapShikimoriAnime(anime: ShikimoriAnime): CatalogSearchResult {
