@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { getAnimeExtendedDetails, getEpisodePlayers, importCatalogAnime, type AnimeExtendedDetails, type CatalogSearchResult, type PlayerProviderResult } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
@@ -27,6 +28,7 @@ type WatchState = {
 };
 
 type AnimePageTab = 'watch' | 'overview' | 'diary';
+type AnimePageMode = 'info' | 'diary';
 
 type AnimeHeroProps = {
   anime: AnimeTitle;
@@ -43,6 +45,10 @@ const PLAYER_PROVIDER_OPTIONS: Array<{ value: PlayerProvider; label: string }> =
   { value: 'kodik', label: 'Kodik' },
   { value: 'anilibria', label: 'AniLiberty' },
 ];
+const TAB_TO_MODE: Partial<Record<AnimePageTab, AnimePageMode>> = {
+  overview: 'info',
+  diary: 'diary',
+};
 
 export function AnimeHero({
   anime,
@@ -55,6 +61,7 @@ export function AnimeHero({
 }: AnimeHeroProps) {
   const { language, t } = useI18n();
   const { requestAnimeRoute } = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
   const [selectedProviderName, setSelectedProviderName] = useState<PlayerProvider>('kodik');
@@ -81,6 +88,10 @@ export function AnimeHero({
   }, [anime.episodes, episodePage]);
 
   useEffect(() => {
+    setActiveTab(getTabFromMode(searchParams.get('mode')));
+  }, [searchParams]);
+
+  useEffect(() => {
     setEpisodePage((currentPage) => {
       const nextPage = Math.min(episodePages - 1, Math.floor((state.episode - 1) / EPISODES_PER_PAGE));
       if (nextPage !== currentPage) {
@@ -98,6 +109,20 @@ export function AnimeHero({
       }
       return clampedPage;
     });
+  }
+
+  function changeTab(tab: AnimePageTab) {
+    setActiveTab(tab);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      const modeParam = TAB_TO_MODE[tab];
+      if (modeParam) {
+        next.set('mode', modeParam);
+      } else {
+        next.delete('mode');
+      }
+      return next;
+    }, { replace: true });
   }
 
   useEffect(() => {
@@ -280,7 +305,7 @@ export function AnimeHero({
                 <button
                   className={activeTab === tab.value ? styles.localTabActive : undefined}
                   type="button"
-                  onClick={() => setActiveTab(tab.value)}
+                  onClick={() => changeTab(tab.value)}
                   aria-label={tab.label}
                   aria-pressed={activeTab === tab.value}
                 >
@@ -355,6 +380,12 @@ function GenreChips({ genres, ariaLabel }: { genres: string[]; ariaLabel: string
       ))}
     </div>
   );
+}
+
+function getTabFromMode(mode: string | null): AnimePageTab {
+  if (mode === 'info' || mode === 'overview') return 'overview';
+  if (mode === 'diary') return 'diary';
+  return 'watch';
 }
 
 function AnimeDetailsSections({
