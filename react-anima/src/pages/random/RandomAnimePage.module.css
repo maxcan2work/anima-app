@@ -275,7 +275,7 @@
 .resultSkeleton {
   display: grid;
   grid-template-columns: minmax(180px, 250px) minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
   gap: 24px;
   min-width: 0;
   min-height: 430px;
@@ -291,10 +291,13 @@
 }
 
 .resultAside {
-  display: grid;
-  align-content: start;
-  gap: 12px;
+  display: flex;
+  align-self: stretch;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
   min-width: 0;
+  min-height: 0;
 }
 
 .resultAside > img,
@@ -309,11 +312,15 @@
 }
 
 .resultContent {
-  display: grid;
-  align-content: start;
+  display: flex;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: stretch;
   gap: 14px;
+  box-sizing: border-box;
   min-width: 0;
-  padding: 10px 2px;
+  min-height: 0;
+  padding: 10px 2px 0;
 }
 
 .resultContent strong {
@@ -342,8 +349,11 @@
 .resultActions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-end;
   gap: 10px;
-  margin-top: 6px;
+  align-self: flex-end;
+  margin-top: auto;
 }
 
 .resultActions button {
@@ -357,7 +367,7 @@
   font-weight: 950;
 }
 
-.resultActions button:first-child {
+.resultActions button:last-child {
   border-color: rgba(242, 192, 99, 0.34);
   background: rgba(242, 192, 99, 0.12);
   color: #fff7ec;
@@ -384,6 +394,7 @@
 }
 
 .metaCard,
+.releaseYearCard,
 .resultTags i {
   display: grid;
   min-height: 76px;
@@ -408,6 +419,20 @@
   gap: 4px;
 }
 
+.releaseYearCard {
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  min-height: 50px;
+  padding: 9px 10px;
+  margin-top: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .metaCard img {
   position: absolute;
   top: 9px;
@@ -419,15 +444,28 @@
   filter: saturate(0.25) brightness(0.92);
 }
 
+.releaseYearCard svg {
+  grid-row: 1 / 3;
+  width: 18px;
+  height: 18px;
+  color: #d7d0c7;
+  opacity: 0.64;
+  filter: saturate(0.25) brightness(0.92);
+}
+
 .metaCard small,
-.metaCard strong {
+.metaCard strong,
+.releaseYearCard small,
+.releaseYearCard strong {
   display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.metaCard small {
+.metaCard small,
+.releaseYearCard small {
+  margin: 0;
   color: #998f82;
   font-size: 10px;
   font-weight: 900;
@@ -435,11 +473,25 @@
   text-transform: uppercase;
 }
 
-.metaCard strong {
+.metaCard strong,
+.releaseYearCard strong {
   color: #fff7ec;
   font-size: 16px;
   font-weight: 950;
   line-height: 1.05;
+}
+
+.releaseYearCard small,
+.releaseYearCard strong {
+  grid-column: 2;
+}
+
+.releaseYearCard small {
+  font-size: 9px;
+}
+
+.releaseYearCard strong {
+  font-size: 14px;
 }
 
 .resultTags {
@@ -450,10 +502,12 @@
 
 .resultGenres {
   margin-top: 0;
+  min-height: 34px;
 }
 
 .resultGenres span {
-  min-height: 34px;
+  min-height: 32px;
+  line-height: 1;
   font-size: 12px;
 }
 

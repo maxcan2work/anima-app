@@ -7,6 +7,7 @@ import starIcon from '@assets/star.svg';
 import trashIcon from '@assets/trash.svg';
 import tvIcon from '@assets/tv-alt.svg';
 import statusIcon from '@assets/profile-check.svg';
+import CalendarIcon from '@assets/calendar.svg?react';
 import {
   getCatalogGenres,
   importCatalogAnime,
@@ -82,6 +83,7 @@ export function RandomAnimePage() {
   const randomAnimePlanned = randomAnime
     ? diaryEntries.some((entry) => entry.animeId === `${randomAnime.provider}-${randomAnime.providerId}` && entry.status === 'PLANNED')
     : false;
+  const randomAnimeReleaseYear = randomAnime?.airedOn ? getReleaseYear(randomAnime.airedOn) : null;
   const genreOptions = useMemo(() => genres.slice(0, 18), [genres]);
   const requestFilters = useMemo<CatalogRequestOptions>(() => ({
     kind: filters.kind === 'all' ? undefined : filters.kind,
@@ -342,6 +344,11 @@ export function RandomAnimePage() {
                   <strong>{randomAnimeKind}</strong>
                 </span>
               </span>
+              <span className={styles.releaseYearCard}>
+                <CalendarIcon aria-hidden="true" />
+                <small>{t('catalog.season')}</small>
+                <strong>{randomAnimeReleaseYear ?? t('common.none')}</strong>
+              </span>
             </span>
             <span className={styles.resultContent}>
               <span className="eyebrow">{t('random.result')}</span>
@@ -349,9 +356,6 @@ export function RandomAnimePage() {
               {randomAnimeOriginalTitle ? <small>{randomAnimeOriginalTitle}</small> : null}
               <p>{randomAnime.description ?? t('random.noDescription')}</p>
               <span className={styles.resultActions}>
-                <button type="button" onClick={() => openCatalogAnime(randomAnime)}>
-                  {t('random.openWatch')}
-                </button>
                 <button
                   className={clsx(randomAnimePlanned && styles.alreadyPlannedButton)}
                   type="button"
@@ -359,6 +363,9 @@ export function RandomAnimePage() {
                   disabled={addingToPlans || randomAnimePlanned}
                 >
                   {randomAnimePlanned ? t('random.alreadyPlanned') : addingToPlans ? t('common.loading') : t('random.addToPlans')}
+                </button>
+                <button type="button" onClick={() => openCatalogAnime(randomAnime)}>
+                  {t('random.openWatch')}
                 </button>
               </span>
             </span>
@@ -436,6 +443,11 @@ function getCatalogKindLabel(kind: string, t: (key: string) => string) {
     default:
       return kind;
   }
+}
+
+function getReleaseYear(airedOn: string) {
+  const year = new Date(airedOn).getFullYear();
+  return Number.isFinite(year) ? String(year) : null;
 }
 
 function FilterSelect({
