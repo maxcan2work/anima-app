@@ -4,7 +4,7 @@ export type AppView = 'watch' | 'profile' | 'random' | 'settings' | 'watchParty'
 
 export function getRouteAnimeId(pathname: string) {
   if (pathname === '/anime') return '';
-  const match = pathname.match(/^\/anime\/([^/]+)$/);
+  const match = pathname.match(/^\/anime\/([^/]+)(?:\/reviews(?:\/[^/]+)?)?$/);
   return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 

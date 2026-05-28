@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import {
   getAnimeExtendedDetails,
@@ -17,8 +17,10 @@ import DiaryIcon from '@assets/pencil.svg?react';
 import InfoIcon from '@assets/description.svg?react';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import shikimoriIcon from '@assets/shikimori.png';
+import SpoilerOffIcon from '@assets/spoiler-off.svg?react';
 import starIcon from '@assets/star.svg';
 import StudioIcon from '@assets/studio.svg?react';
+import ThumbUpIcon from '@assets/thumb-up.svg?react';
 import WatchTabIcon from '@assets/tv-alt.svg?react';
 import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
@@ -63,6 +65,117 @@ const TAB_TO_MODE: Partial<Record<AnimePageTab, AnimePageMode>> = {
   diary: 'diary',
 };
 
+type MockReview = {
+  id: string;
+  author: string;
+  avatarLabel: string;
+  score: number;
+  watched: number;
+  reviewsCount: number;
+  helpfulCount: number;
+  likes: number;
+  dislikes: number;
+  recommended: boolean;
+  hasSpoilers: boolean;
+  scores: {
+    story: number;
+    characters: number;
+    visuals: number;
+    music: number;
+    opening: number;
+    atmosphere: number;
+  };
+  title: string;
+  excerpt: string;
+  body: string;
+  bodyExtra?: string[];
+};
+
+const MOCK_REVIEWS: MockReview[] = [
+  {
+    id: 'quiet-aftertaste',
+    author: 'Mira',
+    avatarLabel: 'M',
+    score: 8,
+    watched: 142,
+    reviewsCount: 18,
+    helpfulCount: 64,
+    likes: 48,
+    dislikes: 3,
+    recommended: true,
+    hasSpoilers: false,
+    scores: { story: 8, characters: 8, visuals: 7, music: 9, opening: 8, atmosphere: 9 },
+    bodyExtra: [
+      'Дальше тайтл особенно хорошо раскрывается через мелкие повторяющиеся детали: взгляды, короткие паузы, бытовые сцены и то, как персонажи постепенно меняют отношение друг к другу. В таких моментах сериал не пытается объяснить каждую эмоцию напрямую, а даёт зрителю собрать впечатление самостоятельно.',
+      'Отдельно хочется отметить работу с темпом. Здесь почти нет ощущения, что серия просто заполняет хронометраж: даже спокойные эпизоды либо двигают отношения, либо добавляют новый оттенок к уже знакомому конфликту. Из-за этого история воспринимается цельной, хотя формально в ней много небольших сцен.',
+      'Визуально тайтл не всегда пытается удивлять сложной постановкой, но у него есть аккуратность. Фоны, цветовые акценты и композиция часто работают на настроение, а не просто закрывают техническую задачу. Особенно хорошо смотрятся тихие сцены, где камера будто оставляет героям немного воздуха.',
+      'Музыка тоже держит правильную дистанцию. Она редко перетягивает внимание на себя, зато хорошо подхватывает кульминации и делает некоторые сцены теплее. Опенинг после нескольких серий начинает восприниматься не как отдельный клип, а как часть общего настроения.',
+      'Если искать минусы, то часть второстепенных линий можно было бы раскрыть смелее. Иногда кажется, что авторы останавливаются ровно в тот момент, когда конфликт мог стать глубже. Но это не ломает общий эффект: скорее оставляет ощущение, что у мира и персонажей есть запас, который хочется увидеть дальше.',
+      'В итоге это не тот тайтл, который обязательно поражает одной большой сценой. Он работает иначе: собирает доверие постепенно и выигрывает за счёт аккуратного настроения. Именно поэтому после просмотра остаётся желание не спорить о сильных и слабых сторонах, а просто ещё немного побыть в этой истории.',
+      'Во второй половине особенно заметно, что история держится не только на главной линии, но и на том, как меняется поведение персонажей в обычных ситуациях. Кто-то начинает говорить прямее, кто-то наоборот замыкается, и эти маленькие сдвиги работают сильнее, чем очередной большой монолог о чувствах.',
+      'Мне понравилось, что тайтл не боится оставлять некоторые сцены недосказанными. Не каждый конфликт получает мгновенное объяснение, не каждая реплика сразу становится очевидной. Благодаря этому появляется ощущение живого пространства, где персонажи существуют не только ради следующего сюжетного поворота.',
+      'При этом сериал не идеален в распределении внимания. Иногда второстепенные герои появляются ровно настолько, чтобы напомнить о себе, но не получают полноценного эпизода. Это немного расстраивает, потому что у многих из них есть потенциал, и хочется, чтобы камера задерживалась на них дольше.',
+      'С эмоциональной стороны тайтл работает аккуратно. Он не выкручивает каждую драматичную сцену на максимум и не требует от зрителя обязательной реакции. Скорее он складывает настроение слой за слоем, и уже ближе к финалу понимаешь, что привязался к происходящему сильнее, чем ожидал в начале.',
+      'Отдельно стоит сказать про повторный просмотр. Некоторые ранние сцены после знания дальнейших событий воспринимаются иначе: жесты, интонации и паузы получают дополнительный смысл. Это хороший признак для истории, которая хочет быть не просто набором событий, а цельным переживанием.',
+      'Я бы рекомендовал смотреть этот тайтл без спешки. Он лучше раскрывается, если не пытаться проглотить всё за один вечер, а дать сериям немного отлежаться. Тогда спокойный темп перестаёт казаться недостатком и становится частью того, зачем вообще включать именно эту историю.',
+    ],
+    title: 'Хороший темп и сильная атмосфера',
+    excerpt: 'Сначала кажется, что история разгоняется медленно, но ближе к середине становится понятно, зачем она так бережно собирает детали.',
+    body: 'Сначала кажется, что история разгоняется медленно, но ближе к середине становится понятно, зачем она так бережно собирает детали. Здесь хорошо работает настроение: сцены не пытаются постоянно давить драмой, но оставляют приятное послевкусие после каждой серии. Особенно понравилось, как тайтл обращается с паузами и маленькими бытовыми моментами.',
+  },
+  {
+    id: 'visual-pulse',
+    author: 'Kaito',
+    avatarLabel: 'K',
+    score: 9,
+    watched: 318,
+    reviewsCount: 42,
+    helpfulCount: 217,
+    likes: 156,
+    dislikes: 12,
+    recommended: true,
+    hasSpoilers: false,
+    scores: { story: 7, characters: 8, visuals: 10, music: 9, opening: 9, atmosphere: 8 },
+    title: 'Визуально цепляет сильнее сюжета',
+    excerpt: 'Самое заметное здесь — постановка сцен. Даже простые разговоры выглядят живо, а экшен не разваливается на шум.',
+    body: 'Самое заметное здесь — постановка сцен. Даже простые разговоры выглядят живо, а экшен не разваливается на шум. Сюжет местами идёт знакомыми дорогами, зато режиссура и музыка вытаскивают почти каждую важную сцену. Для меня это тот случай, когда стиль не заменяет содержание, а аккуратно держит его в тонусе.',
+  },
+  {
+    id: 'warm-characters',
+    author: 'Nika',
+    avatarLabel: 'N',
+    score: 7,
+    watched: 86,
+    reviewsCount: 11,
+    helpfulCount: 39,
+    likes: 31,
+    dislikes: 8,
+    recommended: true,
+    hasSpoilers: true,
+    scores: { story: 7, characters: 9, visuals: 7, music: 7, opening: 6, atmosphere: 8 },
+    title: 'Персонажи делают половину работы',
+    excerpt: 'Не все арки одинаково сильные, зато герои быстро становятся своими. За ними приятно наблюдать даже вне главного конфликта.',
+    body: 'Не все арки одинаково сильные, зато герои быстро становятся своими. За ними приятно наблюдать даже вне главного конфликта. Иногда хочется чуть меньше объяснений и чуть больше доверия к зрителю, но в целом эмоциональные сцены попадают туда, куда нужно.',
+  },
+  {
+    id: 'mixed-ending',
+    author: 'Rei',
+    avatarLabel: 'R',
+    score: 6,
+    watched: 204,
+    reviewsCount: 27,
+    helpfulCount: 91,
+    likes: 73,
+    dislikes: 19,
+    recommended: false,
+    hasSpoilers: true,
+    scores: { story: 6, characters: 7, visuals: 8, music: 7, opening: 7, atmosphere: 6 },
+    title: 'Финал спорный, но путь стоил того',
+    excerpt: 'К концовке есть вопросы: часть решений выглядит резковато. Но отдельные серии до неё всё равно очень крепкие.',
+    body: 'К концовке есть вопросы: часть решений выглядит резковато. Но отдельные серии до неё всё равно очень крепкие. Если смотреть ради атмосферы, персонажей и отдельных сцен, тайтл работает хорошо. Если ждать идеально собранной развязки, впечатление может быть неровным.',
+  },
+];
+
 export function AnimeHero({
   anime,
   state,
@@ -78,6 +191,9 @@ export function AnimeHero({
   const { language, t } = useI18n();
   const { requestAnimeRoute } = useNavigation();
   const toast = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialReviewRoute = getReviewRoute(location.pathname);
   const [searchParams, setSearchParams] = useSearchParams();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
@@ -91,6 +207,10 @@ export function AnimeHero({
   const [diaryScore, setDiaryScore] = useState<number | null>(savedDiaryScore);
   const [diaryReview, setDiaryReview] = useState(savedDiaryReview ?? '');
   const [diarySaving, setDiarySaving] = useState(false);
+  const [showReviews, setShowReviews] = useState(Boolean(initialReviewRoute));
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(
+    initialReviewRoute?.reviewId && MOCK_REVIEWS.some((review) => review.id === initialReviewRoute.reviewId) ? initialReviewRoute.reviewId : null,
+  );
   const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
@@ -100,6 +220,7 @@ export function AnimeHero({
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const animeTitle = getLocalizedAnimeTitle(anime, language);
   const animeSecondaryTitle = getAnimeOriginalDisplayTitle(anime, language);
+  const selectedReview = MOCK_REVIEWS.find((review) => review.id === selectedReviewId) ?? null;
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -199,7 +320,24 @@ export function AnimeHero({
   useEffect(() => {
     setDetails(null);
     setDetailsError(false);
+    setShowReviews(false);
+    setSelectedReviewId(null);
   }, [anime.id]);
+
+  useEffect(() => {
+    const reviewRoute = getReviewRoute(location.pathname);
+    if (!reviewRoute) {
+      setShowReviews(false);
+      setSelectedReviewId(null);
+      return;
+    }
+
+    const routeSlug = animeRouteSlug(anime);
+    if (reviewRoute.animeId !== anime.id && reviewRoute.animeId !== routeSlug) return;
+
+    setShowReviews(true);
+    setSelectedReviewId(reviewRoute.reviewId && MOCK_REVIEWS.some((review) => review.id === reviewRoute.reviewId) ? reviewRoute.reviewId : null);
+  }, [anime, location.pathname]);
 
   useEffect(() => {
     if (mode !== 'default' || activeTab !== 'overview' || details) return;
@@ -265,8 +403,19 @@ export function AnimeHero({
 
   return (
     <div className={clsx(styles.layout, mode === 'watchParty' && styles.watchPartyLayout)}>
-      <section className={styles.player}>
-        {selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
+      <section className={clsx(styles.player, showReviews && mode === 'default' && styles.playerReviews)}>
+        {showReviews && mode === 'default' ? (
+          <ReviewsPanel
+            reviews={MOCK_REVIEWS}
+            selectedReview={selectedReview}
+            onSelectReview={(reviewId) => {
+              navigate(`${animeReviewBaseRoute(anime)}/${encodeURIComponent(reviewId)}`);
+            }}
+            onBack={() => {
+              navigate(animeReviewBaseRoute(anime));
+            }}
+          />
+        ) : selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
           <VideoPlayer anime={anime} player={selectedPlayer} playbackSync={mode === 'watchParty' ? playbackSync : undefined} />
         ) : (
           <div className={styles.videoFrame}>
@@ -274,7 +423,7 @@ export function AnimeHero({
           </div>
         )}
 
-        {mode === 'default' ? episodeControls : null}
+        {mode === 'default' && !showReviews ? episodeControls : null}
       </section>
 
       <aside className={styles.detailsPanel}>
@@ -381,6 +530,16 @@ export function AnimeHero({
 
               <div className={styles.watchTools}>
                 <PlayerProviderSelect players={players} value={activeProviderName} onChange={setSelectedProviderName} />
+                <button
+                  className={clsx(styles.reviewsToggle, showReviews && styles.reviewsToggleActive)}
+                  type="button"
+                  onClick={() => {
+                    navigate(showReviews ? `/anime/${animeRouteSlug(anime)}` : animeReviewBaseRoute(anime));
+                  }}
+                  aria-pressed={showReviews}
+                >
+                  {showReviews ? t('anime.backToPlayer') : t('anime.reviewsButton', { count: MOCK_REVIEWS.length })}
+                </button>
               </div>
             </>
           ) : null}
@@ -410,6 +569,176 @@ export function AnimeHero({
           {footerExtra ? <div className={styles.watchPartyActions}>{footerExtra}</div> : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ReviewsPanel({
+  reviews,
+  selectedReview,
+  onSelectReview,
+  onBack,
+}: {
+  reviews: MockReview[];
+  selectedReview: MockReview | null;
+  onSelectReview: (reviewId: string) => void;
+  onBack: () => void;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <section className={clsx(styles.reviewsPanel, selectedReview && styles.reviewsPanelExpanded)}>
+      {selectedReview ? (
+        <div key={selectedReview.id}>
+          <article className={styles.reviewDetail}>
+            <aside className={styles.reviewAuthor}>
+              <div className={styles.reviewAuthorProfile}>
+                <span className={styles.reviewAuthorAvatar}>{selectedReview.avatarLabel}</span>
+                <strong>{selectedReview.author}</strong>
+              </div>
+              <div className={styles.reviewAuthorStats}>
+                <span>
+                  <small>{t('anime.reviewWatchedLabel')}</small>
+                  <strong>{selectedReview.watched}</strong>
+                </span>
+                <span>
+                  <small>{t('anime.reviewReviewsLabel')}</small>
+                  <strong>{selectedReview.reviewsCount}</strong>
+                </span>
+                <span>
+                  <small>{t('anime.reviewHelpfulLabel')}</small>
+                  <strong>{selectedReview.helpfulCount}</strong>
+                </span>
+              </div>
+            </aside>
+            <div className={styles.reviewText}>
+              <h2>{selectedReview.title}</h2>
+              {[selectedReview.body, ...(selectedReview.bodyExtra ?? [])].map((paragraph, index) => (
+                <p key={`${selectedReview.id}-paragraph-${index}`}>{paragraph}</p>
+              ))}
+            </div>
+            <div className={styles.reviewScoreColumn}>
+              <ReviewScores review={selectedReview} />
+              <ReviewReactions review={selectedReview} />
+              <button className={styles.reviewBack} type="button" onClick={onBack}>
+                {t('anime.backToReviews')}
+              </button>
+            </div>
+          </article>
+        </div>
+      ) : (
+        <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
+          {reviews.map((review, index) => (
+            <button
+              key={review.id}
+              className={styles.reviewCard}
+              type="button"
+              style={{ '--review-card-delay': `${Math.min(index, 8) * 45 + 40}ms` } as React.CSSProperties}
+              onClick={() => onSelectReview(review.id)}
+            >
+              <span className={styles.reviewCardHeader}>
+                <span className={styles.reviewAvatar} aria-hidden="true">{review.avatarLabel}</span>
+                <span>
+                  <strong>{review.author}</strong>
+                  <small>{review.score}/10</small>
+                </span>
+              </span>
+              <span className={styles.reviewCardBody}>
+                <strong>{review.title}</strong>
+                <span>{review.excerpt}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReviewScores({ review }: { review: MockReview }) {
+  const { t } = useI18n();
+  const scores: Array<{ key: keyof MockReview['scores']; label: string }> = [
+    { key: 'story', label: t('anime.reviewAspect.story') },
+    { key: 'characters', label: t('anime.reviewAspect.characters') },
+    { key: 'visuals', label: t('anime.reviewAspect.visuals') },
+    { key: 'music', label: t('anime.reviewAspect.music') },
+    { key: 'opening', label: t('anime.reviewAspect.opening') },
+    { key: 'atmosphere', label: t('anime.reviewAspect.atmosphere') },
+  ];
+
+  return (
+    <aside className={styles.reviewScores} aria-label={t('anime.reviewDetails')}>
+      <div className={styles.reviewScoreTop}>
+        <div className={styles.reviewScoreSummary}>
+          <small>{t('anime.reviewOverall')}</small>
+          <strong>{review.score}/10</strong>
+        </div>
+        <div className={styles.reviewFlags}>
+          <Tooltip label={review.recommended ? t('anime.reviewRecommended') : t('anime.reviewNotRecommended')} placement="bottom">
+            <span className={clsx(styles.reviewFlagIcon, review.recommended ? styles.reviewFlagPositive : styles.reviewFlagWarning)}>
+              <ThumbUpIcon aria-hidden="true" />
+            </span>
+          </Tooltip>
+          <Tooltip label={review.hasSpoilers ? t('anime.reviewHasSpoilers') : t('anime.reviewNoSpoilers')} placement="bottom" align="end">
+            <span className={clsx(styles.reviewFlagIcon, review.hasSpoilers ? styles.reviewFlagSpoiler : styles.reviewFlagMuted)}>
+              <SpoilerOffIcon aria-hidden="true" />
+            </span>
+          </Tooltip>
+        </div>
+      </div>
+      <div className={styles.reviewScoreList}>
+        {scores.map((item) => {
+          const value = review.scores[item.key];
+
+          return (
+            <div key={item.key} className={styles.reviewScoreItem}>
+              <span>
+                <small>{item.label}</small>
+                <strong>{value}</strong>
+              </span>
+              <div className={styles.reviewScoreTrack} aria-hidden="true">
+                <i style={{ width: `${value * 10}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function ReviewReactions({ review }: { review: MockReview }) {
+  const { t } = useI18n();
+  const [reaction, setReaction] = useState<'like' | 'dislike' | null>(null);
+  const likes = review.likes + (reaction === 'like' ? 1 : 0);
+  const dislikes = review.dislikes + (reaction === 'dislike' ? 1 : 0);
+
+  return (
+    <div className={styles.reviewReactions} aria-label={t('anime.reviewReaction')}>
+      <Tooltip label={t('anime.reviewLike')} placement="bottom">
+        <button
+          className={clsx(styles.reviewReactionButton, reaction === 'like' && styles.reviewReactionActive)}
+          type="button"
+          onClick={() => setReaction((current) => (current === 'like' ? null : 'like'))}
+          aria-pressed={reaction === 'like'}
+          aria-label={t('anime.reviewLike')}
+        >
+          <ThumbUpIcon aria-hidden="true" />
+          <span>{likes}</span>
+        </button>
+      </Tooltip>
+      <Tooltip label={t('anime.reviewDislike')} placement="bottom" align="end">
+        <button
+          className={clsx(styles.reviewReactionButton, styles.reviewReactionDislike, reaction === 'dislike' && styles.reviewReactionActive)}
+          type="button"
+          onClick={() => setReaction((current) => (current === 'dislike' ? null : 'dislike'))}
+          aria-pressed={reaction === 'dislike'}
+          aria-label={t('anime.reviewDislike')}
+        >
+          <ThumbUpIcon aria-hidden="true" />
+          <span>{dislikes}</span>
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -474,6 +803,20 @@ function getTabFromMode(mode: string | null): AnimePageTab {
   if (mode === 'info' || mode === 'overview') return 'overview';
   if (mode === 'diary') return 'diary';
   return 'watch';
+}
+
+function animeReviewBaseRoute(anime: AnimeTitle) {
+  return `/anime/${animeRouteSlug(anime)}/reviews`;
+}
+
+function getReviewRoute(pathname: string) {
+  const match = pathname.match(/^\/anime\/([^/]+)\/reviews(?:\/([^/]+))?$/);
+  if (!match?.[1]) return null;
+
+  return {
+    animeId: decodeURIComponent(match[1]),
+    reviewId: match[2] ? decodeURIComponent(match[2]) : null,
+  };
 }
 
 function AnimeDetailsSections({

@@ -22,7 +22,7 @@ const NavigationContext =
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const navigation = useAppNavigation();
-  const screenKey = `${navigation.view}:${navigation.currentPath}`;
+  const screenKey = `${navigation.view}:${getScreenPath(navigation.currentPath)}`;
   const { screenAnimation, displayedScreenKey } = useScreenTransition(screenKey);
   const displayedScreenDivider = displayedScreenKey.indexOf(':');
   const displayedView = displayedScreenKey.slice(0, displayedScreenDivider) as AppView;
@@ -52,6 +52,13 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       {children}
     </NavigationContext.Provider>
   );
+}
+
+function getScreenPath(pathname: string) {
+  const animeReviewMatch = pathname.match(/^\/anime\/([^/]+)\/reviews(?:\/[^/]+)?$/);
+  if (animeReviewMatch?.[1]) return `/anime/${animeReviewMatch[1]}`;
+
+  return pathname;
 }
 
 export function useNavigation() {
