@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { getAnimeExtendedDetails, getEpisodePlayers, importCatalogAnime, type AnimeExtendedDetails, type CatalogSearchResult, type PlayerProviderResult } from '@/api';
@@ -584,9 +584,7 @@ function CharacterGrid({
         const content = (
           <>
             {item.imageUrl ? <img src={item.imageUrl} alt="" loading="lazy" /> : <span className={styles.characterAvatarFallback} />}
-            <span>
-              <strong>{item.name}</strong>
-            </span>
+            <CharacterName name={item.name} />
           </>
         );
 
@@ -603,6 +601,46 @@ function CharacterGrid({
         );
       })}
     </div>
+  );
+}
+
+function CharacterName({ name }: { name: string }) {
+  const textRef = useRef<HTMLElement | null>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  const [overflowOffset, setOverflowOffset] = useState(0);
+
+  useLayoutEffect(() => {
+    const text = textRef.current;
+    if (!text) return;
+
+    function updateOverflow() {
+      const offset = Math.max(0, text.scrollWidth - text.clientWidth);
+      setOverflowing(offset > 1);
+      setOverflowOffset(offset);
+    }
+
+    updateOverflow();
+
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(text);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [name]);
+
+  return (
+    <span
+      className={clsx(overflowing && styles.characterNameScrollable)}
+      style={{
+        '--character-name-offset': `${overflowOffset + 4}px`,
+        '--character-name-duration': `${Math.max(1.2, (overflowOffset + 4) / 14)}s`,
+      } as React.CSSProperties}
+    >
+      <strong ref={textRef}>
+        <em>{name}</em>
+      </strong>
+    </span>
   );
 }
 

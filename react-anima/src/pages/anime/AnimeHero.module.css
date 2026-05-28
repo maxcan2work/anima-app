@@ -463,7 +463,6 @@
 .characterCard strong,
 .characterCard small {
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -473,6 +472,16 @@
   font-size: 13px;
   font-weight: 950;
   line-height: 1.1;
+}
+
+.characterCard em {
+  display: inline-block;
+  min-width: 100%;
+  font-style: normal;
+}
+
+.characterCard:hover .characterNameScrollable em {
+  animation: characterNameMarquee var(--character-name-duration, 1.8s) linear infinite alternate;
 }
 
 .similarList button {
@@ -1093,6 +1102,16 @@
 
   to {
     transform: translateX(calc(-100% + 100cqw));
+  }
+}
+
+@keyframes characterNameMarquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(var(--character-name-offset, 0px) * -1));
   }
 }
 
