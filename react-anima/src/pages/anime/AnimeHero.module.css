@@ -380,6 +380,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  transform-origin: center;
 }
 
 .screenshotGrid img,
@@ -501,6 +505,10 @@
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  transform-origin: center;
 }
 
 .roleCard {
@@ -514,6 +522,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.045);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  transform-origin: center;
 }
 
 .roleCard > a,
@@ -568,6 +580,16 @@
   font-size: 12px;
   font-weight: 750;
   line-height: 1.1;
+}
+
+.screenshotGrid a:hover,
+.screenshotGrid a:focus-visible,
+.similarList button:hover,
+.similarList button:focus-visible,
+.roleCard:has(a:hover),
+.roleCard:has(a:focus-visible) {
+  border-color: rgba(242, 192, 99, 0.34);
+  transform: scale(1.01);
 }
 
 .extendedDetailsSkeleton {
@@ -861,6 +883,10 @@
   background: rgba(255, 255, 255, 0.05);
   color: inherit;
   text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+  transform-origin: center;
 }
 
 .sourceLink img {
@@ -869,8 +895,10 @@
   object-fit: contain;
 }
 
-.sourceLink:hover {
+.sourceLink:hover,
+.sourceLink:focus-visible {
   border-color: rgba(242, 192, 99, 0.55);
+  transform: scale(1.01);
 }
 
 .sourceLink strong {
