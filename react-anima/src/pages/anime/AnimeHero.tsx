@@ -13,6 +13,7 @@ import {
   type ServerWatchEntry,
 } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
+import clockIcon from '@assets/clock-three.svg';
 import DiaryIcon from '@assets/pencil.svg?react';
 import InfoIcon from '@assets/description.svg?react';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
@@ -41,6 +42,8 @@ type WatchState = {
 
 type AnimePageTab = 'watch' | 'overview' | 'diary';
 type AnimePageMode = 'info' | 'diary';
+type ReviewSortKey = 'recent' | 'score';
+type SortDirection = 'desc' | 'asc';
 
 type AnimeHeroProps = {
   anime: AnimeTitle;
@@ -75,6 +78,7 @@ type MockReview = {
   helpfulCount: number;
   likes: number;
   dislikes: number;
+  createdAt: string;
   recommended: boolean;
   hasSpoilers: boolean;
   scores: {
@@ -102,6 +106,7 @@ const MOCK_REVIEWS: MockReview[] = [
     helpfulCount: 64,
     likes: 48,
     dislikes: 3,
+    createdAt: '2026-05-28',
     recommended: true,
     hasSpoilers: false,
     scores: { story: 8, characters: 8, visuals: 7, music: 9, opening: 8, atmosphere: 9 },
@@ -133,6 +138,7 @@ const MOCK_REVIEWS: MockReview[] = [
     helpfulCount: 217,
     likes: 156,
     dislikes: 12,
+    createdAt: '2026-05-21',
     recommended: true,
     hasSpoilers: false,
     scores: { story: 7, characters: 8, visuals: 10, music: 9, opening: 9, atmosphere: 8 },
@@ -150,6 +156,7 @@ const MOCK_REVIEWS: MockReview[] = [
     helpfulCount: 39,
     likes: 31,
     dislikes: 8,
+    createdAt: '2026-04-12',
     recommended: true,
     hasSpoilers: true,
     scores: { story: 7, characters: 9, visuals: 7, music: 7, opening: 6, atmosphere: 8 },
@@ -167,6 +174,7 @@ const MOCK_REVIEWS: MockReview[] = [
     helpfulCount: 91,
     likes: 73,
     dislikes: 19,
+    createdAt: '2026-03-30',
     recommended: false,
     hasSpoilers: true,
     scores: { story: 6, characters: 7, visuals: 8, music: 7, opening: 7, atmosphere: 6 },
@@ -585,6 +593,12 @@ function ReviewsPanel({
   onBack: () => void;
 }) {
   const { t } = useI18n();
+  const [reviewSortKey, setReviewSortKey] = useState<ReviewSortKey>('recent');
+  const [reviewSortDirection, setReviewSortDirection] = useState<SortDirection>('desc');
+  const sortedReviews = useMemo(
+    () => sortReviews(reviews, reviewSortKey, reviewSortDirection),
+    [reviewSortDirection, reviewSortKey, reviews],
+  );
 
   return (
     <section className={clsx(styles.reviewsPanel, selectedReview && styles.reviewsPanelExpanded)}>
@@ -627,8 +641,39 @@ function ReviewsPanel({
           </article>
         </div>
       ) : (
-        <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
-          {reviews.map((review, index) => (
+        <div className={styles.reviewsList}>
+          <div className={styles.reviewSorts} aria-label={t('anime.reviewSort.label')}>
+            <button
+              className={clsx(styles.reviewSortButton, reviewSortKey === 'recent' && styles.reviewSortActive)}
+              type="button"
+              onClick={() => {
+                setReviewSortKey('recent');
+                setReviewSortDirection((current) => (reviewSortKey === 'recent' && current === 'desc' ? 'asc' : 'desc'));
+              }}
+              aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'recent' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}
+              aria-pressed={reviewSortKey === 'recent'}
+            >
+              <img src={clockIcon} alt="" aria-hidden="true" />
+              <span>{reviewSortKey === 'recent' && reviewSortDirection === 'asc' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}</span>
+              <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'recent' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+            </button>
+            <button
+              className={clsx(styles.reviewSortButton, reviewSortKey === 'score' && styles.reviewSortActive)}
+              type="button"
+              onClick={() => {
+                setReviewSortKey('score');
+                setReviewSortDirection((current) => (reviewSortKey === 'score' && current === 'desc' ? 'asc' : 'desc'));
+              }}
+              aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'score' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}
+              aria-pressed={reviewSortKey === 'score'}
+            >
+              <img src={starIcon} alt="" aria-hidden="true" />
+              <span>{reviewSortKey === 'score' && reviewSortDirection === 'asc' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}</span>
+              <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'score' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+            </button>
+          </div>
+          <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
+          {sortedReviews.map((review, index) => (
             <button
               key={review.id}
               className={styles.reviewCard}
@@ -649,10 +694,23 @@ function ReviewsPanel({
               </span>
             </button>
           ))}
+          </div>
         </div>
       )}
     </section>
   );
+}
+
+function sortReviews(reviews: MockReview[], sortKey: ReviewSortKey, direction: SortDirection) {
+  const directionMultiplier = direction === 'asc' ? 1 : -1;
+
+  return [...reviews].sort((left, right) => {
+    if (sortKey === 'score') {
+      return (left.score - right.score) * directionMultiplier;
+    }
+
+    return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * directionMultiplier;
+  });
 }
 
 function ReviewScores({ review }: { review: MockReview }) {

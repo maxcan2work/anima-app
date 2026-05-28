@@ -175,6 +175,82 @@
   min-height: 0;
 }
 
+.reviewsList {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.reviewSorts {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  padding: 2px;
+}
+
+.reviewSortButton {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d9d0c5;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.reviewSortButton > img:first-child {
+  width: 16px;
+  height: 16px;
+}
+
+.reviewSortButton span {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reviewSortDirection {
+  width: 11px;
+  height: 11px;
+  transform: rotate(-90deg);
+  transition: transform 160ms ease;
+}
+
+.reviewSortDirectionUp {
+  transform: rotate(90deg);
+}
+
+.reviewSortButton:hover,
+.reviewSortButton:focus-visible,
+.reviewSortActive {
+  border-color: rgba(242, 192, 99, 0.45);
+  background: rgba(242, 192, 99, 0.12);
+  color: #fff7ec;
+}
+
+.reviewSortButton:hover,
+.reviewSortButton:focus-visible {
+  transform: scale(1.01);
+}
+
 .reviewsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
