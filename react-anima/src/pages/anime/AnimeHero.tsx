@@ -2,7 +2,16 @@ import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
-import { getAnimeExtendedDetails, getEpisodePlayers, importCatalogAnime, type AnimeExtendedDetails, type CatalogSearchResult, type PlayerProviderResult } from '@/api';
+import {
+  getAnimeExtendedDetails,
+  getEpisodePlayers,
+  importCatalogAnime,
+  saveAnimeProgress,
+  type AnimeExtendedDetails,
+  type CatalogSearchResult,
+  type PlayerProviderResult,
+  type ServerWatchEntry,
+} from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
 import DiaryIcon from '@assets/pencil.svg?react';
 import InfoIcon from '@assets/description.svg?react';
@@ -17,6 +26,7 @@ import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { animeRouteFromCatalog, animeRouteSlug } from '@shared/navigation';
 import { Tooltip } from '@shared/ui/Tooltip';
+import { useToast } from '@shared/ui/ToastProvider';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
 import styles from './AnimeHero.module.css';
 
@@ -33,6 +43,9 @@ type AnimePageMode = 'info' | 'diary';
 type AnimeHeroProps = {
   anime: AnimeTitle;
   state: WatchState;
+  diaryScore?: number | null;
+  diaryReview?: string | null;
+  onDiaryEntrySaved?: (entry: ServerWatchEntry) => void;
   onStateChange: (patch: Partial<WatchState>) => void;
   mode?: 'default' | 'watchParty';
   playbackSync?: PlaybackSync;
@@ -53,6 +66,9 @@ const TAB_TO_MODE: Partial<Record<AnimePageTab, AnimePageMode>> = {
 export function AnimeHero({
   anime,
   state,
+  diaryScore: savedDiaryScore = null,
+  diaryReview: savedDiaryReview = null,
+  onDiaryEntrySaved,
   onStateChange,
   mode = 'default',
   playbackSync,
@@ -61,6 +77,7 @@ export function AnimeHero({
 }: AnimeHeroProps) {
   const { language, t } = useI18n();
   const { requestAnimeRoute } = useNavigation();
+  const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [players, setPlayers] = useState<PlayerProviderResult[]>([]);
   const [playersStatus, setPlayersStatus] = useState('');
@@ -71,6 +88,9 @@ export function AnimeHero({
   const [details, setDetails] = useState<AnimeExtendedDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(false);
+  const [diaryScore, setDiaryScore] = useState<number | null>(savedDiaryScore);
+  const [diaryReview, setDiaryReview] = useState(savedDiaryReview ?? '');
+  const [diarySaving, setDiarySaving] = useState(false);
   const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
@@ -90,6 +110,11 @@ export function AnimeHero({
   useEffect(() => {
     setActiveTab(getTabFromMode(searchParams.get('mode')));
   }, [searchParams]);
+
+  useEffect(() => {
+    setDiaryScore(savedDiaryScore);
+    setDiaryReview(savedDiaryReview ?? '');
+  }, [anime.id, savedDiaryReview, savedDiaryScore]);
 
   useEffect(() => {
     setEpisodePage((currentPage) => {
@@ -123,6 +148,24 @@ export function AnimeHero({
       }
       return next;
     }, { replace: true });
+  }
+
+  async function saveDiaryEntry() {
+    setDiarySaving(true);
+    try {
+      const { entry } = await saveAnimeProgress(anime.id, {
+        status: state.status,
+        currentEpisode: state.episode,
+        score: diaryScore,
+        review: diaryReview.trim() || null,
+      });
+      onDiaryEntrySaved?.(entry);
+      toast({ message: t('anime.diarySaved'), variant: 'success' });
+    } catch {
+      toast({ message: t('anime.diarySaveFailed'), variant: 'danger' });
+    } finally {
+      setDiarySaving(false);
+    }
   }
 
   useEffect(() => {
@@ -248,12 +291,57 @@ export function AnimeHero({
             </div>
           ) : activeTab === 'diary' ? (
             <div className={styles.sidebarInfoPanel}>
-              <p className="eyebrow">{t('anime.tab.diary')}</p>
-              <h2>{t('anime.diaryTitle')}</h2>
               <div className={styles.watchStatusTools}>
+                <h3>{t('catalog.status')}</h3>
                 <WatchStatusSelect value={state.status} onChange={(status) => onStateChange({ status })} />
               </div>
-              <p>{t('anime.diaryDescription')}</p>
+              <section className={styles.diaryField}>
+                <h3>{t('anime.diaryScore')}</h3>
+                <div
+                  className={styles.diaryScoreRange}
+                  style={{
+                    '--score-progress': `${((diaryScore ?? 0) / 10) * 100}%`,
+                    '--score-thumb-position': `${((diaryScore ?? 0) / 10) * 100}%`,
+                  } as React.CSSProperties}
+                >
+                  <span className={styles.diaryScoreHeader}>
+                    <span>
+                      <img src={starIcon} alt="" aria-hidden="true" />
+                      {diaryScore == null ? t('common.none') : `${diaryScore}/10`}
+                    </span>
+                    <button type="button" onClick={saveDiaryEntry} disabled={diarySaving}>
+                      {diarySaving ? '...' : t('anime.diarySave')}
+                    </button>
+                  </span>
+                  <span className={styles.diaryScoreRangeTrack}>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      step="1"
+                      value={diaryScore ?? 0}
+                      aria-label={t('anime.diaryScore')}
+                      onChange={(event) => {
+                        const score = Number(event.target.value);
+                        setDiaryScore(score > 0 ? score : null);
+                      }}
+                    />
+                  </span>
+                  <span className={styles.diaryScoreRangeScale} aria-hidden="true">
+                    <span style={{ left: '0%' }}>{t('common.none')}</span>
+                    <span style={{ left: '30%' }}>3</span>
+                    <span style={{ left: '60%' }}>6</span>
+                    <span style={{ left: '100%' }}>10</span>
+                  </span>
+                </div>
+                <h3>{t('anime.diaryReview')}</h3>
+                <textarea
+                  value={diaryReview}
+                  onChange={(event) => setDiaryReview(event.target.value)}
+                  placeholder={t('anime.diaryReviewPlaceholder')}
+                  rows={6}
+                />
+              </section>
             </div>
           ) : mode === 'default' ? (
             <>

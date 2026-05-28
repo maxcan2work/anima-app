@@ -4,8 +4,10 @@ import { RandomAnimePage } from '@pages/random/RandomAnimePage';
 import { SettingsPage } from '@pages/settings/SettingsPage';
 import { WatchPartyPage } from '@pages/watch-party/WatchPartyPage';
 import { EmptyCatalog, WatchHome } from '@pages/watch/WatchHome';
+import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useWatchLibrary } from '@features/watch-library/WatchLibraryProvider';
+import { upsertDiaryEntry } from '@shared/animeMappers';
 import { getWatchPartyCodeFromPath } from '@shared/navigation';
 
 export function AppScreens() {
@@ -20,6 +22,7 @@ export function AppScreens() {
     consumeWatchPartyCreate,
   } = useNavigation();
   const { displayedSelected, routeAnimeLoading, watchState, updateWatchState } = useWatchLibrary();
+  const { diaryEntries, setDiaryEntries } = useAuth();
 
   if (displayedView === 'random') {
     return <RandomAnimePage />;
@@ -64,10 +67,15 @@ export function AppScreens() {
   }
 
   if (displayedView === 'watch') {
+    const diaryEntry = diaryEntries.find((entry) => entry.animeId === displayedSelected.id) ?? null;
+
     return (
       <AnimeHero
         anime={displayedSelected}
         state={watchState[displayedSelected.id] ?? { episode: 1, status: 'planned' }}
+        diaryScore={diaryEntry?.score ?? null}
+        diaryReview={diaryEntry?.review ?? null}
+        onDiaryEntrySaved={(entry) => setDiaryEntries((current) => upsertDiaryEntry(current, entry))}
         onStateChange={(patch) => updateWatchState(displayedSelected.id, patch)}
       />
     );

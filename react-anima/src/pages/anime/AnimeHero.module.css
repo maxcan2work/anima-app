@@ -152,9 +152,9 @@
   gap: 8px;
   min-width: 0;
   min-height: 0;
-  margin: -3px 0 6px;
+  margin: -3px 0 4px;
   overflow-y: auto;
-  padding: 0 3px;
+  padding: 3px 3px 8px;
   scrollbar-gutter: stable;
   scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
   scrollbar-width: thin;
@@ -241,7 +241,7 @@
 .sidebarInfoPanel {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -349,7 +349,7 @@
 
 .extendedDetails {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -763,6 +763,214 @@
 .watchStatusTools {
   display: grid;
   gap: 8px;
+}
+
+.watchStatusTools h3 {
+  margin: 0;
+  color: #fff7ec;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.diaryField {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.diaryField h3:not(:first-child) {
+  margin-top: 4px;
+}
+
+.diaryField h3 {
+  margin: 0;
+  color: #fff7ec;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.diaryField textarea {
+  width: 100%;
+  min-height: 132px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff7ec;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+  outline: none;
+}
+
+.diaryScoreHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.diaryScoreHeader span {
+  display: inline-grid;
+  grid-template-columns: 16px auto;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #d8cbbb;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.diaryScoreHeader img {
+  width: 14px;
+  height: 14px;
+  opacity: 0.86;
+}
+
+.diaryScoreHeader button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #d8cbbb;
+  font-size: 12px;
+  font-weight: 850;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.diaryScoreHeader button:hover:not(:disabled),
+.diaryScoreHeader button:focus-visible {
+  border-color: rgba(242, 192, 99, 0.36);
+  background: rgba(242, 192, 99, 0.1);
+  color: #fff7ec;
+  transform: scale(1.01);
+}
+
+.diaryScoreHeader button:disabled {
+  cursor: default;
+  opacity: 0.64;
+}
+
+.diaryScoreRange {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(242, 192, 99, 0.045), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.diaryScoreRangeTrack {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.diaryScoreRangeScale {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 12px;
+  color: #92887a;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.diaryScoreRangeScale span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.diaryScoreRangeScale span:first-child {
+  transform: translateX(0);
+}
+
+.diaryScoreRangeScale span:last-child {
+  transform: translateX(-100%);
+}
+
+.diaryScoreRange input {
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  appearance: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.diaryScoreRange input::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #f2c063 0 var(--score-progress), rgba(255, 255, 255, 0.1) var(--score-progress) 100%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+.diaryScoreRange input::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  appearance: none;
+  border: 2px solid #21170d;
+  border-radius: 50%;
+  background: #f2c063;
+  box-shadow:
+    0 0 0 3px rgba(242, 192, 99, 0.18),
+    0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.diaryScoreRange input::-moz-range-track {
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.diaryScoreRange input::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #f2c063;
+}
+
+.diaryScoreRange input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #21170d;
+  border-radius: 50%;
+  background: #f2c063;
+  box-shadow:
+    0 0 0 3px rgba(242, 192, 99, 0.18),
+    0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.diaryScoreRange input:focus-visible {
+  outline: none;
+}
+
+.diaryField textarea::placeholder {
+  color: #8f8578;
+}
+
+.diaryField textarea:focus {
+  border-color: rgba(242, 192, 99, 0.52);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .providerSelect {
