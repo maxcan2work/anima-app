@@ -52,13 +52,3 @@
   display: flex;
   justify-content: end;
 }
-
-.reload {
-  min-height: 42px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 8px;
-  background: #d94d38;
-  color: white;
-  font-weight: 900;
-}

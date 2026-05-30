@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { dictionaries } from '@shared/i18n/dictionaries';
+import { Button } from './Button';
 import styles from './ErrorBoundary.module.css';
 
 type ErrorBoundaryProps = {
@@ -34,9 +35,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <h1>{getErrorBoundaryText('error.title')}</h1>
           <pre className={styles.details}>{this.state.error.message}</pre>
           <div className={styles.actions}>
-            <button className={styles.reload} type="button" onClick={() => window.location.reload()}>
+            <Button onClick={() => window.location.reload()}>
               {getErrorBoundaryText('common.reload')}
-            </button>
+            </Button>
           </div>
         </section>
       </main>

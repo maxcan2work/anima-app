@@ -4,12 +4,17 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle, WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import {
   getAnimeExtendedDetails,
+  getAnimeReviews,
   getEpisodePlayers,
   importCatalogAnime,
   saveAnimeProgress,
+  saveAnimeReview,
   type AnimeExtendedDetails,
+  type AnimeReview,
+  type AnimeReviewScores,
   type CatalogSearchResult,
   type PlayerProviderResult,
+  type SaveAnimeReviewPayload,
   type ServerWatchEntry,
 } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
@@ -29,6 +34,7 @@ import type { AnimeTitle } from '@/data';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { animeRouteFromCatalog, animeRouteSlug } from '@shared/navigation';
+import { Button } from '@shared/ui/Button';
 import { Tooltip } from '@shared/ui/Tooltip';
 import { useToast } from '@shared/ui/ToastProvider';
 import { ControlledVideoPlayer, type PlaybackSync, type PlaybackSyncState } from './ControlledVideoPlayer';
@@ -52,7 +58,7 @@ type ReviewDraft = {
   overallScore: number;
   recommended: boolean;
   hasSpoilers: boolean;
-  aspectScores: MockReview['scores'];
+  aspectScores: AnimeReviewScores;
 };
 
 type AnimeHeroProps = {
@@ -77,122 +83,6 @@ const TAB_TO_MODE: Partial<Record<AnimePageTab, AnimePageMode>> = {
   overview: 'info',
   diary: 'diary',
 };
-
-type MockReview = {
-  id: string;
-  author: string;
-  avatarLabel: string;
-  score: number;
-  watched: number;
-  reviewsCount: number;
-  helpfulCount: number;
-  likes: number;
-  dislikes: number;
-  createdAt: string;
-  recommended: boolean;
-  hasSpoilers: boolean;
-  scores: {
-    story: number;
-    characters: number;
-    visuals: number;
-    music: number;
-    opening: number;
-    atmosphere: number;
-  };
-  title: string;
-  excerpt: string;
-  body: string;
-  bodyExtra?: string[];
-};
-
-const MOCK_REVIEWS: MockReview[] = [
-  {
-    id: 'quiet-aftertaste',
-    author: 'Mira',
-    avatarLabel: 'M',
-    score: 8,
-    watched: 142,
-    reviewsCount: 18,
-    helpfulCount: 64,
-    likes: 48,
-    dislikes: 3,
-    createdAt: '2026-05-28',
-    recommended: true,
-    hasSpoilers: false,
-    scores: { story: 8, characters: 8, visuals: 7, music: 9, opening: 8, atmosphere: 9 },
-    bodyExtra: [
-      'Дальше тайтл особенно хорошо раскрывается через мелкие повторяющиеся детали: взгляды, короткие паузы, бытовые сцены и то, как персонажи постепенно меняют отношение друг к другу. В таких моментах сериал не пытается объяснить каждую эмоцию напрямую, а даёт зрителю собрать впечатление самостоятельно.',
-      'Отдельно хочется отметить работу с темпом. Здесь почти нет ощущения, что серия просто заполняет хронометраж: даже спокойные эпизоды либо двигают отношения, либо добавляют новый оттенок к уже знакомому конфликту. Из-за этого история воспринимается цельной, хотя формально в ней много небольших сцен.',
-      'Визуально тайтл не всегда пытается удивлять сложной постановкой, но у него есть аккуратность. Фоны, цветовые акценты и композиция часто работают на настроение, а не просто закрывают техническую задачу. Особенно хорошо смотрятся тихие сцены, где камера будто оставляет героям немного воздуха.',
-      'Музыка тоже держит правильную дистанцию. Она редко перетягивает внимание на себя, зато хорошо подхватывает кульминации и делает некоторые сцены теплее. Опенинг после нескольких серий начинает восприниматься не как отдельный клип, а как часть общего настроения.',
-      'Если искать минусы, то часть второстепенных линий можно было бы раскрыть смелее. Иногда кажется, что авторы останавливаются ровно в тот момент, когда конфликт мог стать глубже. Но это не ломает общий эффект: скорее оставляет ощущение, что у мира и персонажей есть запас, который хочется увидеть дальше.',
-      'В итоге это не тот тайтл, который обязательно поражает одной большой сценой. Он работает иначе: собирает доверие постепенно и выигрывает за счёт аккуратного настроения. Именно поэтому после просмотра остаётся желание не спорить о сильных и слабых сторонах, а просто ещё немного побыть в этой истории.',
-      'Во второй половине особенно заметно, что история держится не только на главной линии, но и на том, как меняется поведение персонажей в обычных ситуациях. Кто-то начинает говорить прямее, кто-то наоборот замыкается, и эти маленькие сдвиги работают сильнее, чем очередной большой монолог о чувствах.',
-      'Мне понравилось, что тайтл не боится оставлять некоторые сцены недосказанными. Не каждый конфликт получает мгновенное объяснение, не каждая реплика сразу становится очевидной. Благодаря этому появляется ощущение живого пространства, где персонажи существуют не только ради следующего сюжетного поворота.',
-      'При этом сериал не идеален в распределении внимания. Иногда второстепенные герои появляются ровно настолько, чтобы напомнить о себе, но не получают полноценного эпизода. Это немного расстраивает, потому что у многих из них есть потенциал, и хочется, чтобы камера задерживалась на них дольше.',
-      'С эмоциональной стороны тайтл работает аккуратно. Он не выкручивает каждую драматичную сцену на максимум и не требует от зрителя обязательной реакции. Скорее он складывает настроение слой за слоем, и уже ближе к финалу понимаешь, что привязался к происходящему сильнее, чем ожидал в начале.',
-      'Отдельно стоит сказать про повторный просмотр. Некоторые ранние сцены после знания дальнейших событий воспринимаются иначе: жесты, интонации и паузы получают дополнительный смысл. Это хороший признак для истории, которая хочет быть не просто набором событий, а цельным переживанием.',
-      'Я бы рекомендовал смотреть этот тайтл без спешки. Он лучше раскрывается, если не пытаться проглотить всё за один вечер, а дать сериям немного отлежаться. Тогда спокойный темп перестаёт казаться недостатком и становится частью того, зачем вообще включать именно эту историю.',
-    ],
-    title: 'Хороший темп и сильная атмосфера',
-    excerpt: 'Сначала кажется, что история разгоняется медленно, но ближе к середине становится понятно, зачем она так бережно собирает детали.',
-    body: 'Сначала кажется, что история разгоняется медленно, но ближе к середине становится понятно, зачем она так бережно собирает детали. Здесь хорошо работает настроение: сцены не пытаются постоянно давить драмой, но оставляют приятное послевкусие после каждой серии. Особенно понравилось, как тайтл обращается с паузами и маленькими бытовыми моментами.',
-  },
-  {
-    id: 'visual-pulse',
-    author: 'Kaito',
-    avatarLabel: 'K',
-    score: 9,
-    watched: 318,
-    reviewsCount: 42,
-    helpfulCount: 217,
-    likes: 156,
-    dislikes: 12,
-    createdAt: '2026-05-21',
-    recommended: true,
-    hasSpoilers: false,
-    scores: { story: 7, characters: 8, visuals: 10, music: 9, opening: 9, atmosphere: 8 },
-    title: 'Визуально цепляет сильнее сюжета',
-    excerpt: 'Самое заметное здесь — постановка сцен. Даже простые разговоры выглядят живо, а экшен не разваливается на шум.',
-    body: 'Самое заметное здесь — постановка сцен. Даже простые разговоры выглядят живо, а экшен не разваливается на шум. Сюжет местами идёт знакомыми дорогами, зато режиссура и музыка вытаскивают почти каждую важную сцену. Для меня это тот случай, когда стиль не заменяет содержание, а аккуратно держит его в тонусе.',
-  },
-  {
-    id: 'warm-characters',
-    author: 'Nika',
-    avatarLabel: 'N',
-    score: 7,
-    watched: 86,
-    reviewsCount: 11,
-    helpfulCount: 39,
-    likes: 31,
-    dislikes: 8,
-    createdAt: '2026-04-12',
-    recommended: true,
-    hasSpoilers: true,
-    scores: { story: 7, characters: 9, visuals: 7, music: 7, opening: 6, atmosphere: 8 },
-    title: 'Персонажи делают половину работы',
-    excerpt: 'Не все арки одинаково сильные, зато герои быстро становятся своими. За ними приятно наблюдать даже вне главного конфликта.',
-    body: 'Не все арки одинаково сильные, зато герои быстро становятся своими. За ними приятно наблюдать даже вне главного конфликта. Иногда хочется чуть меньше объяснений и чуть больше доверия к зрителю, но в целом эмоциональные сцены попадают туда, куда нужно.',
-  },
-  {
-    id: 'mixed-ending',
-    author: 'Rei',
-    avatarLabel: 'R',
-    score: 6,
-    watched: 204,
-    reviewsCount: 27,
-    helpfulCount: 91,
-    likes: 73,
-    dislikes: 19,
-    createdAt: '2026-03-30',
-    recommended: false,
-    hasSpoilers: true,
-    scores: { story: 6, characters: 7, visuals: 8, music: 7, opening: 7, atmosphere: 6 },
-    title: 'Финал спорный, но путь стоил того',
-    excerpt: 'К концовке есть вопросы: часть решений выглядит резковато. Но отдельные серии до неё всё равно очень крепкие.',
-    body: 'К концовке есть вопросы: часть решений выглядит резковато. Но отдельные серии до неё всё равно очень крепкие. Если смотреть ради атмосферы, персонажей и отдельных сцен, тайтл работает хорошо. Если ждать идеально собранной развязки, впечатление может быть неровным.',
-  },
-];
 
 export function AnimeHero({
   anime,
@@ -225,10 +115,11 @@ export function AnimeHero({
   const [diaryScore, setDiaryScore] = useState<number | null>(savedDiaryScore);
   const [diaryReview, setDiaryReview] = useState(savedDiaryReview ?? '');
   const [diarySaving, setDiarySaving] = useState(false);
+  const [reviews, setReviews] = useState<AnimeReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState(false);
   const [showReviews, setShowReviews] = useState(Boolean(initialReviewRoute));
-  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(
-    initialReviewRoute?.reviewId && MOCK_REVIEWS.some((review) => review.id === initialReviewRoute.reviewId) ? initialReviewRoute.reviewId : null,
-  );
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(initialReviewRoute?.reviewId ?? null);
   const playablePlayers = players.filter((player) => isPlayablePlayer(player) && (mode !== 'watchParty' || player.provider === 'anilibria'));
   const preferredPlayers = mode === 'watchParty' ? orderWatchPartyPlayers(playablePlayers) : playablePlayers;
   const selectedProviderPlayer = preferredPlayers.find((player) => player.provider === selectedProviderName);
@@ -238,7 +129,7 @@ export function AnimeHero({
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const animeTitle = getLocalizedAnimeTitle(anime, language);
   const animeSecondaryTitle = getAnimeOriginalDisplayTitle(anime, language);
-  const selectedReview = MOCK_REVIEWS.find((review) => review.id === selectedReviewId) ?? null;
+  const selectedReview = reviews.find((review) => review.id === selectedReviewId) ?? null;
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -338,6 +229,8 @@ export function AnimeHero({
   useEffect(() => {
     setDetails(null);
     setDetailsError(false);
+    setReviews([]);
+    setReviewsError(false);
     setShowReviews(false);
     setSelectedReviewId(null);
   }, [anime.id]);
@@ -354,8 +247,32 @@ export function AnimeHero({
     if (reviewRoute.animeId !== anime.id && reviewRoute.animeId !== routeSlug) return;
 
     setShowReviews(true);
-    setSelectedReviewId(reviewRoute.reviewId && MOCK_REVIEWS.some((review) => review.id === reviewRoute.reviewId) ? reviewRoute.reviewId : null);
+    setSelectedReviewId(reviewRoute.reviewId ?? null);
   }, [anime, location.pathname]);
+
+  useEffect(() => {
+    if (mode !== 'default' || !showReviews) return;
+
+    let ignore = false;
+    setReviewsLoading(true);
+    setReviewsError(false);
+
+    getAnimeReviews(anime.id)
+      .then((response) => {
+        if (ignore) return;
+        setReviews(response.reviews);
+      })
+      .catch(() => {
+        if (!ignore) setReviewsError(true);
+      })
+      .finally(() => {
+        if (!ignore) setReviewsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [anime.id, mode, showReviews]);
 
   useEffect(() => {
     if (mode !== 'default' || activeTab !== 'overview' || details) return;
@@ -425,13 +342,25 @@ export function AnimeHero({
         {showReviews && mode === 'default' ? (
           <ReviewsPanel
             anime={anime}
-            reviews={MOCK_REVIEWS}
+            reviews={reviews}
+            loading={reviewsLoading}
+            error={reviewsError}
             selectedReview={selectedReview}
             onSelectReview={(reviewId) => {
               navigate(`${animeReviewBaseRoute(anime)}/${encodeURIComponent(reviewId)}`);
             }}
             onBack={() => {
               navigate(animeReviewBaseRoute(anime));
+            }}
+            onReviewSaved={(review) => {
+              setReviews((current) => {
+                const exists = current.some((item) => item.id === review.id);
+                return exists
+                  ? current.map((item) => item.id === review.id ? review : item)
+                  : [review, ...current];
+              });
+              setSelectedReviewId(review.id);
+              navigate(`${animeReviewBaseRoute(anime)}/${encodeURIComponent(review.id)}`);
             }}
           />
         ) : selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
@@ -557,7 +486,7 @@ export function AnimeHero({
                   }}
                   aria-pressed={showReviews}
                 >
-                  {showReviews ? t('anime.backToPlayer') : t('anime.reviewsButton', { count: MOCK_REVIEWS.length })}
+                  {showReviews ? t('anime.backToPlayer') : t('anime.reviewsButton', { count: reviews.length })}
                 </button>
               </div>
             </>
@@ -595,15 +524,21 @@ export function AnimeHero({
 function ReviewsPanel({
   anime,
   reviews,
+  loading,
+  error,
   selectedReview,
   onSelectReview,
   onBack,
+  onReviewSaved,
 }: {
   anime: AnimeTitle;
-  reviews: MockReview[];
-  selectedReview: MockReview | null;
+  reviews: AnimeReview[];
+  loading: boolean;
+  error: boolean;
+  selectedReview: AnimeReview | null;
   onSelectReview: (reviewId: string) => void;
   onBack: () => void;
+  onReviewSaved: (review: AnimeReview) => void;
 }) {
   const { t } = useI18n();
   const [reviewSortKey, setReviewSortKey] = useState<ReviewSortKey>('recent');
@@ -642,7 +577,7 @@ function ReviewsPanel({
             <div className={styles.reviewText}>
               <h2>{selectedReview.title}</h2>
               <div className={styles.reviewBodyScroll}>
-                {[selectedReview.body, ...(selectedReview.bodyExtra ?? [])].map((paragraph, index) => (
+                {splitReviewBody(selectedReview.body).map((paragraph, index) => (
                   <p key={`${selectedReview.id}-paragraph-${index}`}>{paragraph}</p>
                 ))}
               </div>
@@ -657,7 +592,16 @@ function ReviewsPanel({
           </article>
         </div>
       ) : isComposing ? (
-        <ReviewComposeForm key={reviewDraftStorageKey(anime)} draftKey={reviewDraftStorageKey(anime)} onBack={() => setIsComposing(false)} />
+        <ReviewComposeForm
+          key={reviewDraftStorageKey(anime)}
+          animeId={anime.id}
+          draftKey={reviewDraftStorageKey(anime)}
+          onBack={() => setIsComposing(false)}
+          onSaved={(review) => {
+            setIsComposing(false);
+            onReviewSaved(review);
+          }}
+        />
       ) : (
         <div className={styles.reviewsList}>
           <div className={styles.reviewToolbar}>
@@ -710,7 +654,25 @@ function ReviewsPanel({
             </button>
           </div>
           <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
-          {sortedReviews.map((review, index) => (
+          {loading ? (
+            Array.from({ length: 4 }, (_, index) => (
+              <div key={`review-placeholder-${index}`} className={clsx(styles.reviewCard, styles.reviewCardPlaceholder)} />
+            ))
+          ) : error ? (
+            <div className={styles.reviewsErrorState} role="status">
+              <ReviewSadIcon />
+              <p>{t('anime.reviewsLoadFailed')}</p>
+            </div>
+          ) : sortedReviews.length === 0 ? (
+            <div className={styles.reviewsEmptyState}>
+              <ReviewSadIcon />
+              <strong>{t('anime.reviewsEmpty')}</strong>
+              <p>{t('anime.reviewsEmptyDescription')}</p>
+              <Button className={styles.reviewsEmptyAction} onClick={() => setIsComposing(true)}>
+                {t('anime.reviewWriteFirst')}
+              </Button>
+            </div>
+          ) : sortedReviews.map((review, index) => (
             <button
               key={review.id}
               className={styles.reviewCard}
@@ -756,10 +718,32 @@ function ReviewsPanel({
   );
 }
 
-function ReviewComposeForm({ draftKey, onBack }: { draftKey: string; onBack: () => void }) {
+function ReviewSadIcon() {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="24" />
+      <path d="M23 27.5H23.1" />
+      <path d="M41 27.5H41.1" />
+      <path d="M23.5 43C25.8 39.8 28.6 38.25 32 38.25C35.4 38.25 38.2 39.8 40.5 43" />
+    </svg>
+  );
+}
+
+function ReviewComposeForm({
+  animeId,
+  draftKey,
+  onBack,
+  onSaved,
+}: {
+  animeId: string;
+  draftKey: string;
+  onBack: () => void;
+  onSaved: (review: AnimeReview) => void;
+}) {
   const { t } = useI18n();
+  const toast = useToast();
   const initialDraft = useMemo(() => readReviewDraft(draftKey), [draftKey]);
-  const defaultAspectScores: MockReview['scores'] = {
+  const defaultAspectScores: AnimeReviewScores = {
     story: 8,
     characters: 8,
     visuals: 8,
@@ -772,8 +756,9 @@ function ReviewComposeForm({ draftKey, onBack }: { draftKey: string; onBack: () 
   const [overallScore, setOverallScore] = useState(initialDraft?.overallScore ?? 8);
   const [recommended, setRecommended] = useState(initialDraft?.recommended ?? true);
   const [hasSpoilers, setHasSpoilers] = useState(initialDraft?.hasSpoilers ?? false);
-  const [aspectScores, setAspectScores] = useState<MockReview['scores']>(initialDraft?.aspectScores ?? defaultAspectScores);
-  const aspects: Array<{ key: keyof MockReview['scores']; label: string }> = [
+  const [aspectScores, setAspectScores] = useState<AnimeReviewScores>(initialDraft?.aspectScores ?? defaultAspectScores);
+  const [saving, setSaving] = useState(false);
+  const aspects: Array<{ key: keyof AnimeReviewScores; label: string }> = [
     { key: 'story', label: t('anime.reviewAspect.story') },
     { key: 'characters', label: t('anime.reviewAspect.characters') },
     { key: 'visuals', label: t('anime.reviewAspect.visuals') },
@@ -795,8 +780,44 @@ function ReviewComposeForm({ draftKey, onBack }: { draftKey: string; onBack: () 
     });
   }, [aspectScores, draftKey, hasSpoilers, overallScore, recommended, reviewBody, reviewTitle]);
 
+  async function submitReview() {
+    if (saving) return;
+
+    const payload: SaveAnimeReviewPayload = {
+      title: reviewTitle.trim(),
+      body: reviewBody.trim(),
+      score: overallScore,
+      recommended,
+      hasSpoilers,
+      scores: aspectScores,
+    };
+
+    if (!payload.title || !payload.body) {
+      toast({ message: t('anime.reviewSaveRequired'), variant: 'danger' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { review } = await saveAnimeReview(animeId, payload);
+      clearReviewDraft(draftKey);
+      toast({ message: t('anime.reviewSaved'), variant: 'success' });
+      onSaved(review);
+    } catch {
+      toast({ message: t('anime.reviewSaveFailed'), variant: 'danger' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <form className={styles.reviewCompose} onSubmit={(event) => event.preventDefault()}>
+    <form
+      className={styles.reviewCompose}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submitReview();
+      }}
+    >
       <div className={styles.reviewComposeMain}>
         <label className={styles.reviewComposeField}>
           <span>{t('anime.reviewTitleLabel')}</span>
@@ -895,14 +916,14 @@ function ReviewComposeForm({ draftKey, onBack }: { draftKey: string; onBack: () 
         </section>
         <div className={styles.reviewComposeActions}>
           <button type="button" onClick={onBack}>{t('common.cancel')}</button>
-          <button type="submit">{t('anime.reviewPublish')}</button>
+          <button type="submit" disabled={saving}>{saving ? '...' : t('anime.reviewPublish')}</button>
         </div>
       </aside>
     </form>
   );
 }
 
-function sortReviews(reviews: MockReview[], sortKey: ReviewSortKey, direction: SortDirection) {
+function sortReviews(reviews: AnimeReview[], sortKey: ReviewSortKey, direction: SortDirection) {
   const directionMultiplier = direction === 'asc' ? 1 : -1;
 
   return [...reviews].sort((left, right) => {
@@ -916,6 +937,10 @@ function sortReviews(reviews: MockReview[], sortKey: ReviewSortKey, direction: S
 
     return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * directionMultiplier;
   });
+}
+
+function splitReviewBody(body: string) {
+  return body.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
 }
 
 function reviewDraftStorageKey(anime: AnimeTitle) {
@@ -955,12 +980,20 @@ function writeReviewDraft(storageKey: string, draft: ReviewDraft) {
   }
 }
 
+function clearReviewDraft(storageKey: string) {
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch {
+    // localStorage can be unavailable in private mode.
+  }
+}
+
 function normalizeReviewScore(value: unknown, fallback: number) {
   return Math.min(10, Math.max(1, Math.round(Number(value) || fallback)));
 }
 
-function normalizeAspectScores(value: unknown): MockReview['scores'] {
-  const source = typeof value === 'object' && value ? value as Partial<MockReview['scores']> : {};
+function normalizeAspectScores(value: unknown): AnimeReviewScores {
+  const source = typeof value === 'object' && value ? value as Partial<AnimeReviewScores> : {};
 
   return {
     story: normalizeReviewScore(source.story, 8),
@@ -972,9 +1005,9 @@ function normalizeAspectScores(value: unknown): MockReview['scores'] {
   };
 }
 
-function ReviewScores({ review }: { review: MockReview }) {
+function ReviewScores({ review }: { review: AnimeReview }) {
   const { t } = useI18n();
-  const scores: Array<{ key: keyof MockReview['scores']; label: string }> = [
+  const scores: Array<{ key: keyof AnimeReviewScores; label: string }> = [
     { key: 'story', label: t('anime.reviewAspect.story') },
     { key: 'characters', label: t('anime.reviewAspect.characters') },
     { key: 'visuals', label: t('anime.reviewAspect.visuals') },
@@ -1024,7 +1057,7 @@ function ReviewScores({ review }: { review: MockReview }) {
   );
 }
 
-function ReviewReactions({ review }: { review: MockReview }) {
+function ReviewReactions({ review }: { review: AnimeReview }) {
   const { t } = useI18n();
   const [reaction, setReaction] = useState<'like' | 'dislike' | null>(null);
   const likes = review.likes + (reaction === 'like' ? 1 : 0);
