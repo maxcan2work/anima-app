@@ -183,12 +183,20 @@
   min-height: 0;
 }
 
-.reviewSorts {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.reviewToolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
   padding: 2px;
+}
+
+.reviewSorts {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .reviewSortButton {
@@ -213,7 +221,8 @@
     transform 160ms ease;
 }
 
-.reviewSortButton > img:first-child {
+.reviewSortButton > img:first-child,
+.reviewSortButton > svg:first-child {
   width: 16px;
   height: 16px;
 }
@@ -251,6 +260,30 @@
   transform: scale(1.01);
 }
 
+.reviewWriteButton {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(242, 192, 99, 0.36);
+  border-radius: 8px;
+  background: rgba(242, 192, 99, 0.14);
+  color: #fff7ec;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.reviewWriteButton:hover,
+.reviewWriteButton:focus-visible {
+  border-color: rgba(242, 192, 99, 0.54);
+  background: rgba(242, 192, 99, 0.2);
+  transform: scale(1.01);
+}
+
 .reviewsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -280,10 +313,10 @@
 
 .reviewCard {
   display: grid;
-  align-content: space-between;
-  gap: 16px;
+  align-content: start;
+  gap: 10px;
   min-width: 0;
-  min-height: 176px;
+  min-height: 178px;
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -319,9 +352,9 @@
 
 .reviewCardHeader {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-columns: 38px minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -344,20 +377,20 @@
   font-size: 15px;
 }
 
-.reviewCardHeader span:last-child,
+.reviewCardAuthor,
 .reviewCardBody {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
-.reviewCardHeader strong,
+.reviewCardAuthor strong,
 .reviewCardBody strong,
 .reviewText h2 {
   color: #fff7ec;
 }
 
-.reviewCardHeader strong,
+.reviewCardAuthor strong,
 .reviewCardBody strong {
   overflow: hidden;
   font-size: 14px;
@@ -367,11 +400,41 @@
   white-space: nowrap;
 }
 
-.reviewCardHeader small {
+.reviewCardAuthor small {
   color: #caa772;
   font-size: 12px;
   font-weight: 900;
   line-height: 1;
+}
+
+.reviewCardScore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 62px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid rgba(242, 192, 99, 0.24);
+  border-radius: 7px;
+  background: rgba(242, 192, 99, 0.1);
+  color: #f4d391;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.reviewCardScore img {
+  width: 13px;
+  height: 13px;
+  filter: brightness(0) saturate(100%) invert(82%) sepia(38%) saturate(569%) hue-rotate(352deg) brightness(101%) contrast(91%);
+}
+
+.reviewCardFlags {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .reviewCardBody span {
@@ -383,6 +446,82 @@
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+.reviewCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.reviewCardFlag {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  color: #c9a66d;
+}
+
+.reviewCardFlag svg {
+  width: 14px;
+  height: 14px;
+}
+
+.reviewThumbDown {
+  transform: rotate(180deg);
+}
+
+.reviewCardFlagGood {
+  border-color: rgba(98, 184, 128, 0.28);
+  background: rgba(98, 184, 128, 0.14);
+  color: #8fd6a5;
+}
+
+.reviewCardFlagBad {
+  border-color: rgba(233, 99, 99, 0.25);
+  background: rgba(233, 99, 99, 0.12);
+  color: #f09a9a;
+}
+
+.reviewCardFlagMuted {
+  background: rgba(255, 255, 255, 0.055);
+  color: #a79b8c;
+}
+
+.reviewCardVotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.reviewCardVotes span {
+  color: rgba(191, 181, 168, 0.5);
+}
+
+.reviewCardVotes strong {
+  font-size: inherit;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.reviewCardVotesLike {
+  color: #8fd6a5;
+}
+
+.reviewCardVotesDislike {
+  color: #f09a9a;
 }
 
 .reviewDetail {
@@ -515,58 +654,69 @@
 }
 
 .reviewText {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
   height: 100%;
   max-height: 100%;
+  overflow: hidden;
+  padding: 2px 8px 2px 2px;
+  opacity: 0;
+  animation: reviewColumnIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 110ms forwards;
+}
+
+.reviewBodyScroll {
+  min-width: 0;
+  min-height: 0;
   overflow-y: auto;
-  padding: 18px;
+  padding-right: 8px;
+  scrollbar-color: rgba(201, 166, 109, 0.48) transparent;
+  scrollbar-width: thin;
+}
+
+.reviewBodyScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reviewBodyScroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: transparent;
+}
+
+.reviewBodyScroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(201, 166, 109, 0.48);
+}
+
+.reviewBodyScroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 166, 109, 0.72);
+}
+
+.reviewText h2 {
+  margin: 0;
+  padding: 16px 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.03)),
     rgba(255, 255, 255, 0.035);
-  opacity: 0;
-  animation: reviewColumnIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 110ms forwards;
-  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
-  scrollbar-width: thin;
-}
-
-.reviewText::-webkit-scrollbar {
-  width: 6px;
-}
-
-.reviewText::-webkit-scrollbar-track {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.reviewText::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(201, 166, 109, 0.48);
-}
-
-.reviewText::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 166, 109, 0.72);
-}
-
-.reviewText h2 {
-  margin: 0 0 12px;
   font-size: 26px;
   font-weight: 950;
   line-height: 1.1;
 }
 
-.reviewText p {
+.reviewBodyScroll p {
   margin: 0 0 14px;
   color: #d2c8ba;
   font-size: 15px;
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.7;
 }
 
-.reviewText p:last-child {
+.reviewBodyScroll p:last-child {
   margin-bottom: 0;
 }
 
@@ -593,7 +743,7 @@
 
 .reviewScoreTop {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -603,8 +753,10 @@
 
 .reviewScoreSummary {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   min-width: 0;
+  justify-items: end;
+  text-align: right;
 }
 
 .reviewScoreSummary small {
@@ -657,9 +809,15 @@
 }
 
 .reviewFlagSpoiler {
-  border-color: rgba(242, 192, 99, 0.22);
-  background: rgba(242, 192, 99, 0.12);
-  color: #f4d391;
+  border-color: rgba(221, 96, 96, 0.24);
+  background: rgba(221, 96, 96, 0.12);
+  color: #f0b4b4;
+}
+
+.reviewFlagNoSpoiler {
+  border-color: rgba(108, 197, 132, 0.22);
+  background: rgba(108, 197, 132, 0.12);
+  color: #b9e6bf;
 }
 
 .reviewFlagMuted {
@@ -685,8 +843,10 @@
   min-height: 38px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
-  color: #cfc7ba;
+  background:
+    linear-gradient(145deg, rgba(108, 197, 132, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.045);
+  color: #9fdfb0;
   cursor: pointer;
   transition:
     border-color 160ms ease,
@@ -697,9 +857,11 @@
 
 .reviewReactionButton:hover,
 .reviewReactionButton:focus-visible {
-  border-color: rgba(242, 192, 99, 0.34);
-  background: rgba(242, 192, 99, 0.09);
-  color: #fff7ec;
+  border-color: rgba(108, 197, 132, 0.36);
+  background:
+    linear-gradient(145deg, rgba(108, 197, 132, 0.17), rgba(255, 255, 255, 0.045)),
+    rgba(255, 255, 255, 0.055);
+  color: #d6f4dd;
   transform: scale(1.01);
 }
 
@@ -718,6 +880,22 @@
 
 .reviewReactionDislike svg {
   transform: rotate(180deg);
+}
+
+.reviewReactionDislike {
+  background:
+    linear-gradient(145deg, rgba(221, 96, 96, 0.12), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.045);
+  color: #f1aaa8;
+}
+
+.reviewReactionDislike:hover,
+.reviewReactionDislike:focus-visible {
+  border-color: rgba(221, 96, 96, 0.36);
+  background:
+    linear-gradient(145deg, rgba(221, 96, 96, 0.18), rgba(255, 255, 255, 0.045)),
+    rgba(255, 255, 255, 0.055);
+  color: #ffd1cf;
 }
 
 .reviewReactionActive {
@@ -781,6 +959,303 @@
   transform: scaleX(0);
   transform-origin: left center;
   animation: reviewScoreFill 620ms cubic-bezier(0.22, 1, 0.36, 1) 120ms forwards;
+}
+
+.reviewCompose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 2px;
+  overflow: hidden;
+}
+
+.reviewComposeMain,
+.reviewComposeSidebar {
+  min-width: 0;
+  min-height: 0;
+  opacity: 0;
+  animation: reviewColumnIn 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.reviewComposeMain {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 22px;
+  animation-delay: 60ms;
+}
+
+.reviewComposeSidebar {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  animation-delay: 130ms;
+}
+
+.reviewComposeField {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.reviewComposeField > span {
+  display: block;
+  color: #fff7ec;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 12px;
+  text-transform: uppercase;
+}
+
+.reviewComposeField input,
+.reviewComposeField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff7ec;
+  font: inherit;
+  outline: none;
+}
+
+.reviewComposeField input {
+  height: 44px;
+  padding: 0 13px;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.reviewComposeField textarea {
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+  padding: 16px;
+  resize: none;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.reviewComposeField input:focus,
+.reviewComposeField textarea:focus {
+  border-color: rgba(242, 192, 99, 0.42);
+  background: rgba(242, 192, 99, 0.07);
+}
+
+.reviewComposeField input::placeholder,
+.reviewComposeField textarea::placeholder {
+  color: #8f8578;
+}
+
+.reviewComposeScore,
+.reviewComposeAspects,
+.reviewComposeFlags {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.056), rgba(255, 255, 255, 0.024)),
+    rgba(255, 255, 255, 0.034);
+}
+
+.reviewComposeScoreHeader {
+  display: grid;
+  min-width: 0;
+}
+
+.reviewComposeScoreHeader span {
+  display: grid;
+  gap: 4px;
+}
+
+.reviewComposeScoreHeader small {
+  color: #998f82;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.reviewComposeScoreHeader strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff7ec;
+  font-size: 38px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.reviewComposeScore input[type='range'],
+.reviewComposeAspect input[type='range'] {
+  width: 100%;
+  accent-color: #f2c063;
+  cursor: pointer;
+}
+
+.reviewComposeScoreHeader input,
+.reviewComposeAspect strong input {
+  box-sizing: border-box;
+  width: 1.55em;
+  height: 1.55em;
+  padding: 0 3px;
+  border: 1px solid rgba(242, 192, 99, 0.24);
+  border-radius: 6px;
+  background: rgba(242, 192, 99, 0.08);
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  text-align: center;
+  outline: none;
+  appearance: textfield;
+}
+
+.reviewComposeScoreHeader input {
+  font-size: 0.82em;
+}
+
+.reviewComposeScoreHeader input::-webkit-outer-spin-button,
+.reviewComposeScoreHeader input::-webkit-inner-spin-button,
+.reviewComposeAspect strong input::-webkit-outer-spin-button,
+.reviewComposeAspect strong input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.reviewComposeScoreHeader input:focus,
+.reviewComposeAspect strong input:focus {
+  border-color: rgba(242, 192, 99, 0.5);
+  background: rgba(242, 192, 99, 0.16);
+}
+
+.reviewComposeFlags {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reviewComposeFlag {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #d8cbbb;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.reviewComposeFlag svg {
+  width: 18px;
+  height: 18px;
+}
+
+.reviewComposeFlag span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reviewComposeFlagActive {
+  border-color: rgba(108, 197, 132, 0.28);
+  background: rgba(108, 197, 132, 0.12);
+  color: #b9e6bf;
+}
+
+.reviewComposeFlagDanger {
+  border-color: rgba(221, 96, 96, 0.28);
+  background: rgba(221, 96, 96, 0.12);
+  color: #f0b4b4;
+}
+
+.reviewComposeFlagWarning {
+  border-color: rgba(221, 96, 96, 0.28);
+  background: rgba(221, 96, 96, 0.12);
+  color: #f0b4b4;
+}
+
+.reviewComposeAspects {
+  gap: 14px;
+}
+
+.reviewComposeAspect {
+  display: grid;
+  gap: 7px;
+}
+
+.reviewComposeAspect > span {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviewComposeAspect small {
+  overflow: hidden;
+  color: #cfc7ba;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reviewComposeAspect strong {
+  color: #fff7ec;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.reviewComposeActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reviewComposeActions button {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #d8cbbb;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.reviewComposeActions button:last-child {
+  border-color: rgba(242, 192, 99, 0.36);
+  background: rgba(242, 192, 99, 0.14);
+  color: #fff7ec;
+}
+
+.reviewComposeActions button:hover,
+.reviewComposeActions button:focus-visible {
+  border-color: rgba(242, 192, 99, 0.45);
+  background: rgba(242, 192, 99, 0.12);
+  color: #fff7ec;
+  transform: scale(1.01);
 }
 
 @keyframes reviewScoreFill {

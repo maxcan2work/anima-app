@@ -22,6 +22,7 @@ export function Tooltip({ label, children, placement = 'top', align = 'center', 
     <span
       className={clsx(styles.tooltip, styles[placement], styles[align], open && styles.open, dismissed && styles.dismissed, disabled && styles.disabled, className)}
       onPointerDown={() => setDismissed(true)}
+      onPointerLeave={() => setDismissed(false)}
       onBlur={() => setDismissed(false)}
     >
       {children}

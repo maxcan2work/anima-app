@@ -19,6 +19,7 @@ import InfoIcon from '@assets/description.svg?react';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import shikimoriIcon from '@assets/shikimori.png';
 import SpoilerOffIcon from '@assets/spoiler-off.svg?react';
+import SpoilerWarningIcon from '@assets/spoiler-warning.svg?react';
 import starIcon from '@assets/star.svg';
 import StudioIcon from '@assets/studio.svg?react';
 import ThumbUpIcon from '@assets/thumb-up.svg?react';
@@ -42,8 +43,17 @@ type WatchState = {
 
 type AnimePageTab = 'watch' | 'overview' | 'diary';
 type AnimePageMode = 'info' | 'diary';
-type ReviewSortKey = 'recent' | 'score';
+type ReviewSortKey = 'recent' | 'score' | 'reaction';
 type SortDirection = 'desc' | 'asc';
+
+type ReviewDraft = {
+  title: string;
+  body: string;
+  overallScore: number;
+  recommended: boolean;
+  hasSpoilers: boolean;
+  aspectScores: MockReview['scores'];
+};
 
 type AnimeHeroProps = {
   anime: AnimeTitle;
@@ -414,6 +424,7 @@ export function AnimeHero({
       <section className={clsx(styles.player, showReviews && mode === 'default' && styles.playerReviews)}>
         {showReviews && mode === 'default' ? (
           <ReviewsPanel
+            anime={anime}
             reviews={MOCK_REVIEWS}
             selectedReview={selectedReview}
             onSelectReview={(reviewId) => {
@@ -582,11 +593,13 @@ export function AnimeHero({
 }
 
 function ReviewsPanel({
+  anime,
   reviews,
   selectedReview,
   onSelectReview,
   onBack,
 }: {
+  anime: AnimeTitle;
   reviews: MockReview[];
   selectedReview: MockReview | null;
   onSelectReview: (reviewId: string) => void;
@@ -595,6 +608,7 @@ function ReviewsPanel({
   const { t } = useI18n();
   const [reviewSortKey, setReviewSortKey] = useState<ReviewSortKey>('recent');
   const [reviewSortDirection, setReviewSortDirection] = useState<SortDirection>('desc');
+  const [isComposing, setIsComposing] = useState(false);
   const sortedReviews = useMemo(
     () => sortReviews(reviews, reviewSortKey, reviewSortDirection),
     [reviewSortDirection, reviewSortKey, reviews],
@@ -627,9 +641,11 @@ function ReviewsPanel({
             </aside>
             <div className={styles.reviewText}>
               <h2>{selectedReview.title}</h2>
-              {[selectedReview.body, ...(selectedReview.bodyExtra ?? [])].map((paragraph, index) => (
-                <p key={`${selectedReview.id}-paragraph-${index}`}>{paragraph}</p>
-              ))}
+              <div className={styles.reviewBodyScroll}>
+                {[selectedReview.body, ...(selectedReview.bodyExtra ?? [])].map((paragraph, index) => (
+                  <p key={`${selectedReview.id}-paragraph-${index}`}>{paragraph}</p>
+                ))}
+              </div>
             </div>
             <div className={styles.reviewScoreColumn}>
               <ReviewScores review={selectedReview} />
@@ -640,36 +656,57 @@ function ReviewsPanel({
             </div>
           </article>
         </div>
+      ) : isComposing ? (
+        <ReviewComposeForm key={reviewDraftStorageKey(anime)} draftKey={reviewDraftStorageKey(anime)} onBack={() => setIsComposing(false)} />
       ) : (
         <div className={styles.reviewsList}>
-          <div className={styles.reviewSorts} aria-label={t('anime.reviewSort.label')}>
-            <button
-              className={clsx(styles.reviewSortButton, reviewSortKey === 'recent' && styles.reviewSortActive)}
-              type="button"
-              onClick={() => {
-                setReviewSortKey('recent');
-                setReviewSortDirection((current) => (reviewSortKey === 'recent' && current === 'desc' ? 'asc' : 'desc'));
-              }}
-              aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'recent' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}
-              aria-pressed={reviewSortKey === 'recent'}
-            >
-              <img src={clockIcon} alt="" aria-hidden="true" />
-              <span>{reviewSortKey === 'recent' && reviewSortDirection === 'asc' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}</span>
-              <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'recent' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
-            </button>
-            <button
-              className={clsx(styles.reviewSortButton, reviewSortKey === 'score' && styles.reviewSortActive)}
-              type="button"
-              onClick={() => {
-                setReviewSortKey('score');
-                setReviewSortDirection((current) => (reviewSortKey === 'score' && current === 'desc' ? 'asc' : 'desc'));
-              }}
-              aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'score' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}
-              aria-pressed={reviewSortKey === 'score'}
-            >
-              <img src={starIcon} alt="" aria-hidden="true" />
-              <span>{reviewSortKey === 'score' && reviewSortDirection === 'asc' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}</span>
-              <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'score' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+          <div className={styles.reviewToolbar}>
+            <div className={styles.reviewSorts} aria-label={t('anime.reviewSort.label')}>
+              <button
+                className={clsx(styles.reviewSortButton, reviewSortKey === 'recent' && styles.reviewSortActive)}
+                type="button"
+                onClick={() => {
+                  setReviewSortKey('recent');
+                  setReviewSortDirection((current) => (reviewSortKey === 'recent' && current === 'desc' ? 'asc' : 'desc'));
+                }}
+                aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'recent' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}
+                aria-pressed={reviewSortKey === 'recent'}
+              >
+                <img src={clockIcon} alt="" aria-hidden="true" />
+                <span>{reviewSortKey === 'recent' && reviewSortDirection === 'asc' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}</span>
+                <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'recent' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+              </button>
+              <button
+                className={clsx(styles.reviewSortButton, reviewSortKey === 'score' && styles.reviewSortActive)}
+                type="button"
+                onClick={() => {
+                  setReviewSortKey('score');
+                  setReviewSortDirection((current) => (reviewSortKey === 'score' && current === 'desc' ? 'asc' : 'desc'));
+                }}
+                aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'score' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}
+                aria-pressed={reviewSortKey === 'score'}
+              >
+                <img src={starIcon} alt="" aria-hidden="true" />
+                <span>{reviewSortKey === 'score' && reviewSortDirection === 'asc' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}</span>
+                <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'score' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+              </button>
+              <button
+                className={clsx(styles.reviewSortButton, reviewSortKey === 'reaction' && styles.reviewSortActive)}
+                type="button"
+                onClick={() => {
+                  setReviewSortKey('reaction');
+                  setReviewSortDirection((current) => (reviewSortKey === 'reaction' && current === 'desc' ? 'asc' : 'desc'));
+                }}
+                aria-label={reviewSortDirection === 'asc' && reviewSortKey === 'reaction' ? t('anime.reviewSort.reactionAsc') : t('anime.reviewSort.reactionDesc')}
+                aria-pressed={reviewSortKey === 'reaction'}
+              >
+                <ThumbUpIcon aria-hidden="true" />
+                <span>{reviewSortKey === 'reaction' && reviewSortDirection === 'asc' ? t('anime.reviewSort.reactionAsc') : t('anime.reviewSort.reactionDesc')}</span>
+                <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'reaction' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
+              </button>
+            </div>
+            <button className={styles.reviewWriteButton} type="button" onClick={() => setIsComposing(true)}>
+              {t('anime.reviewWrite')}
             </button>
           </div>
           <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
@@ -683,14 +720,32 @@ function ReviewsPanel({
             >
               <span className={styles.reviewCardHeader}>
                 <span className={styles.reviewAvatar} aria-hidden="true">{review.avatarLabel}</span>
-                <span>
+                <span className={styles.reviewCardAuthor}>
                   <strong>{review.author}</strong>
-                  <small>{review.score}/10</small>
+                </span>
+                <span className={styles.reviewCardFlags} aria-hidden="true">
+                  <span className={clsx(styles.reviewCardFlag, review.recommended ? styles.reviewCardFlagGood : styles.reviewCardFlagBad)}>
+                    <ThumbUpIcon className={clsx(!review.recommended && styles.reviewThumbDown)} aria-hidden="true" />
+                  </span>
+                  <span className={clsx(styles.reviewCardFlag, review.hasSpoilers ? styles.reviewCardFlagBad : styles.reviewCardFlagGood)}>
+                    {review.hasSpoilers ? <SpoilerWarningIcon aria-hidden="true" /> : <SpoilerOffIcon aria-hidden="true" />}
+                  </span>
+                </span>
+                <span className={styles.reviewCardScore}>
+                  <img src={starIcon} alt="" aria-hidden="true" />
+                  {review.score}/10
                 </span>
               </span>
               <span className={styles.reviewCardBody}>
                 <strong>{review.title}</strong>
                 <span>{review.excerpt}</span>
+              </span>
+              <span className={styles.reviewCardMeta} aria-hidden="true">
+                <span className={styles.reviewCardVotes}>
+                  <strong className={styles.reviewCardVotesLike}>+{review.likes}</strong>
+                  <span>/</span>
+                  <strong className={styles.reviewCardVotesDislike}>-{review.dislikes}</strong>
+                </span>
               </span>
             </button>
           ))}
@@ -698,6 +753,152 @@ function ReviewsPanel({
         </div>
       )}
     </section>
+  );
+}
+
+function ReviewComposeForm({ draftKey, onBack }: { draftKey: string; onBack: () => void }) {
+  const { t } = useI18n();
+  const initialDraft = useMemo(() => readReviewDraft(draftKey), [draftKey]);
+  const defaultAspectScores: MockReview['scores'] = {
+    story: 8,
+    characters: 8,
+    visuals: 8,
+    music: 8,
+    opening: 8,
+    atmosphere: 8,
+  };
+  const [reviewTitle, setReviewTitle] = useState(initialDraft?.title ?? '');
+  const [reviewBody, setReviewBody] = useState(initialDraft?.body ?? '');
+  const [overallScore, setOverallScore] = useState(initialDraft?.overallScore ?? 8);
+  const [recommended, setRecommended] = useState(initialDraft?.recommended ?? true);
+  const [hasSpoilers, setHasSpoilers] = useState(initialDraft?.hasSpoilers ?? false);
+  const [aspectScores, setAspectScores] = useState<MockReview['scores']>(initialDraft?.aspectScores ?? defaultAspectScores);
+  const aspects: Array<{ key: keyof MockReview['scores']; label: string }> = [
+    { key: 'story', label: t('anime.reviewAspect.story') },
+    { key: 'characters', label: t('anime.reviewAspect.characters') },
+    { key: 'visuals', label: t('anime.reviewAspect.visuals') },
+    { key: 'music', label: t('anime.reviewAspect.music') },
+    { key: 'opening', label: t('anime.reviewAspect.opening') },
+    { key: 'atmosphere', label: t('anime.reviewAspect.atmosphere') },
+  ];
+  const updateOverallScore = (value: number) => {
+    setOverallScore(Math.min(10, Math.max(1, Math.round(value || 1))));
+  };
+  useEffect(() => {
+    writeReviewDraft(draftKey, {
+      title: reviewTitle,
+      body: reviewBody,
+      overallScore,
+      recommended,
+      hasSpoilers,
+      aspectScores,
+    });
+  }, [aspectScores, draftKey, hasSpoilers, overallScore, recommended, reviewBody, reviewTitle]);
+
+  return (
+    <form className={styles.reviewCompose} onSubmit={(event) => event.preventDefault()}>
+      <div className={styles.reviewComposeMain}>
+        <label className={styles.reviewComposeField}>
+          <span>{t('anime.reviewTitleLabel')}</span>
+          <input type="text" value={reviewTitle} onChange={(event) => setReviewTitle(event.target.value)} placeholder={t('anime.reviewTitlePlaceholder')} />
+        </label>
+        <label className={styles.reviewComposeField}>
+          <span>{t('anime.reviewBodyLabel')}</span>
+          <textarea rows={14} value={reviewBody} onChange={(event) => setReviewBody(event.target.value)} placeholder={t('anime.reviewBodyPlaceholder')} />
+        </label>
+      </div>
+      <aside className={styles.reviewComposeSidebar}>
+        <section className={styles.reviewComposeScore}>
+          <div className={styles.reviewComposeScoreHeader}>
+            <span>
+              <small>{t('anime.reviewOverall')}</small>
+              <strong>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={overallScore}
+                  onChange={(event) => updateOverallScore(Number(event.target.value))}
+                  aria-label={t('anime.reviewOverall')}
+                />
+                /10
+              </strong>
+            </span>
+          </div>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              step="1"
+              value={overallScore}
+              onChange={(event) => updateOverallScore(Number(event.target.value))}
+              aria-label={t('anime.reviewOverall')}
+              tabIndex={-1}
+            />
+        </section>
+        <div className={styles.reviewComposeFlags}>
+          <button
+            className={clsx(styles.reviewComposeFlag, recommended ? styles.reviewComposeFlagActive : styles.reviewComposeFlagDanger)}
+            type="button"
+            onClick={() => setRecommended((current) => !current)}
+            aria-pressed={recommended}
+          >
+            <ThumbUpIcon className={clsx(!recommended && styles.reviewThumbDown)} aria-hidden="true" />
+            <span>{recommended ? t('anime.reviewRecommended') : t('anime.reviewNotRecommended')}</span>
+          </button>
+          <button
+            className={clsx(styles.reviewComposeFlag, hasSpoilers && styles.reviewComposeFlagWarning)}
+            type="button"
+            onClick={() => setHasSpoilers((current) => !current)}
+            aria-pressed={hasSpoilers}
+          >
+            {hasSpoilers ? <SpoilerWarningIcon aria-hidden="true" /> : <SpoilerOffIcon aria-hidden="true" />}
+            <span>{hasSpoilers ? t('anime.reviewHasSpoilers') : t('anime.reviewNoSpoilers')}</span>
+          </button>
+        </div>
+        <section className={styles.reviewComposeAspects}>
+          {aspects.map((aspect) => (
+            <label key={aspect.key} className={styles.reviewComposeAspect}>
+              <span>
+                <small>{aspect.label}</small>
+                <strong>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={aspectScores[aspect.key]}
+                    onChange={(event) => {
+                      const value = Math.min(10, Math.max(1, Math.round(Number(event.target.value) || 1)));
+                      setAspectScores((current) => ({ ...current, [aspect.key]: value }));
+                    }}
+                    aria-label={aspect.label}
+                  />
+                </strong>
+              </span>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={aspectScores[aspect.key]}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  setAspectScores((current) => ({ ...current, [aspect.key]: value }));
+                }}
+                aria-label={aspect.label}
+                tabIndex={-1}
+              />
+            </label>
+          ))}
+        </section>
+        <div className={styles.reviewComposeActions}>
+          <button type="button" onClick={onBack}>{t('common.cancel')}</button>
+          <button type="submit">{t('anime.reviewPublish')}</button>
+        </div>
+      </aside>
+    </form>
   );
 }
 
@@ -709,8 +910,66 @@ function sortReviews(reviews: MockReview[], sortKey: ReviewSortKey, direction: S
       return (left.score - right.score) * directionMultiplier;
     }
 
+    if (sortKey === 'reaction') {
+      return ((left.likes - left.dislikes) - (right.likes - right.dislikes)) * directionMultiplier;
+    }
+
     return (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * directionMultiplier;
   });
+}
+
+function reviewDraftStorageKey(anime: AnimeTitle) {
+  return `anima:review-draft:${anime.id}`;
+}
+
+function readReviewDraft(storageKey: string): ReviewDraft | null {
+  try {
+    const rawDraft = window.localStorage.getItem(storageKey);
+    if (!rawDraft) {
+      return null;
+    }
+
+    const parsed = JSON.parse(rawDraft) as Partial<ReviewDraft>;
+    if (!parsed || typeof parsed !== 'object') {
+      return null;
+    }
+
+    return {
+      title: typeof parsed.title === 'string' ? parsed.title : '',
+      body: typeof parsed.body === 'string' ? parsed.body : '',
+      overallScore: normalizeReviewScore(parsed.overallScore, 8),
+      recommended: typeof parsed.recommended === 'boolean' ? parsed.recommended : true,
+      hasSpoilers: typeof parsed.hasSpoilers === 'boolean' ? parsed.hasSpoilers : false,
+      aspectScores: normalizeAspectScores(parsed.aspectScores),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeReviewDraft(storageKey: string, draft: ReviewDraft) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(draft));
+  } catch {
+    // localStorage can be unavailable in private mode or full storage.
+  }
+}
+
+function normalizeReviewScore(value: unknown, fallback: number) {
+  return Math.min(10, Math.max(1, Math.round(Number(value) || fallback)));
+}
+
+function normalizeAspectScores(value: unknown): MockReview['scores'] {
+  const source = typeof value === 'object' && value ? value as Partial<MockReview['scores']> : {};
+
+  return {
+    story: normalizeReviewScore(source.story, 8),
+    characters: normalizeReviewScore(source.characters, 8),
+    visuals: normalizeReviewScore(source.visuals, 8),
+    music: normalizeReviewScore(source.music, 8),
+    opening: normalizeReviewScore(source.opening, 8),
+    atmosphere: normalizeReviewScore(source.atmosphere, 8),
+  };
 }
 
 function ReviewScores({ review }: { review: MockReview }) {
@@ -727,21 +986,21 @@ function ReviewScores({ review }: { review: MockReview }) {
   return (
     <aside className={styles.reviewScores} aria-label={t('anime.reviewDetails')}>
       <div className={styles.reviewScoreTop}>
-        <div className={styles.reviewScoreSummary}>
-          <small>{t('anime.reviewOverall')}</small>
-          <strong>{review.score}/10</strong>
-        </div>
         <div className={styles.reviewFlags}>
           <Tooltip label={review.recommended ? t('anime.reviewRecommended') : t('anime.reviewNotRecommended')} placement="bottom">
             <span className={clsx(styles.reviewFlagIcon, review.recommended ? styles.reviewFlagPositive : styles.reviewFlagWarning)}>
-              <ThumbUpIcon aria-hidden="true" />
+              <ThumbUpIcon className={clsx(!review.recommended && styles.reviewThumbDown)} aria-hidden="true" />
             </span>
           </Tooltip>
           <Tooltip label={review.hasSpoilers ? t('anime.reviewHasSpoilers') : t('anime.reviewNoSpoilers')} placement="bottom" align="end">
-            <span className={clsx(styles.reviewFlagIcon, review.hasSpoilers ? styles.reviewFlagSpoiler : styles.reviewFlagMuted)}>
-              <SpoilerOffIcon aria-hidden="true" />
+            <span className={clsx(styles.reviewFlagIcon, review.hasSpoilers ? styles.reviewFlagSpoiler : styles.reviewFlagNoSpoiler)}>
+              {review.hasSpoilers ? <SpoilerWarningIcon aria-hidden="true" /> : <SpoilerOffIcon aria-hidden="true" />}
             </span>
           </Tooltip>
+        </div>
+        <div className={styles.reviewScoreSummary}>
+          <small>{t('anime.reviewOverall')}</small>
+          <strong>{review.score}/10</strong>
         </div>
       </div>
       <div className={styles.reviewScoreList}>
