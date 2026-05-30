@@ -143,6 +143,47 @@ export type SaveAnimeProgressPayload = {
   review?: string | null;
 };
 
+export type AnimeReviewScores = {
+  story: number;
+  characters: number;
+  visuals: number;
+  music: number;
+  opening: number;
+  atmosphere: number;
+};
+
+export type AnimeReview = {
+  id: string;
+  animeId: string;
+  userId: string;
+  author: string;
+  avatarUrl: string | null;
+  avatarLabel: string;
+  watched: number;
+  reviewsCount: number;
+  helpfulCount: number;
+  likes: number;
+  dislikes: number;
+  createdAt: string;
+  updatedAt: string;
+  recommended: boolean;
+  hasSpoilers: boolean;
+  score: number;
+  scores: AnimeReviewScores;
+  title: string;
+  excerpt: string;
+  body: string;
+};
+
+export type SaveAnimeReviewPayload = {
+  title: string;
+  body: string;
+  score: number;
+  recommended: boolean;
+  hasSpoilers: boolean;
+  scores: AnimeReviewScores;
+};
+
 export type ShikimoriImportResult = {
   imported: number;
   updated: number;
@@ -209,6 +250,14 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
     getAnimeCatalog: () => apiFetch<{ anime: ServerAnime[] }>('/anime'),
     getAnimeById: (animeId: string) => apiFetch<{ anime: ServerAnime }>(`/anime/${animeId}`),
     getAnimeExtendedDetails: (animeId: string) => apiFetch<{ details: AnimeExtendedDetails }>(`/anime/${animeId}/details`),
+    getAnimeReviews: (animeId: string) => apiFetch<{ reviews: AnimeReview[] }>(`/anime/${animeId}/reviews`),
+    getAnimeReview: (animeId: string, reviewId: string) =>
+      apiFetch<{ review: AnimeReview }>(`/anime/${animeId}/reviews/${encodeURIComponent(reviewId)}`),
+    saveAnimeReview: (animeId: string, payload: SaveAnimeReviewPayload) =>
+      apiFetch<{ review: AnimeReview }>(`/anime/${animeId}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
     getCatalogAnimeDetails: (provider: CatalogSearchResult['provider'], providerId: number) =>
       apiFetch<{ anime: CatalogSearchResult }>(`/catalog/${encodeURIComponent(provider)}/${providerId}`),
     getCatalogGenres: () => apiFetch<{ genres: CatalogGenre[] }>('/catalog/genres'),

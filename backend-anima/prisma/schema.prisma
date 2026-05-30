@@ -30,6 +30,7 @@ model User {
   accounts    AuthAccount[]
   animeList   UserAnime[]
   randomHistory UserRandomAnime[]
+  reviews     AnimeReview[]
 }
 
 model AuthAccount {
@@ -69,6 +70,34 @@ model Anime {
   updatedAt     DateTime    @updatedAt
   userEntries   UserAnime[]
   providerMatches ProviderMatch[]
+  reviews       AnimeReview[]
+}
+
+model AnimeReview {
+  id             String   @id @default(cuid())
+  animeId        String
+  userId         String
+  title          String
+  body           String
+  score          Int
+  recommended    Boolean  @default(true)
+  hasSpoilers    Boolean  @default(false)
+  storyScore     Int
+  charactersScore Int
+  visualsScore   Int
+  musicScore     Int
+  openingScore   Int
+  atmosphereScore Int
+  likes          Int      @default(0)
+  dislikes       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  anime          Anime    @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([animeId, userId])
+  @@index([animeId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model ProviderMatch {

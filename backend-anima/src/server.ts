@@ -266,6 +266,81 @@ app.get('/anime/:animeId/details', async (request, response, next) => {
   }
 });
 
+app.get('/anime/:animeId/reviews', async (request, response, next) => {
+  try {
+    const animeId = String(request.params.animeId);
+    const anime = await prisma.anime.findUnique({ where: { id: animeId }, select: { id: true } });
+    if (!anime) {
+      response.status(404).json({ error: 'Anime not found' });
+      return;
+    }
+
+    const reviews = await prisma.animeReview.findMany({
+      where: { animeId },
+      include: reviewInclude(),
+      orderBy: { createdAt: 'desc' },
+    });
+
+    response.json({ reviews: reviews.map(formatAnimeReview) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/anime/:animeId/reviews/:reviewId', async (request, response, next) => {
+  try {
+    const animeId = String(request.params.animeId);
+    const review = await prisma.animeReview.findFirst({
+      where: {
+        id: String(request.params.reviewId),
+        animeId,
+      },
+      include: reviewInclude(),
+    });
+
+    if (!review) {
+      response.status(404).json({ error: 'Review not found' });
+      return;
+    }
+
+    response.json({ review: formatAnimeReview(review) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/anime/:animeId/reviews', requireAuth, async (request, response, next) => {
+  try {
+    const animeId = String(request.params.animeId);
+    const anime = await prisma.anime.findUnique({ where: { id: animeId }, select: { id: true } });
+    if (!anime) {
+      response.status(404).json({ error: 'Anime not found' });
+      return;
+    }
+
+    const payload = parseReviewPayload(request.body);
+    const review = await prisma.animeReview.upsert({
+      where: {
+        animeId_userId: {
+          animeId,
+          userId: request.userId!,
+        },
+      },
+      create: {
+        animeId,
+        userId: request.userId!,
+        ...payload,
+      },
+      update: payload,
+      include: reviewInclude(),
+    });
+
+    response.status(201).json({ review: formatAnimeReview(review) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/catalog/search', async (request, response, next) => {
   try {
     const query = String(request.query.q ?? '');
@@ -766,4 +841,119 @@ function parseRequiredText(value: unknown, field: string) {
   }
 
   return text;
+}
+
+function reviewInclude() {
+  return {
+    user: {
+      select: {
+        id: true,
+        displayName: true,
+        avatarUrl: true,
+        _count: {
+          select: {
+            animeList: true,
+            reviews: true,
+          },
+        },
+      },
+    },
+  } as const;
+}
+
+function formatAnimeReview(review: {
+  id: string;
+  animeId: string;
+  userId: string;
+  title: string;
+  body: string;
+  score: number;
+  recommended: boolean;
+  hasSpoilers: boolean;
+  storyScore: number;
+  charactersScore: number;
+  visualsScore: number;
+  musicScore: number;
+  openingScore: number;
+  atmosphereScore: number;
+  likes: number;
+  dislikes: number;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    displayName: string;
+    avatarUrl: string | null;
+    _count: {
+      animeList: number;
+      reviews: number;
+    };
+  };
+}) {
+  return {
+    id: review.id,
+    animeId: review.animeId,
+    userId: review.userId,
+    author: review.user.displayName,
+    avatarUrl: review.user.avatarUrl,
+    avatarLabel: createAvatarLabel(review.user.displayName),
+    watched: review.user._count.animeList,
+    reviewsCount: review.user._count.reviews,
+    helpfulCount: review.likes,
+    likes: review.likes,
+    dislikes: review.dislikes,
+    createdAt: review.createdAt.toISOString(),
+    updatedAt: review.updatedAt.toISOString(),
+    recommended: review.recommended,
+    hasSpoilers: review.hasSpoilers,
+    score: review.score,
+    scores: {
+      story: review.storyScore,
+      characters: review.charactersScore,
+      visuals: review.visualsScore,
+      music: review.musicScore,
+      opening: review.openingScore,
+      atmosphere: review.atmosphereScore,
+    },
+    title: review.title,
+    excerpt: createReviewExcerpt(review.body),
+    body: review.body,
+  };
+}
+
+function parseReviewPayload(body: unknown) {
+  const payload = body && typeof body === 'object' ? body as Record<string, unknown> : {};
+  const scores = payload.scores && typeof payload.scores === 'object' ? payload.scores as Record<string, unknown> : {};
+
+  return {
+    title: parseRequiredText(payload.title, 'title').slice(0, 160),
+    body: parseRequiredText(payload.body, 'body').slice(0, 12000),
+    score: requireReviewScore(payload.score, 'score'),
+    recommended: typeof payload.recommended === 'boolean' ? payload.recommended : true,
+    hasSpoilers: typeof payload.hasSpoilers === 'boolean' ? payload.hasSpoilers : false,
+    storyScore: requireReviewScore(scores.story, 'scores.story'),
+    charactersScore: requireReviewScore(scores.characters, 'scores.characters'),
+    visualsScore: requireReviewScore(scores.visuals, 'scores.visuals'),
+    musicScore: requireReviewScore(scores.music, 'scores.music'),
+    openingScore: requireReviewScore(scores.opening, 'scores.opening'),
+    atmosphereScore: requireReviewScore(scores.atmosphere, 'scores.atmosphere'),
+  };
+}
+
+function requireReviewScore(value: unknown, field: string) {
+  const score = clampScore(Number(value));
+  if (score == null) {
+    throw new Error(`${field} must be a number from 1 to 10`);
+  }
+
+  return score;
+}
+
+function createReviewExcerpt(body: string) {
+  const excerpt = body.replace(/\s+/g, ' ').trim();
+  return excerpt.length > 180 ? `${excerpt.slice(0, 177)}...` : excerpt;
+}
+
+function createAvatarLabel(displayName: string) {
+  return displayName.trim().slice(0, 1).toUpperCase() || '?';
 }

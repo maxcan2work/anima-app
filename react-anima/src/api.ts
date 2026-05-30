@@ -1,6 +1,8 @@
 import { createAnimaApiClient } from '@anima/api-client';
 
 export type {
+  AnimeReview,
+  AnimeReviewScores,
   AnimeExtendedDetails,
   CatalogGenre,
   CatalogRequestOptions,
@@ -8,6 +10,7 @@ export type {
   CurrentUser,
   PlayerProviderResult,
   SaveAnimeProgressPayload,
+  SaveAnimeReviewPayload,
   ServerAnime,
   ServerRandomHistoryEntry,
   ServerWatchEntry,
@@ -39,12 +42,15 @@ export const {
   getAnimeCatalog,
   getAnimeById,
   getAnimeExtendedDetails,
+  getAnimeReview,
+  getAnimeReviews,
   getCatalogAnimeDetails,
   getCatalogGenres,
   searchCatalog,
   browseCatalog,
   importCatalogAnime,
   saveAnimeProgress,
+  saveAnimeReview,
   getEpisodePlayers,
   checkWatchPartyRoom,
 } = api;
