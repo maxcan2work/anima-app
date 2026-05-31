@@ -4,6 +4,7 @@ import { WATCH_STATUS_OPTIONS } from '@anima/core';
 import { type PlayerProviderResult } from '@/api';
 import shikimoriIcon from '@assets/shikimori.png';
 import type { AnimeTitle } from '@/data';
+import { useI18n } from '@shared/i18n/I18nProvider';
 import { ControlledVideoPlayer, type PlaybackSync } from './ControlledVideoPlayer';
 import { PLAYER_PROVIDER_OPTIONS } from './AnimeHero.constants';
 import type { PlayerProvider, WatchState } from './AnimeHero.types';
@@ -45,9 +46,11 @@ export function WatchStatusSelect({
   value: WatchState['status'];
   onChange: (value: WatchState['status']) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const selected = WATCH_STATUS_OPTIONS.find((option) => option.value === value) ?? WATCH_STATUS_OPTIONS[0];
+  const selectedLabel = t(`profile.status.${selected.value}`);
 
   useEffect(() => {
     if (!open) return;
@@ -81,7 +84,7 @@ export function WatchStatusSelect({
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <span>{selected.label}</span>
+        <span>{selectedLabel}</span>
         <span className={styles.statusSelectChevron} aria-hidden="true" />
       </button>
 
@@ -99,7 +102,7 @@ export function WatchStatusSelect({
                 setOpen(false);
               }}
             >
-              {option.label}
+              {t(`profile.status.${option.value}`)}
             </button>
           ))}
         </div>
@@ -196,4 +199,3 @@ export function WatchSources({ anime }: { anime: AnimeTitle }) {
     </div>
   );
 }
-
