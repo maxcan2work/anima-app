@@ -2,20 +2,31 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 16px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 8px;
   color: white;
   font: inherit;
-  font-size: 13px;
-  font-weight: 900;
   line-height: 1;
   cursor: pointer;
   transition:
     background 160ms ease,
+    border-color 160ms ease,
     opacity 160ms ease,
     transform 160ms ease;
+}
+
+.md {
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sm {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .button:hover:not(:disabled),
@@ -29,10 +40,23 @@
 }
 
 .primary {
+  border-color: transparent;
   background: #d94d38;
 }
 
 .primary:hover:not(:disabled),
 .primary:focus-visible:not(:disabled) {
   background: #e25640;
+}
+
+.tonal {
+  border-color: rgba(242, 192, 99, 0.36);
+  background: rgba(242, 192, 99, 0.14);
+  color: #fff7ec;
+}
+
+.tonal:hover:not(:disabled),
+.tonal:focus-visible:not(:disabled) {
+  border-color: rgba(242, 192, 99, 0.54);
+  background: rgba(242, 192, 99, 0.2);
 }
