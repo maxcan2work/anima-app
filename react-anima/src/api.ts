@@ -49,6 +49,7 @@ export const {
   searchCatalog,
   browseCatalog,
   importCatalogAnime,
+  deleteAnimeProgress,
   saveAnimeProgress,
   saveAnimeReview,
   getEpisodePlayers,

@@ -72,7 +72,7 @@ export function AppScreens() {
     return (
       <AnimeHero
         anime={displayedSelected}
-        state={watchState[displayedSelected.id] ?? { episode: 1, status: 'planned' }}
+        state={watchState[displayedSelected.id] ?? { episode: 1, status: 'none' }}
         diaryScore={diaryEntry?.score ?? null}
         diaryReview={diaryEntry?.review ?? null}
         onDiaryEntrySaved={(entry) => setDiaryEntries((current) => upsertDiaryEntry(current, entry))}

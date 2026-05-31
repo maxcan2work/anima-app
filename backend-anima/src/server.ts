@@ -508,6 +508,17 @@ app.put('/me/anime/:animeId', requireAuth, async (request, response) => {
   response.json({ entry });
 });
 
+app.delete('/me/anime/:animeId', requireAuth, async (request, response) => {
+  await prisma.userAnime.deleteMany({
+    where: {
+      userId: request.userId!,
+      animeId: String(request.params.animeId),
+    },
+  });
+
+  response.status(204).send();
+});
+
 app.get('/me/random-history', requireAuth, async (request, response) => {
   const history = await prisma.userRandomAnime.findMany({
     where: { userId: request.userId },

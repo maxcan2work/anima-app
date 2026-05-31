@@ -125,6 +125,8 @@ export function AnimeHero({
   }
 
   async function saveDiaryEntry() {
+    if (state.status === 'none') return;
+
     setDiarySaving(true);
     try {
       const { entry } = await saveAnimeProgress(anime.id, {

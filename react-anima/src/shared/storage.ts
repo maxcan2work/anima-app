@@ -1,8 +1,10 @@
 import type { WatchStatus } from '@anima/core';
 
+export type AppWatchStatus = WatchStatus | 'none';
+
 export type WatchState = {
   episode: number;
-  status: WatchStatus;
+  status: AppWatchStatus;
 };
 
 const STORAGE_KEY = 'anima.watchState.v1';

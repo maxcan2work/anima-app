@@ -105,7 +105,7 @@ export function AnimeDiaryPanel({
               <img src={starIcon} alt="" aria-hidden="true" />
               {diaryScore == null ? t('common.none') : `${diaryScore}/10`}
             </span>
-            <button type="button" onClick={onSave} disabled={saving}>
+            <button type="button" onClick={onSave} disabled={saving || status === 'none'}>
               {saving ? '...' : t('anime.diarySave')}
             </button>
           </span>

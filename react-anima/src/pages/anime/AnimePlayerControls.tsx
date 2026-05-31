@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
-import { WATCH_STATUS_OPTIONS } from '@anima/core';
+import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { type PlayerProviderResult } from '@/api';
 import shikimoriIcon from '@assets/shikimori.png';
 import type { AnimeTitle } from '@/data';
@@ -49,8 +49,14 @@ export function WatchStatusSelect({
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const selected = WATCH_STATUS_OPTIONS.find((option) => option.value === value) ?? WATCH_STATUS_OPTIONS[0];
-  const selectedLabel = t(`profile.status.${selected.value}`);
+  const statusOptions: Array<{ value: WatchState['status']; label: string }> = [
+    { value: 'none', label: t('profile.status.none') },
+    ...WATCH_STATUS_OPTIONS.map((option) => ({
+      value: option.value,
+      label: t(`profile.status.${option.value}` as `profile.status.${WatchStatus}`),
+    })),
+  ];
+  const selected = statusOptions.find((option) => option.value === value) ?? statusOptions[0];
 
   useEffect(() => {
     if (!open) return;
@@ -84,13 +90,13 @@ export function WatchStatusSelect({
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <span>{selectedLabel}</span>
+        <span>{selected.label}</span>
         <span className={styles.statusSelectChevron} aria-hidden="true" />
       </button>
 
       {open ? (
         <div className={styles.statusSelectMenu} role="listbox" aria-label="Статус просмотра">
-          {WATCH_STATUS_OPTIONS.map((option) => (
+          {statusOptions.map((option) => (
             <button
               key={option.value}
               className={clsx(option.value === value && styles.selectedStatus)}
@@ -102,7 +108,7 @@ export function WatchStatusSelect({
                 setOpen(false);
               }}
             >
-              {t(`profile.status.${option.value}`)}
+              {option.label}
             </button>
           ))}
         </div>

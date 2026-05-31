@@ -312,6 +312,8 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
         method: 'PUT',
         body: JSON.stringify(payload),
       }),
+    deleteAnimeProgress: (animeId: string) =>
+      apiFetch<void>(`/me/anime/${animeId}`, { method: 'DELETE' }),
     getEpisodePlayers: (animeId: string, episodeNumber: number) =>
       apiFetch<{ providers: PlayerProviderResult[] }>(`/anime/${animeId}/episodes/${episodeNumber}/players`),
     checkWatchPartyRoom: (code: string) =>

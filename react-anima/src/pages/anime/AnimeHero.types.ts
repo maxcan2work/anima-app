@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
-import type { WatchStatus } from '@anima/core';
 import type { AnimeReviewScores, PlayerProviderResult, ServerWatchEntry } from '@/api';
 import type { AnimeTitle } from '@/data';
+import type { AppWatchStatus } from '@shared/storage';
 import type { PlaybackSync } from './ControlledVideoPlayer';
 
 export type PlayerProvider = PlayerProviderResult['provider'];
 
 export type WatchState = {
   episode: number;
-  status: WatchStatus;
+  status: AppWatchStatus;
 };
 
 export type AnimePageTab = 'watch' | 'overview' | 'diary';
