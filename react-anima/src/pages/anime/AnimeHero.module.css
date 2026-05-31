@@ -261,27 +261,7 @@
 }
 
 .reviewWriteButton {
-  min-height: 38px;
-  padding: 0 14px;
-  border: 1px solid rgba(242, 192, 99, 0.36);
-  border-radius: 8px;
-  background: rgba(242, 192, 99, 0.14);
-  color: #fff7ec;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease;
-}
-
-.reviewWriteButton:hover,
-.reviewWriteButton:focus-visible {
-  border-color: rgba(242, 192, 99, 0.54);
-  background: rgba(242, 192, 99, 0.2);
-  transform: scale(1.01);
+  white-space: nowrap;
 }
 
 .reviewsGrid {
@@ -2087,20 +2067,34 @@
   line-height: 1.2;
 }
 
-.diaryField textarea {
-  width: 100%;
-  min-height: 132px;
+.diaryAuthPrompt {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
   padding: 12px;
-  resize: vertical;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.045);
+}
+
+.diaryAuthPrompt h3 {
+  margin: 0;
   color: #fff7ec;
-  font: inherit;
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.diaryAuthPrompt p {
+  margin: 0;
+  color: #d8cbbb;
+  font-size: 13px;
   font-weight: 650;
   line-height: 1.45;
-  outline: none;
+}
+
+.diaryAuthPrompt button {
+  width: 100%;
 }
 
 .diaryScoreHeader {
@@ -2108,6 +2102,55 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px;
   align-items: center;
+}
+
+.diaryReviewStatus,
+.diaryReviewPreview {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.diaryReviewStatus {
+  margin: 0;
+  color: #d8cbbb;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.diaryReviewPreview {
+  display: grid;
+  gap: 10px;
+}
+
+.diaryReviewPreview strong {
+  overflow: hidden;
+  color: #fff7ec;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diaryReviewPreview p {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: #d8cbbb;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.diaryReviewAction {
+  width: 100%;
 }
 
 .diaryScoreHeader span {
@@ -2258,15 +2301,6 @@
 
 .diaryScoreRange input:focus-visible {
   outline: none;
-}
-
-.diaryField textarea::placeholder {
-  color: #8f8578;
-}
-
-.diaryField textarea:focus {
-  border-color: rgba(242, 192, 99, 0.52);
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .providerSelect {

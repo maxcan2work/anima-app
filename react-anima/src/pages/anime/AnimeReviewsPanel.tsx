@@ -24,6 +24,8 @@ export function ReviewsPanel({
   onSelectReview,
   onBack,
   onReviewSaved,
+  composeReviewId,
+  signedIn,
 }: {
   anime: AnimeTitle;
   reviews: AnimeReview[];
@@ -33,15 +35,35 @@ export function ReviewsPanel({
   onSelectReview: (reviewId: string) => void;
   onBack: () => void;
   onReviewSaved: (review: AnimeReview) => void;
+  composeReviewId?: string | null;
+  signedIn: boolean;
 }) {
   const { t } = useI18n();
+  const toast = useToast();
   const [reviewSortKey, setReviewSortKey] = useState<ReviewSortKey>('recent');
   const [reviewSortDirection, setReviewSortDirection] = useState<SortDirection>('desc');
   const [isComposing, setIsComposing] = useState(false);
+  const composeReview = composeReviewId && composeReviewId !== 'new'
+    ? reviews.find((review) => review.id === composeReviewId) ?? null
+    : null;
   const sortedReviews = useMemo(
     () => sortReviews(reviews, reviewSortKey, reviewSortDirection),
     [reviewSortDirection, reviewSortKey, reviews],
   );
+  const startReview = () => {
+    if (!signedIn) {
+      toast({ message: t('anime.reviewLoginRequired'), variant: 'warning' });
+      return;
+    }
+
+    setIsComposing(true);
+  };
+
+  useEffect(() => {
+    if (composeReviewId && signedIn) {
+      setIsComposing(true);
+    }
+  }, [composeReviewId, signedIn]);
 
   return (
     <section className={clsx(styles.reviewsPanel, selectedReview && styles.reviewsPanelExpanded)}>
@@ -87,10 +109,14 @@ export function ReviewsPanel({
         </div>
       ) : isComposing ? (
         <ReviewComposeForm
-          key={reviewDraftStorageKey(anime)}
+          key={`${reviewDraftStorageKey(anime)}:${composeReview?.id ?? 'new'}`}
           animeId={anime.id}
           draftKey={reviewDraftStorageKey(anime)}
-          onBack={() => setIsComposing(false)}
+          initialReview={composeReview}
+          onBack={() => {
+            setIsComposing(false);
+            onBack();
+          }}
           onSaved={(review) => {
             setIsComposing(false);
             onReviewSaved(review);
@@ -143,9 +169,9 @@ export function ReviewsPanel({
                 <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'reaction' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
               </button>
             </div>
-            <button className={styles.reviewWriteButton} type="button" onClick={() => setIsComposing(true)}>
+            <Button className={styles.reviewWriteButton} variant="tonal" size="sm" onClick={startReview}>
               {t('anime.reviewWrite')}
-            </button>
+            </Button>
           </div>
           <div className={styles.reviewsGrid} aria-label={t('anime.reviews')}>
           {loading ? (
@@ -162,7 +188,7 @@ export function ReviewsPanel({
               <ReviewSadIcon />
               <strong>{t('anime.reviewsEmpty')}</strong>
               <p>{t('anime.reviewsEmptyDescription')}</p>
-              <Button className={styles.reviewsEmptyAction} onClick={() => setIsComposing(true)}>
+              <Button className={styles.reviewsEmptyAction} onClick={startReview}>
                 {t('anime.reviewWriteFirst')}
               </Button>
             </div>
@@ -226,17 +252,19 @@ function ReviewSadIcon() {
 function ReviewComposeForm({
   animeId,
   draftKey,
+  initialReview,
   onBack,
   onSaved,
 }: {
   animeId: string;
   draftKey: string;
+  initialReview?: AnimeReview | null;
   onBack: () => void;
   onSaved: (review: AnimeReview) => void;
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const initialDraft = useMemo(() => readReviewDraft(draftKey), [draftKey]);
+  const initialDraft = useMemo(() => initialReview ? null : readReviewDraft(draftKey), [draftKey, initialReview]);
   const defaultAspectScores: AnimeReviewScores = {
     story: 8,
     characters: 8,
@@ -245,12 +273,12 @@ function ReviewComposeForm({
     opening: 8,
     atmosphere: 8,
   };
-  const [reviewTitle, setReviewTitle] = useState(initialDraft?.title ?? '');
-  const [reviewBody, setReviewBody] = useState(initialDraft?.body ?? '');
-  const [overallScore, setOverallScore] = useState(initialDraft?.overallScore ?? 8);
-  const [recommended, setRecommended] = useState(initialDraft?.recommended ?? true);
-  const [hasSpoilers, setHasSpoilers] = useState(initialDraft?.hasSpoilers ?? false);
-  const [aspectScores, setAspectScores] = useState<AnimeReviewScores>(initialDraft?.aspectScores ?? defaultAspectScores);
+  const [reviewTitle, setReviewTitle] = useState(initialDraft?.title ?? initialReview?.title ?? '');
+  const [reviewBody, setReviewBody] = useState(initialDraft?.body ?? initialReview?.body ?? '');
+  const [overallScore, setOverallScore] = useState(initialDraft?.overallScore ?? initialReview?.score ?? 8);
+  const [recommended, setRecommended] = useState(initialDraft?.recommended ?? initialReview?.recommended ?? true);
+  const [hasSpoilers, setHasSpoilers] = useState(initialDraft?.hasSpoilers ?? initialReview?.hasSpoilers ?? false);
+  const [aspectScores, setAspectScores] = useState<AnimeReviewScores>(initialDraft?.aspectScores ?? initialReview?.scores ?? defaultAspectScores);
   const [saving, setSaving] = useState(false);
   const aspects: Array<{ key: keyof AnimeReviewScores; label: string }> = [
     { key: 'story', label: t('anime.reviewAspect.story') },
@@ -586,5 +614,3 @@ function ReviewReactions({ review }: { review: AnimeReview }) {
     </div>
   );
 }
-
-

@@ -12,6 +12,7 @@ import {
 } from '@/api';
 import episodeArrowIcon from '@assets/episode-arrow.svg';
 import type { AnimeTitle } from '@/data';
+import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { animeRouteSlug } from '@shared/navigation';
@@ -39,6 +40,7 @@ export function AnimeHero({
   footerExtra,
 }: AnimeHeroProps) {
   const { t } = useI18n();
+  const { user, authStatus, login } = useAuth();
   const { requestAnimeRoute } = useNavigation();
   const toast = useToast();
   const location = useLocation();
@@ -70,6 +72,8 @@ export function AnimeHero({
     : selectedProviderPlayer ?? preferredPlayers[0] ?? players[0];
   const activeProviderName = selectedPlayer?.provider ?? selectedProviderName;
   const selectedReview = reviews.find((review) => review.id === selectedReviewId) ?? null;
+  const ownReview = user ? reviews.find((review) => review.userId === user.id) ?? null : null;
+  const composeReviewId = searchParams.get('composeReview');
   const episodePages = Math.max(1, Math.ceil(anime.episodes / EPISODES_PER_PAGE));
   const visibleEpisodes = useMemo(() => {
     const start = episodePage * EPISODES_PER_PAGE + 1;
@@ -191,7 +195,7 @@ export function AnimeHero({
   }, [anime, location.pathname]);
 
   useEffect(() => {
-    if (mode !== 'default' || !showReviews) return;
+    if (mode !== 'default' || (!showReviews && activeTab !== 'diary')) return;
 
     let ignore = false;
     setReviewsLoading(true);
@@ -212,7 +216,7 @@ export function AnimeHero({
     return () => {
       ignore = true;
     };
-  }, [anime.id, mode, showReviews]);
+  }, [activeTab, anime.id, mode, showReviews]);
 
   useEffect(() => {
     if (mode !== 'default' || activeTab !== 'overview' || details) return;
@@ -296,6 +300,8 @@ export function AnimeHero({
               setSelectedReviewId(review.id);
               navigate(`${animeReviewBaseRoute(anime)}/${encodeURIComponent(review.id)}`);
             }}
+            composeReviewId={composeReviewId}
+            signedIn={Boolean(user)}
           />
         ) : selectedPlayer && isPlayablePlayer(selectedPlayer) ? (
           <VideoPlayer anime={anime} player={selectedPlayer} playbackSync={mode === 'watchParty' ? playbackSync : undefined} />
@@ -322,12 +328,21 @@ export function AnimeHero({
             <AnimeDiaryPanel
               status={state.status}
               diaryScore={diaryScore}
-              diaryReview={diaryReview}
               saving={diarySaving}
+              review={ownReview}
+              reviewLoading={reviewsLoading}
+              reviewError={reviewsError}
+              signedIn={Boolean(user)}
+              authLoading={authStatus === 'loading'}
               onStatusChange={(status) => onStateChange({ status })}
               onScoreChange={setDiaryScore}
-              onReviewChange={setDiaryReview}
               onSave={() => void saveDiaryEntry()}
+              onLogin={login}
+              onWriteReview={() => {
+                const next = new URLSearchParams();
+                next.set('composeReview', ownReview?.id ?? 'new');
+                navigate(`${animeReviewBaseRoute(anime)}?${next.toString()}`);
+              }}
             />
           ) : mode === 'default' ? (
             <AnimeWatchPanel

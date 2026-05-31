@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import type { CSSProperties } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
-import type { AnimeExtendedDetails, PlayerProviderResult } from '@/api';
+import type { AnimeExtendedDetails, AnimeReview, PlayerProviderResult } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
 import DiaryIcon from '@assets/pencil.svg?react';
 import InfoIcon from '@assets/description.svg?react';
@@ -11,6 +11,7 @@ import WatchTabIcon from '@assets/tv-alt.svg?react';
 import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { Button } from '@shared/ui/Button';
 import { Tooltip } from '@shared/ui/Tooltip';
 import { AnimeDetailsSections } from './AnimeDetailsSections';
 import type { AnimePageTab, PlayerProvider, WatchState } from './AnimeHero.types';
@@ -48,23 +49,41 @@ export function AnimeOverviewPanel({
 export function AnimeDiaryPanel({
   status,
   diaryScore,
-  diaryReview,
   saving,
+  review,
+  reviewLoading,
+  reviewError,
+  signedIn,
+  authLoading,
   onStatusChange,
   onScoreChange,
-  onReviewChange,
   onSave,
+  onLogin,
+  onWriteReview,
 }: {
   status: WatchState['status'];
   diaryScore: number | null;
-  diaryReview: string;
   saving: boolean;
+  review: AnimeReview | null;
+  reviewLoading: boolean;
+  reviewError: boolean;
+  signedIn: boolean;
+  authLoading: boolean;
   onStatusChange: (status: WatchState['status']) => void;
   onScoreChange: (score: number | null) => void;
-  onReviewChange: (review: string) => void;
   onSave: () => void;
+  onLogin: () => void;
+  onWriteReview: () => void;
 }) {
   const { t } = useI18n();
+
+  if (!signedIn) {
+    return (
+      <div className={styles.sidebarInfoPanel}>
+        <DiaryLoginPrompt loading={authLoading} onLogin={onLogin} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.sidebarInfoPanel}>
@@ -112,14 +131,68 @@ export function AnimeDiaryPanel({
           </span>
         </div>
         <h3>{t('anime.diaryReview')}</h3>
-        <textarea
-          value={diaryReview}
-          onChange={(event) => onReviewChange(event.target.value)}
-          placeholder={t('anime.diaryReviewPlaceholder')}
-          rows={6}
+        <DiaryReviewSummary
+          review={review}
+          loading={reviewLoading}
+          error={reviewError}
+          onWriteReview={onWriteReview}
         />
       </section>
     </div>
+  );
+}
+
+function DiaryLoginPrompt({ loading, onLogin }: { loading: boolean; onLogin: () => void }) {
+  const { t } = useI18n();
+
+  return (
+    <section className={styles.diaryAuthPrompt}>
+      <h3>{t('anime.diaryAuthTitle')}</h3>
+      <p>{t('anime.diaryAuthDescription')}</p>
+      <Button variant="tonal" size="sm" onClick={onLogin} disabled={loading}>
+        {loading ? t('common.loading') : t('sidebar.loginDiscord')}
+      </Button>
+    </section>
+  );
+}
+
+function DiaryReviewSummary({
+  review,
+  loading,
+  error,
+  onWriteReview,
+}: {
+  review: AnimeReview | null;
+  loading: boolean;
+  error: boolean;
+  onWriteReview: () => void;
+}) {
+  const { t } = useI18n();
+
+  if (loading) {
+    return <p className={styles.diaryReviewStatus}>{t('common.loading')}</p>;
+  }
+
+  if (error) {
+    return <p className={styles.diaryReviewStatus}>{t('anime.reviewsLoadFailed')}</p>;
+  }
+
+  if (!review) {
+    return (
+      <Button className={styles.diaryReviewAction} variant="tonal" size="sm" onClick={onWriteReview}>
+        {t('anime.reviewWrite')}
+      </Button>
+    );
+  }
+
+  return (
+    <article className={styles.diaryReviewPreview}>
+      <strong>{review.title}</strong>
+      <p>{review.excerpt}</p>
+      <Button className={styles.diaryReviewAction} variant="tonal" size="sm" onClick={onWriteReview}>
+        {t('anime.reviewEdit')}
+      </Button>
+    </article>
   );
 }
 
