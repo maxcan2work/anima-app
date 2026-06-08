@@ -12,6 +12,7 @@ export function WatchPartyParticipants({
   connectionStatus,
   canKick,
   ownParticipantId,
+  maxParticipants = 16,
   onKickParticipant,
   onLeaveRoom,
   showActions = true,
@@ -21,6 +22,7 @@ export function WatchPartyParticipants({
   connectionStatus: string;
   canKick: boolean;
   ownParticipantId: string;
+  maxParticipants?: number;
   onKickParticipant: (participantId: string) => void;
   onLeaveRoom: () => void;
   showActions?: boolean;
@@ -29,7 +31,7 @@ export function WatchPartyParticipants({
 
   return (
     <>
-      <h3 className={styles.title}>{t('watchParty.participants')} ({participants.length}/16)</h3>
+      <h3 className={styles.title}>{t('watchParty.participants')} ({participants.length}/{maxParticipants})</h3>
       {connectionStatus ? <p className={styles.status}>{connectionStatus}</p> : null}
       <div className={styles.members}>
         {participants.map((participant) => (

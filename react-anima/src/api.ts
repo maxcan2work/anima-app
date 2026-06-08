@@ -9,6 +9,7 @@ export type {
   CatalogSearchResult,
   CurrentUser,
   PlayerProviderResult,
+  PublicWatchPartyRoom,
   SaveAnimeProgressPayload,
   SaveAnimeReviewPayload,
   ServerAnime,
@@ -54,4 +55,5 @@ export const {
   saveAnimeReview,
   getEpisodePlayers,
   checkWatchPartyRoom,
+  getPublicWatchPartyRooms,
 } = api;

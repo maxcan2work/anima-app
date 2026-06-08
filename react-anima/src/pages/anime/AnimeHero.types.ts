@@ -34,6 +34,7 @@ export type AnimeHeroProps = {
   onStateChange: (patch: Partial<WatchState>) => void;
   mode?: 'default' | 'watchParty';
   playbackSync?: PlaybackSync;
+  canChangeEpisode?: boolean;
   sidebarExtra?: ReactNode;
   footerExtra?: ReactNode;
 };

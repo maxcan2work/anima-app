@@ -6,6 +6,10 @@
   margin-top: auto;
 }
 
+.withSettings {
+  grid-template-columns: minmax(0, 1fr) repeat(2, var(--ui-row-height));
+}
+
 .code {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22px;
@@ -34,7 +38,7 @@
   white-space: nowrap;
 }
 
-.code img {
+.code svg {
   width: 22px;
   height: 22px;
 }
@@ -44,7 +48,7 @@
   background: rgba(201, 166, 109, 0.1);
 }
 
-.leave {
+.row > span button {
   display: grid;
   place-items: center;
   width: var(--ui-row-height);
@@ -56,12 +60,13 @@
   color: #f1e7dc;
 }
 
-.leave:hover {
+.row > span button:hover,
+.row > span .active {
   border-color: rgba(201, 166, 109, 0.42);
   background: rgba(201, 166, 109, 0.1);
 }
 
-.leave img {
+.row > span svg {
   width: 24px;
   height: 24px;
 }

@@ -9,8 +9,9 @@ import type { CatalogBrowseFilters, CatalogBrowseOrder } from '@hooks/useCatalog
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { Tooltip } from '@shared/ui/Tooltip';
 import { useToast } from '@shared/ui/ToastProvider';
-import type { WatchPartyParticipant } from './types';
+import type { WatchPartyParticipant, WatchPartyRoomSettings as RoomSettings } from './types';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
+import { WatchPartyRoomSettings } from './WatchPartyRoomSettings';
 import styles from './WatchPartySelectionSidebar.module.css';
 
 type SidebarTab = 'participants' | 'filters' | 'settings';
@@ -22,6 +23,7 @@ type WatchPartySelectionSidebarProps = {
   canKick: boolean;
   canBrowse: boolean;
   ownParticipantId: string;
+  roomSettings: RoomSettings;
   browseFilters: CatalogBrowseFilters;
   browseOrder: CatalogBrowseOrder;
   searchQuery: string;
@@ -30,6 +32,8 @@ type WatchPartySelectionSidebarProps = {
   onSearchChange: (query: string) => void;
   onKickParticipant: (participantId: string) => void;
   onLeaveRoom: () => void;
+  onSettingsChange: (settings: RoomSettings, password?: string | null) => void;
+  onCloseRoom: () => void;
 };
 
 export function WatchPartySelectionSidebar({
@@ -39,6 +43,7 @@ export function WatchPartySelectionSidebar({
   canKick,
   canBrowse,
   ownParticipantId,
+  roomSettings,
   browseFilters,
   browseOrder,
   searchQuery,
@@ -47,6 +52,8 @@ export function WatchPartySelectionSidebar({
   onSearchChange,
   onKickParticipant,
   onLeaveRoom,
+  onSettingsChange,
+  onCloseRoom,
 }: WatchPartySelectionSidebarProps) {
   const [tab, setTab] = useState<SidebarTab>('participants');
   const { t } = useI18n();
@@ -70,11 +77,7 @@ export function WatchPartySelectionSidebar({
             onSearchChange={onSearchChange}
           />
         ) : tab === 'settings' && canBrowse ? (
-          <section className={styles.settings}>
-            <h3>{t('watchParty.roomSettings')}</h3>
-            <p>{t('watchParty.roomSettingsDescription')}</p>
-            <span>{t('common.soon')}</span>
-          </section>
+          <WatchPartyRoomSettings settings={roomSettings} participantCount={participants.length} onSave={onSettingsChange} onClose={onCloseRoom} />
         ) : (
           <WatchPartyParticipants
             code={code}
@@ -82,6 +85,7 @@ export function WatchPartySelectionSidebar({
             connectionStatus={connectionStatus}
             canKick={canKick}
             ownParticipantId={ownParticipantId}
+            maxParticipants={roomSettings.maxParticipants}
             onKickParticipant={onKickParticipant}
             onLeaveRoom={onLeaveRoom}
             showActions={false}

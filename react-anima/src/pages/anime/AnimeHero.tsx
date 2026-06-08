@@ -36,6 +36,7 @@ export function AnimeHero({
   onStateChange,
   mode = 'default',
   playbackSync,
+  canChangeEpisode = true,
   sidebarExtra,
   footerExtra,
 }: AnimeHeroProps) {
@@ -259,6 +260,7 @@ export function AnimeHero({
           <button
             key={episode}
             className={clsx(episode === state.episode && styles.currentEpisode)}
+            disabled={!canChangeEpisode}
             onClick={() => onStateChange({ episode, status: 'watching' })}
           >
             {episode}

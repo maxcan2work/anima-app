@@ -9,6 +9,7 @@ import type { WatchState } from '@shared/storage';
 import { WatchPartyEntry } from './WatchPartyEntry';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
+import { WatchPartyRoomSettings } from './WatchPartyRoomSettings';
 import { WatchPartySelectionSidebar } from './WatchPartySelectionSidebar';
 import { useWatchPartyCatalog } from './useWatchPartyCatalog';
 import { useWatchPartyRoom } from './useWatchPartyRoom';
@@ -32,17 +33,20 @@ export function WatchPartyPage({
   onCreateRoomConsumed,
 }: WatchPartyPageProps) {
   const [joinChecking, setJoinChecking] = useState(false);
+  const [joinPassword, setJoinPassword] = useState('');
+  const [showActiveRoomSettings, setShowActiveRoomSettings] = useState(false);
   const { t } = useI18n();
   const room = useWatchPartyRoom({
     code,
     createRoom,
+    password: joinPassword,
     onCreateRoomConsumed,
     onLeaveRoom,
     mapServerAnime,
   });
   const catalog = useWatchPartyCatalog({
     code,
-    enabled: room.isHost,
+    enabled: room.canSelectAnime,
     selectedAnime: room.selectedAnime,
     onSelectAnime: room.selectAnime,
   });
@@ -53,7 +57,10 @@ export function WatchPartyPage({
         code={code}
         joinChecking={joinChecking}
         onCreateRoom={() => onCreateRoom(createWatchPartyCode())}
-        onJoinRoom={onJoinRoom}
+        onJoinRoom={(roomCode, password) => {
+          setJoinPassword(password);
+          onJoinRoom(roomCode);
+        }}
         onJoinCheckingChange={setJoinChecking}
       />
     );
@@ -68,31 +75,44 @@ export function WatchPartyPage({
             state={{ episode: room.partyEpisode, status: 'watching' }}
             onStateChange={(patch: Partial<WatchState>) => room.updatePartyState(patch)}
             mode="watchParty"
+            canChangeEpisode={room.canSwitchEpisode}
             playbackSync={{
               state: room.playbackState,
-              canControl: room.isHost,
+              canControl: room.canControlPlayback,
               onChange: room.updatePartyPlayback,
             }}
             sidebarExtra={(
-              <WatchPartyParticipants
-                code={code}
-                participants={room.participants}
-                connectionStatus={room.connectionStatus}
-                canKick={room.isHost}
-                ownParticipantId={room.ownParticipantId}
-                onKickParticipant={room.kickParticipant}
-                onLeaveRoom={onLeaveRoom}
-                showActions={false}
-              />
+              showActiveRoomSettings && room.isHost ? (
+                <WatchPartyRoomSettings
+                  settings={room.settings}
+                  participantCount={room.participants.length}
+                  onSave={room.updateSettings}
+                  onClose={room.closeRoom}
+                />
+              ) : (
+                <WatchPartyParticipants
+                  code={code}
+                  participants={room.participants}
+                  connectionStatus={room.connectionStatus}
+                  canKick={room.isHost}
+                  ownParticipantId={room.ownParticipantId}
+                  maxParticipants={room.settings.maxParticipants}
+                  onKickParticipant={room.kickParticipant}
+                  onLeaveRoom={onLeaveRoom}
+                  showActions={false}
+                />
+              )
             )}
             footerExtra={(
               <WatchPartyRoomActions
                 code={code}
+                settingsActive={showActiveRoomSettings}
+                onToggleSettings={room.isHost ? () => setShowActiveRoomSettings((current) => !current) : undefined}
                 onLeaveRoom={onLeaveRoom}
               />
             )}
           />
-        ) : room.isHost ? (
+        ) : room.canSelectAnime ? (
           <CatalogBrowser
             className={styles.catalog}
             eyebrow={t('watchParty.title')}
@@ -130,6 +150,7 @@ export function WatchPartyPage({
               canKick={room.isHost}
               canBrowse={room.isHost}
               ownParticipantId={room.ownParticipantId}
+              roomSettings={room.settings}
               browseFilters={catalog.browseFilters}
               browseOrder={catalog.browseOrder}
               searchQuery={catalog.catalogSearchQuery}
@@ -138,6 +159,8 @@ export function WatchPartyPage({
               onSearchChange={catalog.setCatalogSearchQuery}
               onKickParticipant={room.kickParticipant}
               onLeaveRoom={onLeaveRoom}
+              onSettingsChange={room.updateSettings}
+              onCloseRoom={room.closeRoom}
             />
           </aside>
         ) : null}

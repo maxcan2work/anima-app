@@ -10,9 +10,25 @@ export type WatchPartyParticipant = {
 
 export type WatchPartyRoomState = {
   participants: WatchPartyParticipant[];
+  settings: WatchPartyRoomSettings;
   selectedAnime: ServerAnime | null;
   episode: number;
   playback: WatchPartyPlaybackState;
+};
+
+export type WatchPartyPermission = 'host' | 'everyone';
+
+export type WatchPartyRoomSettings = {
+  name: string;
+  maxParticipants: number;
+  visibility: 'public' | 'code';
+  passwordProtected: boolean;
+  animeSelection: WatchPartyPermission;
+  episodeControl: WatchPartyPermission;
+  playbackControl: WatchPartyPermission;
+  transferHost: boolean;
+  autoPlay: boolean;
+  allowJoinAfterStart: boolean;
 };
 
 export type WatchPartyAnime = AnimeTitle | null;
