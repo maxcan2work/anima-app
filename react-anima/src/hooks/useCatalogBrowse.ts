@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { browseCatalog, searchCatalog, type CatalogSearchResult } from '@/api';
+import { browseCatalog, searchCatalog, type CatalogRequestOptions, type CatalogSearchResult } from '@/api';
 
 export type CatalogBrowseOrder = 'popularity' | 'ranked' | 'aired_on' | 'ranked_random';
 export type CatalogBrowseFilters = {
@@ -11,7 +11,7 @@ export type CatalogBrowseFilters = {
   ratings: string[];
 };
 
-const defaultFilters: CatalogBrowseFilters = {
+export const defaultCatalogBrowseFilters: CatalogBrowseFilters = {
   kinds: [],
   status: 'all',
   seasons: [],
@@ -20,8 +20,9 @@ const defaultFilters: CatalogBrowseFilters = {
   ratings: [],
 };
 
-function requestFilters(filters: CatalogBrowseFilters) {
+function requestFilters(filters: CatalogBrowseFilters, requestOptions: CatalogRequestOptions) {
   return {
+    ...requestOptions,
     kind: filters.kinds.length ? filters.kinds.join(',') : undefined,
     status: filters.status === 'all' ? undefined : filters.status,
     season: filters.seasons.length ? filters.seasons.join(',') : undefined,
@@ -45,10 +46,16 @@ function mergeCatalogResults(
   });
 }
 
-export function useCatalogBrowse() {
+export function useCatalogBrowse({
+  enabled = true,
+  requestOptions = {},
+}: {
+  enabled?: boolean;
+  requestOptions?: CatalogRequestOptions;
+} = {}) {
   const browseRequestIdRef = useRef(0);
   const [browseOrder, setBrowseOrder] = useState<CatalogBrowseOrder>('popularity');
-  const [browseFilters, setBrowseFiltersState] = useState<CatalogBrowseFilters>(defaultFilters);
+  const [browseFilters, setBrowseFiltersState] = useState<CatalogBrowseFilters>(defaultCatalogBrowseFilters);
   const [browseResults, setBrowseResults] = useState<CatalogSearchResult[]>([]);
   const [browsePage, setBrowsePage] = useState(1);
   const [browseHasNext, setBrowseHasNext] = useState(true);
@@ -72,6 +79,8 @@ export function useCatalogBrowse() {
   }
 
   useEffect(() => {
+    if (!enabled) return;
+
     let ignore = false;
     const requestId = browseRequestIdRef.current + 1;
     browseRequestIdRef.current = requestId;
@@ -80,7 +89,7 @@ export function useCatalogBrowse() {
       setBrowseLoading(true);
       setBrowseStatus('');
       try {
-        const response = await browseCatalog(browsePage, browseOrder, requestFilters(browseFilters));
+        const response = await browseCatalog(browsePage, browseOrder, requestFilters(browseFilters, requestOptions));
         if (ignore || browseRequestIdRef.current !== requestId) return;
 
         setBrowseResults((current) => mergeCatalogResults(current, response.results, browsePage === 1));
@@ -102,9 +111,11 @@ export function useCatalogBrowse() {
     return () => {
       ignore = true;
     };
-  }, [browseFilters, browseOrder, browsePage]);
+  }, [browseFilters, browseOrder, browsePage, enabled, requestOptions.playableProvider]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const query = catalogSearchQuery.trim();
 
     if (query.length < 2) {
@@ -120,7 +131,7 @@ export function useCatalogBrowse() {
 
     const timeoutId = window.setTimeout(async () => {
       try {
-        const response = await searchCatalog(query, requestFilters(browseFilters));
+        const response = await searchCatalog(query, requestFilters(browseFilters, requestOptions));
         if (ignore) return;
 
         setCatalogSearchResults(response.results);
@@ -141,7 +152,7 @@ export function useCatalogBrowse() {
       ignore = true;
       window.clearTimeout(timeoutId);
     };
-  }, [browseFilters, catalogSearchQuery]);
+  }, [browseFilters, catalogSearchQuery, enabled, requestOptions.playableProvider]);
 
   return {
     browseResults,
