@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { AuthProvider, WatchStatus } from '@prisma/client';
@@ -41,9 +42,26 @@ type WatchPartyRoom = {
   code: string;
   hostSocketId: string;
   participants: Map<string, WatchPartyParticipant>;
+  settings: WatchPartyRoomSettings;
+  passwordHash: string | null;
   selectedAnime: WatchPartyAnime | null;
   episode: number;
   playback: WatchPartyPlaybackState;
+};
+
+type WatchPartyPermission = 'host' | 'everyone';
+
+type WatchPartyRoomSettings = {
+  name: string;
+  maxParticipants: number;
+  visibility: 'public' | 'code';
+  passwordProtected: boolean;
+  animeSelection: WatchPartyPermission;
+  episodeControl: WatchPartyPermission;
+  playbackControl: WatchPartyPermission;
+  transferHost: boolean;
+  autoPlay: boolean;
+  allowJoinAfterStart: boolean;
 };
 
 type WatchPartyPlaybackState = {
@@ -89,9 +107,31 @@ app.get('/health', (_request, response) => {
   response.json({ ok: true });
 });
 
+app.get('/watch-party', (_request, response) => {
+  const rooms = Array.from(watchPartyRooms.values())
+    .filter((room) => (
+      room.settings.visibility === 'public'
+      && room.participants.size < room.settings.maxParticipants
+      && (!room.selectedAnime || room.settings.allowJoinAfterStart)
+    ))
+    .map((room) => ({
+      code: room.code,
+      name: room.settings.name,
+      participantCount: room.participants.size,
+      maxParticipants: room.settings.maxParticipants,
+      passwordProtected: Boolean(room.passwordHash),
+      hasStarted: Boolean(room.selectedAnime),
+    }));
+  response.json({ rooms });
+});
+
 app.get('/watch-party/:code', (request, response) => {
   const code = normalizeWatchPartyCode(request.params.code);
-  response.json({ exists: code ? watchPartyRooms.has(code) : false });
+  const room = code ? watchPartyRooms.get(code) : null;
+  response.json({
+    exists: Boolean(room),
+    requiresPassword: Boolean(room?.passwordHash),
+  });
 });
 
 app.get('/auth/discord', (_request, response, next) => {
@@ -643,8 +683,18 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (!room.participants.has(socket.id) && room.participants.size >= WATCH_PARTY_MAX_PARTICIPANTS) {
+    if (!room.participants.has(socket.id) && room.participants.size >= room.settings.maxParticipants) {
       socket.emit('watch-party:join-rejected', { reason: 'room-full' });
+      return;
+    }
+
+    if (!room.participants.has(socket.id) && room.passwordHash && !verifyWatchPartyPassword(getPayloadString(payload, 'password'), room.passwordHash)) {
+      socket.emit('watch-party:join-rejected', { reason: 'invalid-password' });
+      return;
+    }
+
+    if (!room.participants.has(socket.id) && room.selectedAnime && !room.settings.allowJoinAfterStart) {
+      socket.emit('watch-party:join-rejected', { reason: 'room-started' });
       return;
     }
 
@@ -663,21 +713,24 @@ io.on('connection', (socket) => {
   socket.on('watch-party:select-anime', (payload: unknown) => {
     const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
     const room = code ? watchPartyRooms.get(code) : null;
-    if (!room || room.hostSocketId !== socket.id) return;
+    if (!room || !canUseWatchPartyPermission(room, socket.id, room.settings.animeSelection)) return;
 
     const anime = getPayloadObject(payload, 'anime') as WatchPartyAnime | null;
     if (!anime || !anime.id || !anime.title) return;
 
     room.selectedAnime = anime;
     room.episode = 1;
-    room.playback = createInitialPlaybackState();
+    room.playback = {
+      ...createInitialPlaybackState(),
+      status: room.settings.autoPlay ? 'playing' : 'paused',
+    };
     emitWatchPartyState(room);
   });
 
   socket.on('watch-party:set-episode', (payload: unknown) => {
     const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
     const room = code ? watchPartyRooms.get(code) : null;
-    if (!room || room.hostSocketId !== socket.id || !room.selectedAnime) return;
+    if (!room || !canUseWatchPartyPermission(room, socket.id, room.settings.episodeControl) || !room.selectedAnime) return;
 
     const episode = Number(getPayloadValue(payload, 'episode'));
     if (!Number.isFinite(episode)) return;
@@ -690,7 +743,7 @@ io.on('connection', (socket) => {
   socket.on('watch-party:set-playback', (payload: unknown) => {
     const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
     const room = code ? watchPartyRooms.get(code) : null;
-    if (!room || room.hostSocketId !== socket.id || !room.selectedAnime) return;
+    if (!room || !canUseWatchPartyPermission(room, socket.id, room.settings.playbackControl) || !room.selectedAnime) return;
 
     const status = getPayloadString(payload, 'status');
     const position = Number(getPayloadValue(payload, 'position'));
@@ -716,6 +769,48 @@ io.on('connection', (socket) => {
     target?.disconnect(true);
   });
 
+  socket.on('watch-party:update-settings', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id) return;
+
+    const settings = getPayloadObject(payload, 'settings');
+    if (!settings) return;
+
+    const requestedLimit = clampWatchPartyLimit(Number(getObjectValue(settings, 'maxParticipants')));
+    if (requestedLimit < room.participants.size) {
+      socket.emit('watch-party:settings-rejected', { reason: 'limit-below-participants' });
+      return;
+    }
+
+    room.settings = {
+      name: getObjectString(settings, 'name').slice(0, 48),
+      maxParticipants: requestedLimit,
+      visibility: getObjectString(settings, 'visibility') === 'public' ? 'public' : 'code',
+      passwordProtected: room.settings.passwordProtected,
+      animeSelection: parseWatchPartyPermission(getObjectValue(settings, 'animeSelection')),
+      episodeControl: parseWatchPartyPermission(getObjectValue(settings, 'episodeControl')),
+      playbackControl: parseWatchPartyPermission(getObjectValue(settings, 'playbackControl')),
+      transferHost: getObjectBoolean(settings, 'transferHost'),
+      autoPlay: getObjectBoolean(settings, 'autoPlay'),
+      allowJoinAfterStart: getObjectBoolean(settings, 'allowJoinAfterStart'),
+    };
+
+    if ('password' in settings) {
+      const password = getObjectString(settings, 'password');
+      room.passwordHash = password ? hashWatchPartyPassword(password.slice(0, 128)) : null;
+    }
+    room.settings.passwordProtected = Boolean(room.passwordHash);
+    emitWatchPartyState(room);
+  });
+
+  socket.on('watch-party:close', (payload: unknown) => {
+    const code = normalizeWatchPartyCode(getPayloadString(payload, 'code'));
+    const room = code ? watchPartyRooms.get(code) : null;
+    if (!room || room.hostSocketId !== socket.id) return;
+    closeWatchPartyRoom(room);
+  });
+
   socket.on('disconnect', () => {
     for (const room of watchPartyRooms.values()) {
       if (!room.participants.has(socket.id)) continue;
@@ -727,6 +822,11 @@ io.on('connection', (socket) => {
       }
 
       if (room.hostSocketId === socket.id) {
+        if (!room.settings.transferHost) {
+          closeWatchPartyRoom(room);
+          continue;
+        }
+
         const nextHost = room.participants.values().next().value as WatchPartyParticipant | undefined;
         if (nextHost) {
           room.hostSocketId = nextHost.id;
@@ -749,6 +849,8 @@ function createWatchPartyRoom(code: string, socketId: string) {
     code,
     hostSocketId: socketId,
     participants: new Map(),
+    settings: createDefaultWatchPartySettings(),
+    passwordHash: null,
     selectedAnime: null,
     episode: 1,
     playback: createInitialPlaybackState(),
@@ -766,10 +868,73 @@ function emitWatchPartyState(room: WatchPartyRoom) {
   io.to(watchPartyRoomName(room.code)).emit('watch-party:state', {
     code: room.code,
     participants,
+    settings: room.settings,
     selectedAnime: room.selectedAnime,
     episode: room.episode,
     playback: room.playback,
   });
+}
+
+function createDefaultWatchPartySettings(): WatchPartyRoomSettings {
+  return {
+    name: '',
+    maxParticipants: WATCH_PARTY_MAX_PARTICIPANTS,
+    visibility: 'code',
+    passwordProtected: false,
+    animeSelection: 'host',
+    episodeControl: 'host',
+    playbackControl: 'host',
+    transferHost: true,
+    autoPlay: false,
+    allowJoinAfterStart: true,
+  };
+}
+
+function closeWatchPartyRoom(room: WatchPartyRoom) {
+  io.to(watchPartyRoomName(room.code)).emit('watch-party:room-closed');
+  io.in(watchPartyRoomName(room.code)).socketsLeave(watchPartyRoomName(room.code));
+  watchPartyRooms.delete(room.code);
+}
+
+function canUseWatchPartyPermission(room: WatchPartyRoom, socketId: string, permission: WatchPartyPermission) {
+  return room.participants.has(socketId) && (permission === 'everyone' || room.hostSocketId === socketId);
+}
+
+function parseWatchPartyPermission(value: unknown): WatchPartyPermission {
+  return value === 'everyone' ? 'everyone' : 'host';
+}
+
+function clampWatchPartyLimit(value: number) {
+  if (!Number.isFinite(value)) return WATCH_PARTY_MAX_PARTICIPANTS;
+  return Math.min(Math.max(Math.trunc(value), 2), WATCH_PARTY_MAX_PARTICIPANTS);
+}
+
+function hashWatchPartyPassword(password: string) {
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyWatchPartyPassword(password: string, storedHash: string) {
+  if (!password) return false;
+  const [salt, hash] = storedHash.split(':');
+  if (!salt || !hash) return false;
+  const expected = Buffer.from(hash, 'hex');
+  const actual = scryptSync(password, salt, expected.length);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+function getObjectString(value: object, key: string) {
+  const item = getObjectValue(value, key);
+  return typeof item === 'string' ? item.trim() : '';
+}
+
+function getObjectBoolean(value: object, key: string) {
+  return getObjectValue(value, key) === true;
+}
+
+function getObjectValue(value: object, key: string) {
+  return (value as Record<string, unknown>)[key];
 }
 
 function createInitialPlaybackState(): WatchPartyPlaybackState {

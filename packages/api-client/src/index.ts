@@ -208,6 +208,15 @@ export type AnimaApiClientOptions = {
   fetchImpl?: typeof fetch;
 };
 
+export type PublicWatchPartyRoom = {
+  code: string;
+  name: string;
+  participantCount: number;
+  maxParticipants: number;
+  passwordProtected: boolean;
+  hasStarted: boolean;
+};
+
 export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiClientOptions) {
   const apiFetch = async <T>(path: string, init?: RequestInit): Promise<T> => {
     const response = await fetchImpl(`${baseUrl}${path}`, {
@@ -317,7 +326,9 @@ export function createAnimaApiClient({ baseUrl, fetchImpl = fetch }: AnimaApiCli
     getEpisodePlayers: (animeId: string, episodeNumber: number) =>
       apiFetch<{ providers: PlayerProviderResult[] }>(`/anime/${animeId}/episodes/${episodeNumber}/players`),
     checkWatchPartyRoom: (code: string) =>
-      apiFetch<{ exists: boolean }>(`/watch-party/${encodeURIComponent(code)}`),
+      apiFetch<{ exists: boolean; requiresPassword: boolean }>(`/watch-party/${encodeURIComponent(code)}`),
+    getPublicWatchPartyRooms: () =>
+      apiFetch<{ rooms: PublicWatchPartyRoom[] }>('/watch-party'),
   };
 }
 
