@@ -69,12 +69,12 @@
 .panel {
   position: sticky;
   top: 28px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
   max-height: calc(100vh - 56px);
-  gap: 12px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .panel button:not(:disabled):hover {
@@ -91,4 +91,5 @@
     min-height: auto;
     max-height: none;
   }
+
 }

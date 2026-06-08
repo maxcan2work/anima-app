@@ -9,6 +9,7 @@ import type { WatchState } from '@shared/storage';
 import { WatchPartyEntry } from './WatchPartyEntry';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
+import { WatchPartySelectionSidebar } from './WatchPartySelectionSidebar';
 import { useWatchPartyCatalog } from './useWatchPartyCatalog';
 import { useWatchPartyRoom } from './useWatchPartyRoom';
 import styles from './WatchPartyPage.module.css';
@@ -97,18 +98,19 @@ export function WatchPartyPage({
             eyebrow={t('watchParty.title')}
             title={t('watchParty.chooseAnime')}
             note={t('watchParty.anilibriaOnly')}
-            browseResults={catalog.partyCatalogResults}
-            browsePage={catalog.partyCatalogPage}
-            browseHasNext={catalog.partyCatalogHasNext}
-            browseLoading={catalog.partyCatalogLoading}
-            browseStatus={catalog.partyCatalogStatus}
-            searchQuery={catalog.animeQuery}
-            searchResults={catalog.animeResults}
-            searchLoading={catalog.animeSearchLoading}
-            searchStatus={catalog.animeSearchStatus}
-            onSearchChange={catalog.setAnimeQuery}
+            browseResults={catalog.browseResults}
+            browsePage={catalog.browsePage}
+            browseHasNext={catalog.browseHasNext}
+            browseLoading={catalog.browseLoading}
+            browseStatus={catalog.browseStatus}
+            searchQuery={catalog.catalogSearchQuery}
+            searchResults={catalog.catalogSearchResults}
+            searchLoading={catalog.catalogSearchLoading}
+            searchStatus={catalog.catalogSearchStatus}
+            hideSearch
+            onSearchChange={catalog.setCatalogSearchQuery}
             onOpenAnime={catalog.handleSelectAnime}
-            onPageChange={catalog.setPartyCatalogPage}
+            onPageChange={catalog.setBrowsePage}
           />
         ) : (
           <div className={clsx(styles.stage, styles.waitingHost)}>
@@ -121,12 +123,19 @@ export function WatchPartyPage({
 
         {!room.selectedAnime ? (
           <aside className={styles.panel}>
-            <WatchPartyParticipants
+            <WatchPartySelectionSidebar
               code={code}
               participants={room.participants}
               connectionStatus={room.connectionStatus}
               canKick={room.isHost}
+              canBrowse={room.isHost}
               ownParticipantId={room.ownParticipantId}
+              browseFilters={catalog.browseFilters}
+              browseOrder={catalog.browseOrder}
+              searchQuery={catalog.catalogSearchQuery}
+              onFiltersChange={catalog.setBrowseFilters}
+              onOrderChange={catalog.setBrowseOrder}
+              onSearchChange={catalog.setCatalogSearchQuery}
               onKickParticipant={room.kickParticipant}
               onLeaveRoom={onLeaveRoom}
             />

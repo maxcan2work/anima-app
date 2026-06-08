@@ -229,6 +229,10 @@ export const dictionaries = {
     'watchParty.room': 'Комната {code}',
     'watchParty.waitingHost': 'Ждём, пока хост выберет аниме для просмотра.',
     'watchParty.participants': 'Участники',
+    'watchParty.codeCopied': 'Код скопирован',
+    'watchParty.leaveRoom': 'Выйти из комнаты',
+    'watchParty.roomSettings': 'Настройки комнаты',
+    'watchParty.roomSettingsDescription': 'Параметры доступа, участников и управления просмотром.',
     'watchParty.host': 'Хост',
     'watchParty.kickParticipant': 'Кикнуть {name}',
 
@@ -474,6 +478,10 @@ export const dictionaries = {
     'watchParty.room': 'Room {code}',
     'watchParty.waitingHost': 'Waiting for the host to choose anime.',
     'watchParty.participants': 'Participants',
+    'watchParty.codeCopied': 'Code copied',
+    'watchParty.leaveRoom': 'Leave room',
+    'watchParty.roomSettings': 'Room settings',
+    'watchParty.roomSettingsDescription': 'Access, participant, and playback control options.',
     'watchParty.host': 'Host',
     'watchParty.kickParticipant': 'Kick {name}',
 
@@ -719,6 +727,10 @@ export const dictionaries = {
     'watchParty.room': 'ルーム {code}',
     'watchParty.waitingHost': 'ホストが視聴するアニメを選ぶのを待っています。',
     'watchParty.participants': '参加者',
+    'watchParty.codeCopied': 'コードをコピーしました',
+    'watchParty.leaveRoom': 'ルームを退出',
+    'watchParty.roomSettings': 'ルーム設定',
+    'watchParty.roomSettingsDescription': 'アクセス、参加者、再生操作の設定。',
     'watchParty.host': 'ホスト',
     'watchParty.kickParticipant': '{name} を退出させる',
 
