@@ -7,7 +7,7 @@ import SortPopularIcon from '@assets/sort-popular.svg?react';
 import SortRatingIcon from '@assets/sort-rating.svg?react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { Button, Checkbox, CollapsibleSection, InputField, RangeSlider, Select, Skeleton } from '@shared/ui';
-import styles from '@pages/watch/WatchHome.module.css';
+import styles from './CatalogFiltersPanel.module.css';
 
 type CatalogFiltersPanelProps = {
   browseFilters: CatalogBrowseFilters;

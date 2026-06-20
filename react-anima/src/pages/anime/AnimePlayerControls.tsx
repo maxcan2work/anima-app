@@ -1,10 +1,11 @@
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WATCH_STATUS_OPTIONS, type WatchStatus } from '@anima/core';
 import { type PlayerProviderResult } from '@/api';
 import shikimoriIcon from '@assets/shikimori.png';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { SegmentedControl, Select } from '@shared/ui';
 import { ControlledVideoPlayer, type PlaybackSync } from './ControlledVideoPlayer';
 import { PLAYER_PROVIDER_OPTIONS } from './AnimeHero.constants';
 import type { PlayerProvider, WatchState } from './AnimeHero.types';
@@ -19,23 +20,14 @@ export function PlayerProviderSelect({
   value: PlayerProvider;
   onChange: (value: PlayerProvider) => void;
 }) {
+  const { t } = useI18n();
+  const options = PLAYER_PROVIDER_OPTIONS.map((option) => ({
+    ...option,
+    disabled: !players.some((player) => player.provider === option.value && isPlayablePlayer(player)),
+  }));
+
   return (
-    <div className={styles.providerSelect} aria-label="Плеер">
-      {PLAYER_PROVIDER_OPTIONS.map((option) => {
-        const available = players.some((player) => player.provider === option.value && isPlayablePlayer(player));
-        return (
-          <button
-            key={option.value}
-            className={clsx(option.value === value && styles.selectedProvider)}
-            type="button"
-            disabled={!available}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedControl value={value} options={options} onChange={onChange} ariaLabel={t('anime.provider')} />
   );
 }
 
@@ -47,8 +39,6 @@ export function WatchStatusSelect({
   onChange: (value: WatchState['status']) => void;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const statusOptions: Array<{ value: WatchState['status']; label: string }> = [
     { value: 'none', label: t('profile.status.none') },
     ...WATCH_STATUS_OPTIONS.map((option) => ({
@@ -56,64 +46,8 @@ export function WatchStatusSelect({
       label: t(`profile.status.${option.value}` as `profile.status.${WatchStatus}`),
     })),
   ];
-  const selected = statusOptions.find((option) => option.value === value) ?? statusOptions[0];
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
   return (
-    <div className={styles.statusSelect} ref={rootRef}>
-      <button
-        className={styles.statusSelectTrigger}
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span>{selected.label}</span>
-        <span className={styles.statusSelectChevron} aria-hidden="true" />
-      </button>
-
-      {open ? (
-        <div className={styles.statusSelectMenu} role="listbox" aria-label="Статус просмотра">
-          {statusOptions.map((option) => (
-            <button
-              key={option.value}
-              className={clsx(option.value === value && styles.selectedStatus)}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <Select label={t('catalog.status')} value={value} options={statusOptions} onChange={onChange} />
   );
 }
 

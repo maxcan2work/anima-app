@@ -1,4 +1,5 @@
 import type { CSSProperties, InputHTMLAttributes, ReactNode } from 'react';
+import { Slider } from './Slider';
 import styles from './RangeSlider.module.css';
 
 type RangeSliderProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> & {
@@ -22,7 +23,7 @@ export function RangeSlider({ value, min, max, onChange, formatValue = String, m
     <label className={styles.range} style={style}>
       <span className={styles.track}>
         <span className={styles.tooltip}>{formatValue(value)}</span>
-        <input {...props} type="range" min={min} max={max} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <Slider {...props} min={min} max={max} value={value} onChange={onChange} />
       </span>
       {marks?.length ? <span className={styles.marks} aria-hidden="true">{marks.map((mark, index) => <span key={index}>{mark}</span>)}</span> : null}
     </label>

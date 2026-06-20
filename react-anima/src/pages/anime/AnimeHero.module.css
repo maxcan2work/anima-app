@@ -201,24 +201,9 @@
 
 .reviewSortButton {
   position: relative;
-  display: inline-flex;
   flex: 0 1 auto;
-  align-items: center;
-  justify-content: center;
   gap: 7px;
   min-width: 0;
-  height: 38px;
-  padding: 0 11px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #d9d0c5;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
 }
 
 .reviewSortButton > img:first-child,
@@ -245,19 +230,6 @@
 
 .reviewSortDirectionUp {
   transform: rotate(90deg);
-}
-
-.reviewSortButton:hover,
-.reviewSortButton:focus-visible,
-.reviewSortActive {
-  border-color: rgba(242, 192, 99, 0.45);
-  background: rgba(242, 192, 99, 0.12);
-  color: #fff7ec;
-}
-
-.reviewSortButton:hover,
-.reviewSortButton:focus-visible {
-  transform: scale(1.01);
 }
 
 .reviewWriteButton {
@@ -630,29 +602,6 @@
 
 .reviewBack {
   width: 100%;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
-  color: #d8cbbb;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
-}
-
-.reviewBack:hover,
-.reviewBack:focus-visible {
-  border-color: rgba(242, 192, 99, 0.34);
-  background: rgba(242, 192, 99, 0.09);
-  color: #fff7ec;
-  transform: scale(1.01);
 }
 
 .reviewAuthorProfile {
@@ -1091,26 +1040,13 @@
   text-transform: uppercase;
 }
 
-.reviewComposeField input,
-.reviewComposeField textarea {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
-  color: #fff7ec;
-  font: inherit;
-  outline: none;
-}
-
-.reviewComposeField input {
+.reviewTitleInput {
   height: 44px;
-  padding: 0 13px;
   font-size: 15px;
   font-weight: 850;
 }
 
-.reviewComposeField textarea {
+.reviewBodyInput {
   box-sizing: border-box;
   min-height: 0;
   height: 100%;
@@ -1119,17 +1055,6 @@
   font-size: 15px;
   font-weight: 400;
   line-height: 1.7;
-}
-
-.reviewComposeField input:focus,
-.reviewComposeField textarea:focus {
-  border-color: rgba(242, 192, 99, 0.42);
-  background: rgba(242, 192, 99, 0.07);
-}
-
-.reviewComposeField input::placeholder,
-.reviewComposeField textarea::placeholder {
-  color: #8f8578;
 }
 
 .reviewComposeScore,
@@ -1174,15 +1099,7 @@
   line-height: 1;
 }
 
-.reviewComposeScore input[type='range'],
-.reviewComposeAspect input[type='range'] {
-  width: 100%;
-  accent-color: #f2c063;
-  cursor: pointer;
-}
-
-.reviewComposeScoreHeader input,
-.reviewComposeAspect strong input {
+.reviewScoreInput {
   box-sizing: border-box;
   width: 1.55em;
   height: 1.55em;
@@ -1198,20 +1115,17 @@
   appearance: textfield;
 }
 
-.reviewComposeScoreHeader input {
+.reviewComposeScoreHeader .reviewScoreInput {
   font-size: 0.82em;
 }
 
-.reviewComposeScoreHeader input::-webkit-outer-spin-button,
-.reviewComposeScoreHeader input::-webkit-inner-spin-button,
-.reviewComposeAspect strong input::-webkit-outer-spin-button,
-.reviewComposeAspect strong input::-webkit-inner-spin-button {
+.reviewScoreInput::-webkit-outer-spin-button,
+.reviewScoreInput::-webkit-inner-spin-button {
   margin: 0;
   appearance: none;
 }
 
-.reviewComposeScoreHeader input:focus,
-.reviewComposeAspect strong input:focus {
+.reviewScoreInput:focus {
   border-color: rgba(242, 192, 99, 0.5);
   background: rgba(242, 192, 99, 0.16);
 }
@@ -1304,37 +1218,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-}
-
-.reviewComposeActions button {
-  min-height: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
-  color: #d8cbbb;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
-}
-
-.reviewComposeActions button:last-child {
-  border-color: rgba(242, 192, 99, 0.36);
-  background: rgba(242, 192, 99, 0.14);
-  color: #fff7ec;
-}
-
-.reviewComposeActions button:hover,
-.reviewComposeActions button:focus-visible {
-  border-color: rgba(242, 192, 99, 0.45);
-  background: rgba(242, 192, 99, 0.12);
-  color: #fff7ec;
-  transform: scale(1.01);
 }
 
 @keyframes reviewScoreFill {
@@ -2011,34 +1894,6 @@
 
 .reviewsToggle {
   width: 100%;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
-  color: #d8cbbb;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
-}
-
-.reviewsToggle:hover,
-.reviewsToggle:focus-visible,
-.reviewsToggleActive {
-  border-color: rgba(242, 192, 99, 0.34);
-  background: rgba(242, 192, 99, 0.09);
-  color: #fff7ec;
-}
-
-.reviewsToggle:hover,
-.reviewsToggle:focus-visible {
-  transform: scale(1.01);
 }
 
 .watchStatusTools h3 {
@@ -2175,34 +2030,6 @@
   opacity: 0.86;
 }
 
-.diaryScoreHeader button {
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
-  color: #d8cbbb;
-  font-size: 12px;
-  font-weight: 850;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    transform 160ms ease;
-}
-
-.diaryScoreHeader button:hover:not(:disabled),
-.diaryScoreHeader button:focus-visible {
-  border-color: rgba(242, 192, 99, 0.36);
-  background: rgba(242, 192, 99, 0.1);
-  color: #fff7ec;
-  transform: scale(1.01);
-}
-
-.diaryScoreHeader button:disabled {
-  cursor: default;
-  opacity: 0.64;
-}
-
 .diaryScoreRange {
   display: grid;
   gap: 9px;
@@ -2243,160 +2070,6 @@
 
 .diaryScoreRangeScale span:last-child {
   transform: translateX(-100%);
-}
-
-.diaryScoreRange input {
-  width: 100%;
-  height: 22px;
-  margin: 0;
-  appearance: none;
-  cursor: pointer;
-  background: transparent;
-}
-
-.diaryScoreRange input::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, #f2c063 0 var(--score-progress), rgba(255, 255, 255, 0.1) var(--score-progress) 100%);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
-}
-
-.diaryScoreRange input::-webkit-slider-thumb {
-  width: 16px;
-  height: 16px;
-  margin-top: -5px;
-  appearance: none;
-  border: 2px solid #21170d;
-  border-radius: 50%;
-  background: #f2c063;
-  box-shadow:
-    0 0 0 3px rgba(242, 192, 99, 0.18),
-    0 6px 14px rgba(0, 0, 0, 0.35);
-}
-
-.diaryScoreRange input::-moz-range-track {
-  height: 6px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.diaryScoreRange input::-moz-range-progress {
-  height: 6px;
-  border-radius: 999px;
-  background: #f2c063;
-}
-
-.diaryScoreRange input::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #21170d;
-  border-radius: 50%;
-  background: #f2c063;
-  box-shadow:
-    0 0 0 3px rgba(242, 192, 99, 0.18),
-    0 6px 14px rgba(0, 0, 0, 0.35);
-}
-
-.diaryScoreRange input:focus-visible {
-  outline: none;
-}
-
-.providerSelect {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.providerSelect button {
-  min-height: 36px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #aaa196;
-  font-weight: 850;
-}
-
-.providerSelect button:disabled {
-  cursor: default;
-  opacity: 0.4;
-}
-
-.selectedProvider {
-  background: rgba(242, 192, 99, 0.16) !important;
-  color: #fffaf2 !important;
-}
-
-.statusSelect {
-  position: relative;
-}
-
-.statusSelectTrigger {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 18px;
-  align-items: center;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #fffaf2;
-  font-weight: 800;
-  text-align: left;
-}
-
-.statusSelectTrigger:hover,
-.statusSelectTrigger[aria-expanded="true"] {
-  border-color: rgba(242, 192, 99, 0.55);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.statusSelectChevron {
-  justify-self: end;
-  width: 9px;
-  height: 9px;
-  border-right: 2px solid #f2c063;
-  border-bottom: 2px solid #f2c063;
-  transform: translateY(-2px) rotate(45deg);
-}
-
-.statusSelectMenu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  left: 0;
-  z-index: 20;
-  display: grid;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(24, 24, 22, 0.98);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
-}
-
-.statusSelectMenu button {
-  min-height: 38px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #f9f1e6;
-  font-weight: 750;
-  text-align: left;
-}
-
-.statusSelectMenu button:hover,
-.selectedStatus {
-  background: rgba(242, 192, 99, 0.14) !important;
-  color: #fffaf2 !important;
 }
 
 .sourcesBlock {
@@ -2460,24 +2133,10 @@
   min-width: 0;
 }
 
-.localTabs button {
-  display: grid;
-  place-items: center;
+.localTabButton {
   width: 100%;
   height: var(--ui-row-height);
   min-height: var(--ui-row-height);
-  padding: var(--ui-row-padding);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--ui-radius);
-  background: rgba(255, 255, 255, 0.05);
-  color: #d9d0c5;
-}
-
-.localTabs button:hover,
-.localTabActive {
-  border-color: rgba(242, 192, 99, 0.52) !important;
-  background: rgba(242, 192, 99, 0.12) !important;
-  color: #fff7ec !important;
 }
 
 .localTabs svg {

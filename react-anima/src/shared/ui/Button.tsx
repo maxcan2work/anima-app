@@ -9,11 +9,12 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  active?: boolean;
 };
 
-export function Button({ children, className, type = 'button', variant = 'accent', size = 'md', ...props }: ButtonProps) {
+export function Button({ active, children, className, type = 'button', variant = 'accent', size = 'md', ...props }: ButtonProps) {
   return (
-    <button className={clsx(styles.button, styles[variant], styles[size], className)} type={type} {...props}>
+    <button className={clsx(styles.button, styles[variant], styles[size], active && styles.active, className)} type={type} {...props}>
       {children}
     </button>
   );

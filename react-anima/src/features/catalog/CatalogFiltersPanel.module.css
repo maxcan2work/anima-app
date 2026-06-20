@@ -1,0 +1,157 @@
+.filterPanel {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--ui-row-height);
+  gap: var(--space-5);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.controls {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+  padding: 0 13px var(--space-5) 6px;
+  overflow-y: auto;
+  scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.controls::-webkit-scrollbar {
+  width: 6px;
+}
+
+.controls::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.controls::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--color-scrollbar-thumb);
+  background-clip: content-box;
+}
+
+.filterFooter {
+  display: grid;
+  min-height: var(--ui-row-height);
+  padding: 0 var(--space-2) 0 3px;
+}
+
+.resetButton {
+  height: var(--ui-row-height);
+  min-height: var(--ui-row-height);
+}
+
+.controlGroup {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.selectBuffer {
+  margin: -4px;
+  padding: 4px;
+  overflow: visible;
+}
+
+.segmented,
+.optionGrid,
+.genreGrid {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-1);
+}
+
+.segmented,
+.optionGrid,
+.genreGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.genreGrid {
+  overflow: visible;
+}
+
+.segmented {
+  gap: 10px;
+}
+
+.segmented button {
+  position: relative;
+  display: grid;
+  align-items: end;
+  justify-items: end;
+  min-width: 0;
+  min-height: 72px;
+  padding: var(--space-3);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-control);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-black);
+  text-align: right;
+}
+
+.segmented button::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--color-accent-soft);
+  opacity: 0.28;
+  content: '';
+}
+
+.segmented button:hover,
+.activeOption {
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+.segmented button span {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--font-size-body-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orderIcon {
+  position: absolute;
+  top: var(--space-2);
+  left: 9px;
+  z-index: 0;
+  display: block;
+  width: 46px;
+  height: 46px;
+  color: var(--color-accent);
+  opacity: 0.24;
+}
+
+.filterCheckPlaceholder {
+  min-height: var(--control-height-sm);
+}
+
+@media (max-width: 1100px) {
+  .filterPanel,
+  .controls {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .controls {
+    padding: 0;
+  }
+}

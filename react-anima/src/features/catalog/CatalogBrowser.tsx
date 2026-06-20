@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import type { CatalogSearchResult } from '@/api';
 import { useI18n } from '@shared/i18n/I18nProvider';
+import { Input, Skeleton } from '@shared/ui';
 import styles from './CatalogBrowser.module.css';
 
 type CatalogBrowserProps = {
@@ -87,7 +88,7 @@ export function CatalogBrowser({
           ) : null}
           {!hideSearch ? (
             <label className={styles.search} aria-label={t('catalog.search')}>
-              <input
+              <Input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => onSearchChange(event.target.value)}
@@ -133,10 +134,10 @@ function CatalogSkeletonCards({ count }: { count: number }) {
     <>
       {Array.from({ length: count }, (_, index) => (
         <div className={`${styles.card} ${styles.skeletonCard}`} key={`catalog-skeleton-${index}`}>
-          <span className={styles.skeletonPoster} />
-          <span className={`${styles.skeletonLine} ${styles.skeletonLineTitle}`} />
-          <span className={styles.skeletonLine} />
-          <span className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+          <Skeleton className={styles.skeletonPoster} />
+          <Skeleton className={`${styles.skeletonLine} ${styles.skeletonLineTitle}`} />
+          <Skeleton className={styles.skeletonLine} />
+          <Skeleton className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
         </div>
       ))}
     </>

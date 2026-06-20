@@ -1,0 +1,39 @@
+.picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: calc(100vw - var(--space-10));
+  padding: 6px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-floating);
+}
+
+.picker button {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: var(--control-height-xs);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-control);
+  color: var(--color-accent-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-black);
+  line-height: 1;
+}
+
+.picker button:hover:not(:disabled),
+.picker button:focus-visible,
+.picker .active {
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+.picker button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}

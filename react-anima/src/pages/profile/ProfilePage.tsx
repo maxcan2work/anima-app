@@ -24,9 +24,10 @@ import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import { animeRouteSlug } from '@shared/navigation';
-import { Button, IconButton, Input, Skeleton, Tooltip } from '@shared/ui';
+import { Button, IconButton, Input, ScorePicker, Skeleton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
+import { ProfileStatusCard } from './ProfileStatusCard';
 
 type SortDirection = 'desc' | 'asc';
 
@@ -198,8 +199,7 @@ export function ProfilePage() {
     event.preventDefault();
     openDiaryAnime(entry);
   };
-  const saveEntryScore = async (event: MouseEvent<HTMLButtonElement>, entry: ServerWatchEntry, score: number | null) => {
-    event.stopPropagation();
+  const saveEntryScore = async (entry: ServerWatchEntry, score: number | null) => {
     if (savingRatingId) return;
 
     setSavingRatingId(entry.id);
@@ -411,27 +411,13 @@ export function ProfilePage() {
                   {savingRatingId === entry.id ? '...' : entry.score ? `${entry.score}/10` : t('common.none')}
                 </Button>
                 {activeRatingEntryId === entry.id ? (
-                  <div className={styles.ratingMenu} onClick={(event) => event.stopPropagation()}>
-                    {Array.from({ length: 10 }, (_, index) => index + 1).map((score) => (
-                      <button
-                        key={score}
-                        className={clsx(styles.ratingOption, entry.score === score && styles.activeRating)}
-                        type="button"
-                        onClick={(event) => saveEntryScore(event, entry, score)}
-                        disabled={savingRatingId === entry.id}
-                      >
-                        {score}
-                      </button>
-                    ))}
-                    <button
-                      className={clsx(styles.ratingOption, entry.score == null && styles.activeRating)}
-                      type="button"
-                      onClick={(event) => saveEntryScore(event, entry, null)}
-                      disabled={savingRatingId === entry.id}
-                    >
-                      {t('common.none')}
-                    </button>
-                  </div>
+                  <ScorePicker
+                    className={styles.ratingMenu}
+                    value={entry.score}
+                    noneLabel={t('common.none')}
+                    onChange={(score) => void saveEntryScore(entry, score)}
+                    disabled={savingRatingId === entry.id}
+                  />
                 ) : null}
               </div>
                   </>
@@ -461,16 +447,14 @@ export function ProfilePage() {
                 <h3 id="profile-watch-section">{t('profile.watchSection')}</h3>
                 <div className={styles.stats} aria-label={t('profile.diaryFilter')}>
                   {profileFilters.map((filter) => (
-                    <button
+                    <ProfileStatusCard
                       key={filter.status}
-                      className={clsx(filter.status === selectedStatus && styles.activeStat)}
-                      type="button"
+                      active={filter.status === selectedStatus}
+                      icon={filter.icon}
+                      label={filter.label}
+                      count={filter.count}
                       onClick={() => setSelectedStatus(filter.status)}
-                    >
-                      <img className={styles.statIcon} src={filter.icon} alt="" aria-hidden="true" />
-                      <span>{filter.label}</span>
-                      <strong>{filter.count}</strong>
-                    </button>
+                    />
                   ))}
                 </div>
               </section>
@@ -493,9 +477,9 @@ export function ProfilePage() {
                     </article>
                   ))}
                 </div>
-                <button className={styles.showAll} type="button">
+                <Button className={styles.showAll} variant="neutral" size="sm">
                   Показать всех
-                </button>
+                </Button>
               </section>
             </>
           ) : (

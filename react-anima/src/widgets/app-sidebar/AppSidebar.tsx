@@ -12,6 +12,7 @@ import { useAuth } from '@features/auth/AuthProvider';
 import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { profileRoute } from '@shared/navigation';
+import { Button, IconButton, Skeleton } from '@shared/ui';
 import styles from './AppSidebar.module.css';
 
 type AppSidebarProps = {
@@ -35,15 +36,15 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
         <div className={styles.brandCopy}>
           <p className="eyebrow">Anima</p>
         </div>
-        <button
+        <IconButton
           className={styles.toggle}
-          type="button"
+          size="lg"
           onClick={onToggleCollapsed}
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           data-tooltip={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
           {collapsed ? <SidebarExpandIcon aria-hidden="true" /> : <SidebarShrinkIcon aria-hidden="true" />}
-        </button>
+        </IconButton>
       </div>
 
       <nav className={styles.nav} aria-label={t('sidebar.sections')}>
@@ -82,20 +83,14 @@ export function AppSidebar({ collapsed, onToggleCollapsed }: AppSidebarProps) {
       </nav>
 
       <div className={styles.footer}>
-        <button
-          className={clsx(styles.footerAction, view === 'settings' && styles.footerActionActive)}
-          type="button"
-          data-tooltip={collapsed ? t('sidebar.settings') : undefined}
+        <SideNavButton
+          active={view === 'settings'}
+          icon={SettingsIcon}
+          title={t('sidebar.settings')}
+          description={t('common.soon')}
+          collapsed={collapsed}
           onClick={() => requestRoute('/settings', 'settings')}
-        >
-          <span className={styles.navIcon} aria-hidden="true">
-            <SettingsIcon />
-          </span>
-          <span className={styles.navCopy}>
-            <span>{t('sidebar.settings')}</span>
-            <small>{t('common.soon')}</small>
-          </span>
-        </button>
+        />
         <AuthPanel
           active={view === 'profile'}
           collapsed={collapsed}
@@ -128,8 +123,8 @@ function AuthPanel({
         }
         aria-hidden="true"
       >
-        <span className={styles.placeholderAvatar} />
-        {collapsed ? null : <span className={styles.placeholderCopy} />}
+        <Skeleton className={styles.placeholderAvatar} />
+        {collapsed ? null : <Skeleton className={styles.placeholderCopy} />}
       </div>
     );
   }
@@ -137,15 +132,15 @@ function AuthPanel({
   if (!user) {
     return (
       <div className={styles.authPanel}>
-        <button
+        <Button
           className={styles.discordButton}
+          variant="discord"
           onClick={login}
           data-tooltip={collapsed ? t('sidebar.loginDiscord') : undefined}
-          type="button"
         >
           <img src={discordIcon} alt="" aria-hidden="true" />
           <span>{t('sidebar.loginDiscord')}</span>
-        </button>
+        </Button>
       </div>
     );
   }

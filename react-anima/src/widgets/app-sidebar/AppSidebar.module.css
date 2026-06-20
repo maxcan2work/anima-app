@@ -37,18 +37,8 @@
 
 .toggle {
   position: relative;
-  display: grid;
-  place-items: center;
   grid-column: 1;
   grid-row: 1;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f2c063;
-  font-size: 22px;
-  font-weight: 900;
 }
 
 .toggle svg {
@@ -63,8 +53,7 @@
   transition: width 220ms ease;
 }
 
-.navButton,
-.footerAction {
+.navButton {
   position: relative;
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -81,12 +70,7 @@
   transition: width 220ms ease, grid-template-columns 220ms ease, border-color 160ms ease, background 160ms ease, transform 140ms ease;
 }
 
-.footerAction {
-  width: 100%;
-}
-
-.navButtonActive,
-.footerActionActive {
+.navButtonActive {
   border-color: rgba(242, 192, 99, 0.65);
   background: rgba(242, 192, 99, 0.14);
   color: #f2c063;
@@ -192,12 +176,7 @@
 
 .placeholderAvatar,
 .placeholderCopy {
-  display: block;
   margin-top: 0;
-  border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05));
-  background-size: 200% 100%;
-  animation: placeholder-pulse 1.2s linear infinite;
 }
 
 .placeholderAvatar {
@@ -289,11 +268,6 @@
   height: var(--ui-row-height);
   min-height: var(--ui-row-height);
   padding: var(--ui-row-padding);
-  border: 0;
-  border-radius: 8px;
-  background: #5865f2;
-  color: white;
-  font-weight: 800;
   text-align: center;
   overflow: hidden;
   transition: width 220ms ease, grid-template-columns 220ms ease, background 160ms ease;
@@ -366,8 +340,7 @@
 }
 
 .collapsed .discordButton,
-.collapsed .navButton,
-.collapsed .footerAction {
+.collapsed .navButton {
   grid-template-columns: 34px;
   justify-items: center;
   width: 56px;
@@ -381,7 +354,6 @@
 .toggle::after,
 .collapsed .discordButton::after,
 .collapsed .profileLink::after,
-.collapsed .footerAction::after,
 .collapsed .navButton::after {
   position: absolute;
   left: calc(100% + 12px);
@@ -409,22 +381,10 @@
 .collapsed .discordButton:focus-visible::after,
 .collapsed .profileLink:hover::after,
 .collapsed .profileLink:focus-visible::after,
-.collapsed .footerAction:hover::after,
-.collapsed .footerAction:focus-visible::after,
 .collapsed .navButton:hover::after,
 .collapsed .navButton:focus-visible::after {
   opacity: 1;
   transform: translate(0, -50%);
-}
-
-@keyframes placeholder-pulse {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
-  }
 }
 
 @media (max-width: 1100px) {

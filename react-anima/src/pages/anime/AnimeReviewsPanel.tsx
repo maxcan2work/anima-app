@@ -9,7 +9,7 @@ import starIcon from '@assets/star.svg';
 import ThumbUpIcon from '@assets/thumb-up.svg?react';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Button, Tooltip } from '@shared/ui';
+import { Button, Field, Input, Slider, Textarea, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import type { ReviewDraft, ReviewSortKey, SortDirection } from './AnimeHero.types';
 import styles from './AnimeHero.module.css';
@@ -100,9 +100,9 @@ export function ReviewsPanel({
             <div className={styles.reviewScoreColumn}>
               <ReviewScores review={selectedReview} />
               <ReviewReactions review={selectedReview} />
-              <button className={styles.reviewBack} type="button" onClick={onBack}>
+              <Button className={styles.reviewBack} variant="neutral" size="sm" onClick={onBack}>
                 {t('anime.backToReviews')}
-              </button>
+              </Button>
             </div>
           </article>
         </div>
@@ -125,9 +125,11 @@ export function ReviewsPanel({
         <div className={styles.reviewsList}>
           <div className={styles.reviewToolbar}>
             <div className={styles.reviewSorts} aria-label={t('anime.reviewSort.label')}>
-              <button
-                className={clsx(styles.reviewSortButton, reviewSortKey === 'recent' && styles.reviewSortActive)}
-                type="button"
+              <Button
+                className={styles.reviewSortButton}
+                variant="neutral"
+                size="sm"
+                active={reviewSortKey === 'recent'}
                 onClick={() => {
                   setReviewSortKey('recent');
                   setReviewSortDirection((current) => (reviewSortKey === 'recent' && current === 'desc' ? 'asc' : 'desc'));
@@ -138,10 +140,12 @@ export function ReviewsPanel({
                 <img src={clockIcon} alt="" aria-hidden="true" />
                 <span>{reviewSortKey === 'recent' && reviewSortDirection === 'asc' ? t('anime.reviewSort.recentAsc') : t('anime.reviewSort.recentDesc')}</span>
                 <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'recent' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
-              </button>
-              <button
-                className={clsx(styles.reviewSortButton, reviewSortKey === 'score' && styles.reviewSortActive)}
-                type="button"
+              </Button>
+              <Button
+                className={styles.reviewSortButton}
+                variant="neutral"
+                size="sm"
+                active={reviewSortKey === 'score'}
                 onClick={() => {
                   setReviewSortKey('score');
                   setReviewSortDirection((current) => (reviewSortKey === 'score' && current === 'desc' ? 'asc' : 'desc'));
@@ -152,10 +156,12 @@ export function ReviewsPanel({
                 <img src={starIcon} alt="" aria-hidden="true" />
                 <span>{reviewSortKey === 'score' && reviewSortDirection === 'asc' ? t('anime.reviewSort.scoreAsc') : t('anime.reviewSort.scoreDesc')}</span>
                 <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'score' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
-              </button>
-              <button
-                className={clsx(styles.reviewSortButton, reviewSortKey === 'reaction' && styles.reviewSortActive)}
-                type="button"
+              </Button>
+              <Button
+                className={styles.reviewSortButton}
+                variant="neutral"
+                size="sm"
+                active={reviewSortKey === 'reaction'}
                 onClick={() => {
                   setReviewSortKey('reaction');
                   setReviewSortDirection((current) => (reviewSortKey === 'reaction' && current === 'desc' ? 'asc' : 'desc'));
@@ -166,7 +172,7 @@ export function ReviewsPanel({
                 <ThumbUpIcon aria-hidden="true" />
                 <span>{reviewSortKey === 'reaction' && reviewSortDirection === 'asc' ? t('anime.reviewSort.reactionAsc') : t('anime.reviewSort.reactionDesc')}</span>
                 <img className={clsx(styles.reviewSortDirection, reviewSortKey === 'reaction' && reviewSortDirection === 'asc' && styles.reviewSortDirectionUp)} src={episodeArrowIcon} alt="" aria-hidden="true" />
-              </button>
+              </Button>
             </div>
             <Button className={styles.reviewWriteButton} variant="tonal" size="sm" onClick={startReview}>
               {t('anime.reviewWrite')}
@@ -340,14 +346,12 @@ function ReviewComposeForm({
       }}
     >
       <div className={styles.reviewComposeMain}>
-        <label className={styles.reviewComposeField}>
-          <span>{t('anime.reviewTitleLabel')}</span>
-          <input type="text" value={reviewTitle} onChange={(event) => setReviewTitle(event.target.value)} placeholder={t('anime.reviewTitlePlaceholder')} />
-        </label>
-        <label className={styles.reviewComposeField}>
-          <span>{t('anime.reviewBodyLabel')}</span>
-          <textarea rows={14} value={reviewBody} onChange={(event) => setReviewBody(event.target.value)} placeholder={t('anime.reviewBodyPlaceholder')} />
-        </label>
+        <Field className={styles.reviewComposeField} label={t('anime.reviewTitleLabel')}>
+          <Input className={styles.reviewTitleInput} type="text" value={reviewTitle} onChange={(event) => setReviewTitle(event.target.value)} placeholder={t('anime.reviewTitlePlaceholder')} />
+        </Field>
+        <Field className={styles.reviewComposeField} label={t('anime.reviewBodyLabel')}>
+          <Textarea className={styles.reviewBodyInput} rows={14} value={reviewBody} onChange={(event) => setReviewBody(event.target.value)} placeholder={t('anime.reviewBodyPlaceholder')} />
+        </Field>
       </div>
       <aside className={styles.reviewComposeSidebar}>
         <section className={styles.reviewComposeScore}>
@@ -355,7 +359,8 @@ function ReviewComposeForm({
             <span>
               <small>{t('anime.reviewOverall')}</small>
               <strong>
-                <input
+                <Input
+                  className={styles.reviewScoreInput}
                   type="number"
                   min="1"
                   max="10"
@@ -368,36 +373,35 @@ function ReviewComposeForm({
               </strong>
             </span>
           </div>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              step="1"
+            <Slider
+              min={1}
+              max={10}
+              step={1}
               value={overallScore}
-              onChange={(event) => updateOverallScore(Number(event.target.value))}
+              onChange={updateOverallScore}
               aria-label={t('anime.reviewOverall')}
               tabIndex={-1}
             />
         </section>
         <div className={styles.reviewComposeFlags}>
-          <button
+          <Button
             className={clsx(styles.reviewComposeFlag, recommended ? styles.reviewComposeFlagActive : styles.reviewComposeFlagDanger)}
-            type="button"
+            variant="neutral"
             onClick={() => setRecommended((current) => !current)}
             aria-pressed={recommended}
           >
             <ThumbUpIcon className={clsx(!recommended && styles.reviewThumbDown)} aria-hidden="true" />
             <span>{recommended ? t('anime.reviewRecommended') : t('anime.reviewNotRecommended')}</span>
-          </button>
-          <button
+          </Button>
+          <Button
             className={clsx(styles.reviewComposeFlag, hasSpoilers && styles.reviewComposeFlagWarning)}
-            type="button"
+            variant="neutral"
             onClick={() => setHasSpoilers((current) => !current)}
             aria-pressed={hasSpoilers}
           >
             {hasSpoilers ? <SpoilerWarningIcon aria-hidden="true" /> : <SpoilerOffIcon aria-hidden="true" />}
             <span>{hasSpoilers ? t('anime.reviewHasSpoilers') : t('anime.reviewNoSpoilers')}</span>
-          </button>
+          </Button>
         </div>
         <section className={styles.reviewComposeAspects}>
           {aspects.map((aspect) => (
@@ -405,7 +409,8 @@ function ReviewComposeForm({
               <span>
                 <small>{aspect.label}</small>
                 <strong>
-                  <input
+                  <Input
+                    className={styles.reviewScoreInput}
                     type="number"
                     min="1"
                     max="10"
@@ -419,14 +424,12 @@ function ReviewComposeForm({
                   />
                 </strong>
               </span>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="1"
+              <Slider
+                min={1}
+                max={10}
+                step={1}
                 value={aspectScores[aspect.key]}
-                onChange={(event) => {
-                  const value = Number(event.target.value);
+                onChange={(value) => {
                   setAspectScores((current) => ({ ...current, [aspect.key]: value }));
                 }}
                 aria-label={aspect.label}
@@ -436,8 +439,8 @@ function ReviewComposeForm({
           ))}
         </section>
         <div className={styles.reviewComposeActions}>
-          <button type="button" onClick={onBack}>{t('common.cancel')}</button>
-          <button type="submit" disabled={saving}>{saving ? '...' : t('anime.reviewPublish')}</button>
+          <Button variant="neutral" size="sm" onClick={onBack}>{t('common.cancel')}</Button>
+          <Button variant="tonal" size="sm" type="submit" disabled={saving}>{saving ? '...' : t('anime.reviewPublish')}</Button>
         </div>
       </aside>
     </form>
@@ -587,28 +590,30 @@ function ReviewReactions({ review }: { review: AnimeReview }) {
   return (
     <div className={styles.reviewReactions} aria-label={t('anime.reviewReaction')}>
       <Tooltip label={t('anime.reviewLike')} placement="bottom">
-        <button
+        <Button
           className={clsx(styles.reviewReactionButton, reaction === 'like' && styles.reviewReactionActive)}
-          type="button"
+          variant="neutral"
+          size="sm"
           onClick={() => setReaction((current) => (current === 'like' ? null : 'like'))}
           aria-pressed={reaction === 'like'}
           aria-label={t('anime.reviewLike')}
         >
           <ThumbUpIcon aria-hidden="true" />
           <span>{likes}</span>
-        </button>
+        </Button>
       </Tooltip>
       <Tooltip label={t('anime.reviewDislike')} placement="bottom" align="end">
-        <button
+        <Button
           className={clsx(styles.reviewReactionButton, styles.reviewReactionDislike, reaction === 'dislike' && styles.reviewReactionActive)}
-          type="button"
+          variant="neutral"
+          size="sm"
           onClick={() => setReaction((current) => (current === 'dislike' ? null : 'dislike'))}
           aria-pressed={reaction === 'dislike'}
           aria-label={t('anime.reviewDislike')}
         >
           <ThumbUpIcon aria-hidden="true" />
           <span>{dislikes}</span>
-        </button>
+        </Button>
       </Tooltip>
     </div>
   );

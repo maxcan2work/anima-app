@@ -150,54 +150,6 @@
   gap: var(--space-2);
 }
 
-.stats button {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  align-items: start;
-  gap: var(--space-2);
-  min-height: 92px;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-bold);
-  text-align: left;
-}
-
-.statIcon {
-  justify-self: start;
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-}
-
-.stats button:hover,
-.activeStat {
-  border-color: var(--color-accent-border-strong) !important;
-  background: var(--color-accent-soft) !important;
-}
-
-.stats span {
-  grid-row: 3;
-  align-self: end;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stats strong {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  color: var(--color-text-strong);
-  font-size: var(--font-size-title-lg);
-  line-height: 1;
-}
-
 .friendsSection {
   align-self: start;
   min-height: 0;
@@ -253,18 +205,7 @@
 }
 
 .showAll {
-  min-height: 38px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-black);
-}
-
-.showAll:hover {
-  border-color: var(--color-accent-border-strong);
-  background: var(--color-accent-soft);
+  width: 100%;
 }
 
 .settingsCard {
@@ -798,51 +739,8 @@
   right: 0;
   bottom: 42px;
   z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  max-width: calc(100vw - 40px);
-  padding: 6px;
-  border: 1px solid rgba(242, 192, 99, 0.24);
-  border-radius: 8px;
-  background: rgba(15, 13, 10, 0.94);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
   animation: ratingMenuIn 140ms ease both;
-}
-
-.ratingOption {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 28px;
-  min-width: 24px;
-  min-height: 28px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f4ddae;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.ratingOption:first-child {
-  width: 24px;
-}
-
-.ratingOption:hover,
-.ratingOption:focus-visible,
-.activeRating {
-  border-color: rgba(242, 192, 99, 0.5);
-  background: rgba(242, 192, 99, 0.16);
-  color: #fff7ec;
-}
-
-.ratingOption:disabled {
-  cursor: wait;
-  opacity: 0.72;
 }
 
 .diaryActionButton {

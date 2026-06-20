@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import type { CSSProperties } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import type { AnimeExtendedDetails, AnimeReview, PlayerProviderResult } from '@/api';
 import CalendarIcon from '@assets/calendar.svg?react';
@@ -11,7 +10,7 @@ import WatchTabIcon from '@assets/tv-alt.svg?react';
 import tvIcon from '@assets/tv-alt.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Button, Tooltip } from '@shared/ui';
+import { Button, IconButton, Slider, Tooltip } from '@shared/ui';
 import { AnimeDetailsSections } from './AnimeDetailsSections';
 import type { AnimePageTab, PlayerProvider, WatchState } from './AnimeHero.types';
 import { PlayerProviderSelect, WatchSources, WatchStatusSelect } from './AnimePlayerControls';
@@ -92,32 +91,24 @@ export function AnimeDiaryPanel({
       </div>
       <section className={styles.diaryField}>
         <h3>{t('anime.diaryScore')}</h3>
-        <div
-          className={styles.diaryScoreRange}
-          style={{
-            '--score-progress': `${((diaryScore ?? 0) / 10) * 100}%`,
-            '--score-thumb-position': `${((diaryScore ?? 0) / 10) * 100}%`,
-          } as CSSProperties}
-        >
+        <div className={styles.diaryScoreRange}>
           <span className={styles.diaryScoreHeader}>
             <span>
               <img src={starIcon} alt="" aria-hidden="true" />
               {diaryScore == null ? t('common.none') : `${diaryScore}/10`}
             </span>
-            <button type="button" onClick={onSave} disabled={saving || status === 'none'}>
+            <Button variant="neutral" size="sm" onClick={onSave} disabled={saving || status === 'none'}>
               {saving ? '...' : t('anime.diarySave')}
-            </button>
+            </Button>
           </span>
           <span className={styles.diaryScoreRangeTrack}>
-            <input
-              type="range"
-              min="0"
-              max="10"
-              step="1"
+            <Slider
+              min={0}
+              max={10}
+              step={1}
               value={diaryScore ?? 0}
               aria-label={t('anime.diaryScore')}
-              onChange={(event) => {
-                const score = Number(event.target.value);
+              onChange={(score) => {
                 onScoreChange(score > 0 ? score : null);
               }}
             />
@@ -254,14 +245,14 @@ export function AnimeWatchPanel({
 
       <div className={styles.watchTools}>
         <PlayerProviderSelect players={players} value={activeProviderName} onChange={onProviderChange} />
-        <button
-          className={clsx(styles.reviewsToggle, showReviews && styles.reviewsToggleActive)}
-          type="button"
+        <Button
+          className={styles.reviewsToggle}
+          variant={showReviews ? 'tonal' : 'neutral'}
           onClick={onToggleReviews}
           aria-pressed={showReviews}
         >
           {showReviews ? t('anime.backToPlayer') : t('anime.reviewsButton', { count: reviewsCount })}
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -285,15 +276,15 @@ export function AnimeLocalTabs({
     <div className={styles.localTabs} aria-label={t('anime.localNavigation')}>
       {pageTabs.map((tab) => (
         <Tooltip key={tab.value} label={tab.label} placement="top">
-          <button
-            className={activeTab === tab.value ? styles.localTabActive : undefined}
-            type="button"
+          <IconButton
+            className={styles.localTabButton}
+            active={activeTab === tab.value}
             onClick={() => onChange(tab.value)}
             aria-label={tab.label}
             aria-pressed={activeTab === tab.value}
           >
             <tab.Icon aria-hidden="true" />
-          </button>
+          </IconButton>
         </Tooltip>
       ))}
     </div>
