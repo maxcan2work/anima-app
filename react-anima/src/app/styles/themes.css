@@ -1,14 +1,46 @@
 :root,
 [data-theme="dark"] {
+  /* Text */
   --color-text-primary: #f5f1e8;
   --color-text-strong: #fffaf2;
+  --color-text-secondary: #cfc7ba;
   --color-text-muted: #aaa196;
+  --color-text-subtle: #8f897f;
+  --color-text-on-solid: #ffffff;
+
+  /* Brand and states */
   --color-accent: #f2c063;
+  --color-accent-text: #f0d3a1;
+  --color-accent-hover: #ffcf75;
   --color-accent-soft: rgba(242, 192, 99, 0.14);
+  --color-accent-soft-hover: rgba(242, 192, 99, 0.2);
+  --color-accent-border: rgba(242, 192, 99, 0.36);
+  --color-accent-border-strong: rgba(242, 192, 99, 0.54);
   --color-danger: #d94d38;
+  --color-danger-hover: #e25640;
+  --color-danger-text: #ef8f88;
+  --color-danger-soft: rgba(217, 77, 56, 0.1);
+  --color-danger-border: rgba(217, 77, 56, 0.35);
+  --color-success: #4caf71;
+  --color-warning: #f5a524;
   --color-discord: #5865f2;
+
+  /* Surfaces and borders */
+  --color-page-bg: #121413;
+  --color-surface-subtle: rgba(255, 255, 255, 0.03);
+  --color-surface-control: rgba(255, 255, 255, 0.04);
   --color-surface: rgba(255, 255, 255, 0.05);
   --color-surface-strong: rgba(255, 255, 255, 0.08);
+  --color-surface-elevated: rgba(24, 24, 22, 0.98);
+  --color-surface-overlay: rgba(20, 22, 21, 0.96);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
   --color-border: rgba(255, 255, 255, 0.1);
-  --color-page-bg: #121413;
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-backdrop: rgba(5, 6, 6, 0.68);
+  --color-focus-ring: rgba(242, 192, 99, 0.72);
+
+  /* Scrollbars */
+  --color-scrollbar-track: rgba(255, 255, 255, 0.05);
+  --color-scrollbar-thumb: rgba(242, 192, 99, 0.42);
+  --color-scrollbar-thumb-hover: rgba(242, 192, 99, 0.68);
 }

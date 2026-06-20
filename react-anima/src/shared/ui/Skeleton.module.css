@@ -1,0 +1,26 @@
+.skeleton {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(90deg, transparent, var(--color-surface-strong), transparent),
+    var(--color-surface-control);
+  background-size: 220% 100%, 100% 100%;
+  animation: skeletonSweep 1.15s linear infinite;
+}
+
+.rounded {
+  border-radius: var(--radius-pill);
+}
+
+@keyframes skeletonSweep {
+  from { background-position: 220% 0, 0 0; }
+  to { background-position: -220% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

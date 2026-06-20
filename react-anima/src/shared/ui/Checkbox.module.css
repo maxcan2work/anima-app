@@ -1,0 +1,92 @@
+.checkbox {
+  display: grid;
+  position: relative;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--control-height-sm);
+  padding: 0 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-black);
+}
+
+.checkbox input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.indicator {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: 5px;
+  background: var(--color-surface-control);
+  transition:
+    border-color var(--duration-normal) var(--ease-standard),
+    background var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard);
+}
+
+.indicator::after {
+  width: 8px;
+  height: 4px;
+  border-bottom: 2px solid var(--color-page-bg);
+  border-left: 2px solid var(--color-page-bg);
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg) scale(0.72);
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+  content: '';
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkbox:hover,
+.checkbox:has(input:checked) {
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+.checkbox:hover .indicator {
+  transform: scale(1.04);
+}
+
+.checkbox:has(input:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.checkbox:has(input:checked) .indicator {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.checkbox:has(input:checked) .indicator::after {
+  opacity: 1;
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.checkbox:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

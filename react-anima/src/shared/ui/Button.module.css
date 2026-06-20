@@ -3,30 +3,30 @@
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 8px;
-  color: white;
+  border-radius: var(--radius-md);
+  color: var(--color-text-on-solid);
   font: inherit;
   line-height: 1;
   cursor: pointer;
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    opacity 160ms ease,
-    transform 160ms ease;
+    background var(--duration-normal) var(--ease-standard),
+    border-color var(--duration-normal) var(--ease-standard),
+    opacity var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard);
 }
 
 .md {
-  min-height: 42px;
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 900;
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-black);
 }
 
 .sm {
-  min-height: 38px;
-  padding: 0 14px;
-  font-size: 13px;
-  font-weight: 900;
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-black);
 }
 
 .button:hover:not(:disabled),
@@ -39,24 +39,49 @@
   opacity: 0.58;
 }
 
-.primary {
+.danger {
   border-color: transparent;
-  background: #d94d38;
+  background: var(--color-danger);
 }
 
-.primary:hover:not(:disabled),
-.primary:focus-visible:not(:disabled) {
-  background: #e25640;
+.danger:hover:not(:disabled),
+.danger:focus-visible:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+.accent {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent);
+  color: var(--color-page-bg);
+}
+
+.accent:hover:not(:disabled),
+.accent:focus-visible:not(:disabled) {
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-hover);
 }
 
 .tonal {
-  border-color: rgba(242, 192, 99, 0.36);
-  background: rgba(242, 192, 99, 0.14);
-  color: #fff7ec;
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+  color: var(--color-text-strong);
+}
+
+.neutral {
+  border-color: var(--color-border-subtle);
+  background: var(--color-surface-control);
+  color: var(--color-text-secondary);
+}
+
+.neutral:hover:not(:disabled),
+.neutral:focus-visible:not(:disabled) {
+  border-color: var(--color-border);
+  background: var(--color-surface-strong);
+  color: var(--color-text-primary);
 }
 
 .tonal:hover:not(:disabled),
 .tonal:focus-visible:not(:disabled) {
-  border-color: rgba(242, 192, 99, 0.54);
-  background: rgba(242, 192, 99, 0.2);
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft-hover);
 }

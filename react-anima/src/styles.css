@@ -1,8 +1,8 @@
 .eyebrow {
   margin: 0 0 6px;
   color: #ef9d73;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
 }
 
@@ -22,8 +22,8 @@ input[type="search"]::-webkit-search-results-decoration {
 
 h1 {
   margin-bottom: 0;
-  font-size: 34px;
-  line-height: 1;
+  font-size: var(--font-size-page-title);
+  line-height: var(--line-height-tight);
 }
 
 @media (max-width: 700px) {

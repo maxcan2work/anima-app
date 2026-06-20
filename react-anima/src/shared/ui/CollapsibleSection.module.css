@@ -1,0 +1,103 @@
+.section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--control-icon-md);
+  align-items: center;
+  width: 100%;
+  min-height: var(--control-height-sm);
+  padding: 3px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-title-sm);
+  font-weight: var(--font-weight-black);
+  text-align: left;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.title > span:first-child {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-black);
+  line-height: 1;
+}
+
+.header:hover {
+  color: var(--color-accent-text);
+  transform: none !important;
+}
+
+.chevron {
+  justify-self: end;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.75;
+  transform: rotate(45deg);
+  transition:
+    opacity var(--duration-normal) var(--ease-standard),
+    transform var(--duration-normal) var(--ease-standard);
+}
+
+.header[aria-expanded='false'] .chevron {
+  transform: rotate(225deg);
+}
+
+.body {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-width: 0;
+  margin: -4px;
+  padding: 4px;
+  overflow: visible;
+  opacity: 1;
+  transition:
+    grid-template-rows var(--duration-slow) var(--ease-standard),
+    opacity var(--duration-normal) var(--ease-standard);
+}
+
+.body[data-collapsed='true'] {
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.bodyInner {
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+
+.body[data-collapsed='true'] .bodyInner {
+  overflow: hidden;
+}

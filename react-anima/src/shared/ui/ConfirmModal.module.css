@@ -4,31 +4,31 @@
   z-index: 120;
   display: grid;
   place-items: center;
-  padding: 24px;
-  background: rgba(5, 6, 6, 0.68);
+  padding: var(--space-6);
+  background: var(--color-backdrop);
   backdrop-filter: blur(8px);
-  animation: backdropIn 140ms ease-out both;
+  animation: backdropIn var(--duration-fast) var(--ease-enter) both;
 }
 
 .backdropClosing {
   pointer-events: none;
-  animation: backdropOut 140ms ease-in both;
+  animation: backdropOut var(--duration-fast) var(--ease-exit) both;
 }
 
 .modal {
   display: grid;
-  gap: 14px;
+  gap: var(--space-4);
   width: min(420px, 100%);
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(24, 24, 22, 0.98);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
-  animation: modalPop 160ms ease-out both;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+  box-shadow: var(--shadow-overlay);
+  animation: modalPop var(--duration-normal) var(--ease-enter) both;
 }
 
 .backdropClosing .modal {
-  animation: modalPopOut 140ms ease-in both;
+  animation: modalPopOut var(--duration-fast) var(--ease-exit) both;
 }
 
 .modal h3,
@@ -37,49 +37,52 @@
 }
 
 .modal h3 {
-  color: #fff7ec;
-  font-size: 22px;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-title-lg);
+  line-height: var(--line-height-tight);
 }
 
 .modal p {
-  color: #cfc7ba;
-  line-height: 1.55;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
 }
 
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 4px;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
 }
 
 .textButton,
 .dangerButton,
 .primaryButton {
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-3);
   border: 0;
-  border-radius: 8px;
-  font-weight: 900;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-black);
 }
 
 .textButton {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fffaf2;
-  font-weight: 800;
+  background: var(--color-surface-strong);
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-bold);
 }
 
 .dangerButton {
-  background: #d94d38;
-  color: white;
+  background: var(--color-danger);
+  color: var(--color-text-on-solid);
 }
 
 .dangerButton:hover {
-  background: #e15843;
+  background: var(--color-danger-hover);
 }
 
 .primaryButton {
-  background: #f5a524;
+  background: var(--color-warning);
   color: #191713;
 }
 
