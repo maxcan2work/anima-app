@@ -1,9 +1,9 @@
-import CopyIcon from '@assets/copy.svg?react';
 import LeaveRoomIcon from '@assets/leave-room.svg?react';
 import SettingsIcon from '@assets/settings.svg?react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { IconButton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
+import { WatchPartyCodeButton } from './WatchPartyCodeButton';
 import styles from './WatchPartyRoomActions.module.css';
 
 export function WatchPartyRoomActions({
@@ -27,10 +27,7 @@ export function WatchPartyRoomActions({
 
   return (
     <div className={`${styles.row} ${onToggleSettings ? styles.withSettings : ''}`}>
-      <button className={styles.code} type="button" onClick={handleCopyCode}>
-        <span>{code}</span>
-        <CopyIcon aria-hidden="true" />
-      </button>
+      <WatchPartyCodeButton code={code} onCopy={handleCopyCode} />
       {onToggleSettings ? (
         <Tooltip label={t('watchParty.roomSettings')} placement="top">
           <IconButton active={settingsActive} onClick={onToggleSettings} aria-pressed={settingsActive}>

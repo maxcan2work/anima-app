@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { useConfirmModal } from '@shared/ui/ModalProvider';
-import { Button, Field, InputField, SectionHeader, SegmentedControl, Toggle } from '@shared/ui';
+import { Button, Field, InputField, RangeSlider, SectionHeader, SegmentedControl, Toggle } from '@shared/ui';
 import type { WatchPartyPermission, WatchPartyRoomSettings } from './types';
 import styles from './WatchPartyRoomSettings.module.css';
 
@@ -70,16 +70,13 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
           />
 
           <Field label={t('watchParty.participantLimit')}>
-            <div className={styles.limit}>
-              <input
-                type="range"
+            <RangeSlider
                 min={Math.max(2, participantCount)}
                 max={16}
                 value={draft.maxParticipants}
-                onChange={(event) => setValue('maxParticipants', Number(event.target.value))}
+                formatValue={String}
+                onChange={(value) => setValue('maxParticipants', value)}
               />
-              <strong>{draft.maxParticipants}</strong>
-            </div>
           </Field>
 
           <Field label={t('watchParty.visibility')}>

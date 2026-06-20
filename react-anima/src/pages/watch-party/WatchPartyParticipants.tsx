@@ -1,7 +1,7 @@
 import crownIcon from '@assets/crown.svg';
 import kickIcon from '@assets/kick.svg';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Tooltip } from '@shared/ui';
+import { IconButton, Tooltip } from '@shared/ui';
 import type { WatchPartyParticipant } from './types';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
 import styles from './WatchPartyParticipants.module.css';
@@ -51,13 +51,14 @@ export function WatchPartyParticipants({
                 </Tooltip>
               ) : null}
               {canKick && !participant.isHost && participant.id !== ownParticipantId ? (
-                <button
-                  type="button"
+                <IconButton
+                  className={styles.kickButton}
+                  size="xs"
                   onClick={() => onKickParticipant(participant.id)}
                   aria-label={t('watchParty.kickParticipant', { name: participant.name })}
                 >
                   <img src={kickIcon} alt="" aria-hidden="true" />
-                </button>
+                </IconButton>
               ) : null}
             </span>
           </div>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import CopyIcon from '@assets/copy.svg?react';
 import FiltersIcon from '@assets/filters.svg?react';
 import GroupIcon from '@assets/circled-group.svg?react';
 import LeaveIcon from '@assets/leave-room.svg?react';
@@ -7,9 +6,10 @@ import SettingsIcon from '@assets/settings.svg?react';
 import { CatalogFiltersPanel } from '@features/catalog/CatalogFiltersPanel';
 import type { CatalogBrowseFilters, CatalogBrowseOrder } from '@hooks/useCatalogBrowse';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Tooltip } from '@shared/ui';
+import { IconButton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import type { WatchPartyParticipant, WatchPartyRoomSettings as RoomSettings } from './types';
+import { WatchPartyCodeButton } from './WatchPartyCodeButton';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
 import { WatchPartyRoomSettings } from './WatchPartyRoomSettings';
 import styles from './WatchPartySelectionSidebar.module.css';
@@ -94,33 +94,30 @@ export function WatchPartySelectionSidebar({
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.code} type="button" onClick={copyCode}>
-          <span>{code}</span>
-          <CopyIcon aria-hidden="true" />
-        </button>
+        <WatchPartyCodeButton code={code} onCopy={copyCode} />
 
         <div className={canBrowse ? styles.tabsHost : styles.tabs}>
           <Tooltip label={t('watchParty.participants')} placement="top">
-            <button className={tab === 'participants' ? styles.activeTab : undefined} type="button" onClick={() => setTab('participants')} aria-pressed={tab === 'participants'}>
+            <IconButton className={styles.tabButton} active={tab === 'participants'} onClick={() => setTab('participants')} aria-pressed={tab === 'participants'}>
               <GroupIcon aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
           <Tooltip label={t('catalog.controls')} placement="top">
-            <button className={tab === 'filters' ? styles.activeTab : undefined} type="button" onClick={() => setTab('filters')} disabled={!canBrowse} aria-pressed={tab === 'filters'}>
+            <IconButton className={styles.tabButton} active={tab === 'filters'} onClick={() => setTab('filters')} disabled={!canBrowse} aria-pressed={tab === 'filters'}>
               <FiltersIcon aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
           {canBrowse ? (
             <Tooltip label={t('watchParty.roomSettings')} placement="top">
-              <button className={tab === 'settings' ? styles.activeTab : undefined} type="button" onClick={() => setTab('settings')} aria-pressed={tab === 'settings'}>
+              <IconButton className={styles.tabButton} active={tab === 'settings'} onClick={() => setTab('settings')} aria-pressed={tab === 'settings'}>
                 <SettingsIcon aria-hidden="true" />
-              </button>
+              </IconButton>
             </Tooltip>
           ) : null}
           <Tooltip label={t('watchParty.leaveRoom')} placement="top" align="end">
-            <button type="button" onClick={onLeaveRoom}>
+            <IconButton className={styles.tabButton} onClick={onLeaveRoom}>
               <LeaveIcon aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
         </div>
       </div>

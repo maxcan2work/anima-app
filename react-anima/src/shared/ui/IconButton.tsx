@@ -4,7 +4,7 @@ import styles from './IconButton.module.css';
 
 type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   active?: boolean;
 };
 

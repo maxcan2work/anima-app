@@ -89,7 +89,7 @@
 }
 
 .hostBadge,
-.actions button {
+.kickButton {
   display: grid;
   place-items: center;
   width: 28px;
@@ -110,16 +110,7 @@
   flex: 0 0 auto;
 }
 
-.actions button {
-  background: var(--color-surface-control);
-}
-
-.actions button:hover {
-  border-color: var(--color-accent-border-strong);
-  background: var(--color-accent-soft);
-}
-
-.actions button img {
+.kickButton img {
   width: 16px;
   height: 16px;
 }

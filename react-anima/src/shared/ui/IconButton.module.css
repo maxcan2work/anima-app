@@ -8,6 +8,11 @@
   color: var(--color-text-primary);
 }
 
+.xs {
+  width: var(--control-height-xs);
+  height: var(--control-height-xs);
+}
+
 .sm {
   width: var(--control-height-sm);
   height: var(--control-height-sm);
@@ -39,6 +44,12 @@
 .button img {
   width: var(--control-icon-lg);
   height: var(--control-icon-lg);
+}
+
+.xs svg,
+.xs img {
+  width: var(--control-icon-sm);
+  height: var(--control-icon-sm);
 }
 
 .sm svg,
