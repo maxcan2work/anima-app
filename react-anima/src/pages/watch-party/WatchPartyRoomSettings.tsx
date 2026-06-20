@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { useConfirmModal } from '@shared/ui/ModalProvider';
+import { Button, Field, InputField, SectionHeader, SegmentedControl, Toggle } from '@shared/ui';
 import type { WatchPartyPermission, WatchPartyRoomSettings } from './types';
 import styles from './WatchPartyRoomSettings.module.css';
 
@@ -56,25 +57,19 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
 
   return (
     <section className={styles.settings}>
-      <header className={styles.header}>
-        <h3>{t('watchParty.roomSettings')}</h3>
-        <p>{t('watchParty.roomSettingsDescription')}</p>
-      </header>
+      <SectionHeader title={t('watchParty.roomSettings')} description={t('watchParty.roomSettingsDescription')} />
 
       <div className={styles.scroll}>
         <SettingsSection title={t('watchParty.settingsGeneral')}>
-          <label className={styles.field}>
-            <span>{t('watchParty.roomName')}</span>
-            <input
-              value={draft.name}
-              maxLength={48}
-              placeholder={t('watchParty.roomNamePlaceholder')}
-              onChange={(event) => setValue('name', event.target.value)}
-            />
-          </label>
+          <InputField
+            label={t('watchParty.roomName')}
+            value={draft.name}
+            maxLength={48}
+            placeholder={t('watchParty.roomNamePlaceholder')}
+            onChange={(event) => setValue('name', event.target.value)}
+          />
 
-          <label className={styles.field}>
-            <span>{t('watchParty.participantLimit')}</span>
+          <Field label={t('watchParty.participantLimit')}>
             <div className={styles.limit}>
               <input
                 type="range"
@@ -85,17 +80,18 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
               />
               <strong>{draft.maxParticipants}</strong>
             </div>
-          </label>
+          </Field>
 
-          <Segmented
-            label={t('watchParty.visibility')}
-            value={draft.visibility}
-            options={[
-              { value: 'code', label: t('watchParty.visibilityCode') },
-              { value: 'public', label: t('watchParty.visibilityPublic') },
-            ]}
-            onChange={(value) => setValue('visibility', value as WatchPartyRoomSettings['visibility'])}
-          />
+          <Field label={t('watchParty.visibility')}>
+            <SegmentedControl
+              value={draft.visibility}
+              options={[
+                { value: 'code', label: t('watchParty.visibilityCode') },
+                { value: 'public', label: t('watchParty.visibilityPublic') },
+              ]}
+              onChange={(value) => setValue('visibility', value)}
+            />
+          </Field>
 
           <Toggle
             checked={passwordEnabled}
@@ -103,16 +99,14 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
             onChange={setPasswordEnabled}
           />
           {passwordEnabled ? (
-            <label className={styles.field}>
-              <span>{settings.passwordProtected ? t('watchParty.newPassword') : t('watchParty.password')}</span>
-              <input
-                type="password"
-                value={password}
-                maxLength={128}
-                placeholder={settings.passwordProtected ? t('watchParty.passwordUnchanged') : t('watchParty.passwordPlaceholder')}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
+            <InputField
+              label={settings.passwordProtected ? t('watchParty.newPassword') : t('watchParty.password')}
+              type="password"
+              value={password}
+              maxLength={128}
+              placeholder={settings.passwordProtected ? t('watchParty.passwordUnchanged') : t('watchParty.passwordPlaceholder')}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           ) : null}
         </SettingsSection>
 
@@ -130,8 +124,8 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
       </div>
 
       <div className={styles.actions}>
-        <button className={styles.close} type="button" onClick={handleClose}>{t('watchParty.closeRoom')}</button>
-        <button className={styles.save} type="button" disabled={!dirty} onClick={handleSave}>{t('common.save')}</button>
+        <Button type="button" variant="danger" onClick={handleClose}>{t('watchParty.closeRoom')}</Button>
+        <Button type="button" variant="tonal" disabled={!dirty} onClick={handleSave}>{t('common.save')}</Button>
       </div>
     </section>
   );
@@ -140,7 +134,7 @@ export function WatchPartyRoomSettings({ settings, participantCount, onSave, onC
 function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className={styles.section}>
-      <h4>{title}</h4>
+      <SectionHeader title={title} level="subsection" />
       <div className={styles.sectionContent}>{children}</div>
     </section>
   );
@@ -149,45 +143,15 @@ function SettingsSection({ title, children }: { title: string; children: ReactNo
 function PermissionControl({ label, value, onChange }: { label: string; value: WatchPartyPermission; onChange: (value: WatchPartyPermission) => void }) {
   const { t } = useI18n();
   return (
-    <Segmented
-      label={label}
-      value={value}
-      options={[
-        { value: 'host', label: t('watchParty.onlyHost') },
-        { value: 'everyone', label: t('watchParty.everyone') },
-      ]}
-      onChange={(next) => onChange(next as WatchPartyPermission)}
-    />
-  );
-}
-
-function Segmented({ label, value, options, onChange }: { label: string; value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void }) {
-  return (
-    <div className={styles.control}>
-      <span>{label}</span>
-      <div className={styles.segmented}>
-        {options.map((option) => (
-          <button
-            className={value === option.value ? styles.selected : undefined}
-            type="button"
-            key={option.value}
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Toggle({ checked, label, onChange }: { checked: boolean; label: string; onChange: (value: boolean) => void }) {
-  return (
-    <button className={styles.toggleRow} type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}>
-      <span>{label}</span>
-      <span className={styles.toggle} aria-hidden="true">
-        <span />
-      </span>
-    </button>
+    <Field label={label}>
+      <SegmentedControl
+        value={value}
+        options={[
+          { value: 'host', label: t('watchParty.onlyHost') },
+          { value: 'everyone', label: t('watchParty.everyone') },
+        ]}
+        onChange={onChange}
+      />
+    </Field>
   );
 }

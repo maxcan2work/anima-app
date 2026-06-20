@@ -3,6 +3,7 @@ import { checkWatchPartyRoom, getPublicWatchPartyRooms, type PublicWatchPartyRoo
 import WatchPartyIcon from '@assets/watch-party.svg?react';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { normalizeWatchPartyCode } from '@shared/navigation';
+import { Button, Input } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './WatchPartyEntry.module.css';
 
@@ -94,9 +95,9 @@ export function WatchPartyEntry({
           <section className={styles.option}>
             <h3>{t('watchParty.createTitle')}</h3>
             <p>{t('watchParty.createDescription')}</p>
-            <button className={styles.createButton} type="button" onClick={onCreateRoom}>
+            <Button className={styles.createButton} onClick={onCreateRoom}>
               {t('watchParty.createAction')}
-            </button>
+            </Button>
           </section>
 
           <div className={styles.divider} aria-hidden="true">
@@ -107,14 +108,14 @@ export function WatchPartyEntry({
             <h3>{t('watchParty.joinTitle')}</h3>
             <p>{t('watchParty.joinDescription')}</p>
             <form className={styles.join} onSubmit={handleJoinRoom}>
-              <input
+              <Input
                 value={joinCode}
                 onChange={(event) => setJoinCode(event.target.value)}
                 placeholder={t('watchParty.roomCode')}
                 maxLength={12}
               />
               {requiresPassword ? (
-                <input
+                <Input
                   type="password"
                   value={password}
                   autoFocus
@@ -122,9 +123,9 @@ export function WatchPartyEntry({
                   onChange={(event) => setPassword(event.target.value)}
                 />
               ) : null}
-              <button type="submit" disabled={!normalizeWatchPartyCode(joinCode)} aria-busy={joinChecking}>
+              <Button type="submit" variant="neutral" disabled={!normalizeWatchPartyCode(joinCode)} aria-busy={joinChecking}>
                 {t('watchParty.joinAction')}
-              </button>
+              </Button>
             </form>
           </section>
         </div>

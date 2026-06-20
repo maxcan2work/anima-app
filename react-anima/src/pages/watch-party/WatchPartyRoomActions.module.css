@@ -1,27 +1,27 @@
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--ui-row-height);
-  gap: var(--ui-grid-gap);
+  grid-template-columns: minmax(0, 1fr) var(--sidebar-row-height);
+  gap: var(--sidebar-gap);
   align-items: stretch;
   margin-top: auto;
 }
 
 .withSettings {
-  grid-template-columns: minmax(0, 1fr) repeat(2, var(--ui-row-height));
+  grid-template-columns: minmax(0, 1fr) repeat(2, var(--sidebar-row-height));
 }
 
 .code {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22px;
   align-items: center;
-  gap: var(--ui-grid-gap);
-  min-height: var(--ui-row-height);
+  gap: var(--sidebar-gap);
+  min-height: var(--sidebar-row-height);
   margin-top: 0;
-  border: 1px solid rgba(201, 166, 109, 0.24);
-  border-radius: var(--ui-radius);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: inherit;
-  padding: var(--ui-row-padding) 10px var(--ui-row-padding) 12px;
+  padding: var(--sidebar-row-padding) 10px var(--sidebar-row-padding) var(--space-3);
   text-align: left;
 }
 
@@ -30,43 +30,20 @@
   overflow: hidden;
   padding: 0;
   background: transparent;
-  color: #f0d3a1;
-  font-size: 20px;
-  font-weight: 900;
+  color: var(--color-accent-text);
+  font-size: var(--font-size-title-lg);
+  font-weight: var(--font-weight-black);
   letter-spacing: 0.06em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .code svg {
-  width: 22px;
-  height: 22px;
+  width: var(--control-icon-md);
+  height: var(--control-icon-md);
 }
 
 .code:hover {
-  border-color: rgba(201, 166, 109, 0.52);
-  background: rgba(201, 166, 109, 0.1);
-}
-
-.row > span button {
-  display: grid;
-  place-items: center;
-  width: var(--ui-row-height);
-  min-height: var(--ui-row-height);
-  padding: var(--ui-row-padding);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--ui-radius);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f1e7dc;
-}
-
-.row > span button:hover,
-.row > span .active {
-  border-color: rgba(201, 166, 109, 0.42);
-  background: rgba(201, 166, 109, 0.1);
-}
-
-.row > span svg {
-  width: 24px;
-  height: 24px;
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft);
 }

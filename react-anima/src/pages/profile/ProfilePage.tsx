@@ -24,7 +24,7 @@ import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import { animeRouteSlug } from '@shared/navigation';
-import { Tooltip } from '@shared/ui/Tooltip';
+import { Button, IconButton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
@@ -767,14 +767,14 @@ function ShikimoriIntegration() {
         </a>
         <div className={styles.connectedActions}>
           <Tooltip className={styles.iconTooltip} label={importing ? t('profile.shikimori.importing') : t('profile.shikimori.importList')} placement="top">
-            <button className={styles.iconButton} type="button" onClick={handleImport} disabled={importing}>
+            <IconButton className={styles.iconButton} size="md" onClick={handleImport} disabled={importing}>
               {importing ? <span className={styles.buttonLoader} aria-hidden="true" /> : <img src={importIcon} alt="" aria-hidden="true" />}
-            </button>
+            </IconButton>
           </Tooltip>
           <Tooltip className={styles.iconTooltip} label={disconnecting ? t('profile.shikimori.disconnecting') : t('profile.shikimori.disconnect')} placement="top" align="end">
-            <button className={styles.iconButton} type="button" onClick={handleDisconnect} disabled={disconnecting}>
+            <IconButton className={styles.iconButton} size="md" onClick={handleDisconnect} disabled={disconnecting}>
               <img src={detachIcon} alt="" aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
         </div>
       </div>
@@ -784,9 +784,9 @@ function ShikimoriIntegration() {
   return (
     <div className={styles.integrationEmpty}>
       <p>{t('profile.shikimori.empty')}</p>
-      <button className={styles.connectButton} type="button" onClick={connectShikimori} disabled={!canConnect}>
+      <Button className={styles.connectButton} onClick={connectShikimori} disabled={!canConnect}>
         {canConnect ? t('profile.shikimori.connect') : t('profile.shikimori.needLogin')}
-      </button>
+      </Button>
     </div>
   );
 }

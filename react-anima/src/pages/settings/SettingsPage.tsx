@@ -4,6 +4,7 @@ import flagJaIcon from '@assets/flag-ja.svg';
 import flagRuIcon from '@assets/flag-ru.svg';
 import settingsIcon from '@assets/settings.svg';
 import { APP_LANGUAGES, useI18n, type AppLanguage } from '@shared/i18n/I18nProvider';
+import { Button, SectionHeader } from '@shared/ui';
 import styles from './SettingsPage.module.css';
 
 const LANGUAGE_FLAG_ICONS: Record<AppLanguage, string> = {
@@ -29,35 +30,35 @@ export function SettingsPage() {
       </header>
 
       <section className={styles.panel}>
-        <div>
-          <h3>{t('settings.theme')}</h3>
-          <p>{t('settings.themeDescription')}</p>
-        </div>
-        <button type="button" disabled>
-          {t('common.soon')}
-        </button>
+        <SectionHeader
+          title={t('settings.theme')}
+          description={t('settings.themeDescription')}
+          action={<Button variant="neutral" disabled>{t('common.soon')}</Button>}
+        />
       </section>
 
       <section className={styles.panel}>
-        <div>
-          <h3>{t('settings.language')}</h3>
-          <p>{t('settings.languageDescription')}</p>
-        </div>
-        <div className={styles.languageList} aria-label={t('settings.language')}>
-          {APP_LANGUAGES.map((item) => (
-            <button
-              key={item.value}
-              className={clsx(styles.languageButton, language === item.value && styles.languageButtonActive)}
-              type="button"
-              aria-label={item.nativeLabel}
-              aria-pressed={language === item.value}
-              title={item.nativeLabel}
-              onClick={() => setLanguage(item.value)}
-            >
-              <img src={LANGUAGE_FLAG_ICONS[item.value]} alt="" aria-hidden="true" />
-            </button>
-          ))}
-        </div>
+        <SectionHeader
+          title={t('settings.language')}
+          description={t('settings.languageDescription')}
+          action={(
+            <div className={styles.languageList} aria-label={t('settings.language')}>
+              {APP_LANGUAGES.map((item) => (
+                <button
+                  key={item.value}
+                  className={clsx(styles.languageButton, language === item.value && styles.languageButtonActive)}
+                  type="button"
+                  aria-label={item.nativeLabel}
+                  aria-pressed={language === item.value}
+                  title={item.nativeLabel}
+                  onClick={() => setLanguage(item.value)}
+                >
+                  <img src={LANGUAGE_FLAG_ICONS[item.value]} alt="" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          )}
+        />
       </section>
     </section>
   );

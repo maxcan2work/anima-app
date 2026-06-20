@@ -9,7 +9,7 @@ import volumeMediumIcon from '@assets/volume-medium.svg';
 import volumeMutedIcon from '@assets/volume-muted.svg';
 import type { AnimeTitle } from '@/data';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Tooltip } from '@shared/ui/Tooltip';
+import { Tooltip } from '@shared/ui';
 import styles from './ControlledVideoPlayer.module.css';
 
 export type PlaybackSyncState = {

@@ -1,7 +1,7 @@
 import crownIcon from '@assets/crown.svg';
 import kickIcon from '@assets/kick.svg';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Tooltip } from '@shared/ui/Tooltip';
+import { Tooltip } from '@shared/ui';
 import type { WatchPartyParticipant } from './types';
 import { WatchPartyRoomActions } from './WatchPartyRoomActions';
 import styles from './WatchPartyParticipants.module.css';

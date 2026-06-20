@@ -1,24 +1,28 @@
 .title {
-  margin: 0 0 8px;
-  font-size: 18px;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-strong);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-black);
+  line-height: var(--line-height-tight);
 }
 
 .status {
   flex: 0 0 auto;
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-body);
 }
 
 .members {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 10px;
-  scrollbar-color: rgba(201, 166, 109, 0.48) rgba(255, 255, 255, 0.05);
+  padding-right: var(--space-2);
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
   scrollbar-width: thin;
 }
 
@@ -28,33 +32,33 @@
 
 .members::-webkit-scrollbar-track {
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-scrollbar-track);
 }
 
 .members::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(201, 166, 109, 0.48);
+  background: var(--color-scrollbar-thumb);
 }
 
 .members::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 166, 109, 0.72);
+  background: var(--color-scrollbar-thumb-hover);
 }
 
 .member {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-2) 10px;
 }
 
 .member > img,
 .avatarFallback {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   flex: 0 0 auto;
 }
 
@@ -63,21 +67,23 @@
   place-items: center;
   background: var(--color-discord);
   color: white;
-  font-weight: 900;
+  font-weight: var(--font-weight-black);
   text-transform: uppercase;
 }
 
 .member strong {
   min-width: 0;
   overflow: hidden;
-  color: #f1e7dc;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-bold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .actions {
   display: flex;
-  gap: 6px;
+  gap: var(--space-1);
   align-items: center;
   justify-content: end;
 }
@@ -89,13 +95,13 @@
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 7px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
 }
 
 .hostBadge {
-  border: 1px solid rgba(201, 166, 109, 0.36);
-  background: rgba(201, 166, 109, 0.14);
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
 }
 
 .hostIcon {
@@ -105,12 +111,12 @@
 }
 
 .actions button {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface-control);
 }
 
 .actions button:hover {
-  border-color: rgba(201, 166, 109, 0.42);
-  background: rgba(201, 166, 109, 0.1);
+  border-color: var(--color-accent-border-strong);
+  background: var(--color-accent-soft);
 }
 
 .actions button img {

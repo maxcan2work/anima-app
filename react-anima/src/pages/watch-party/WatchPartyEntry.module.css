@@ -7,7 +7,7 @@
 .entry {
   display: grid;
   justify-items: center;
-  gap: 14px;
+  gap: var(--space-4);
   width: min(100%, 920px);
   margin: 0 auto;
   text-align: center;
@@ -16,7 +16,7 @@
 .header {
   display: grid;
   justify-items: center;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .header h2 {
@@ -30,17 +30,17 @@
 .icon {
   width: 92px;
   height: 92px;
-  border-radius: 24px;
-  background: rgba(201, 166, 109, 0.12);
-  color: #f2c063;
-  padding: 16px;
-  box-shadow: inset 0 0 0 1px rgba(201, 166, 109, 0.2);
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  padding: var(--space-4);
+  box-shadow: inset 0 0 0 1px var(--color-accent-border);
 }
 
 .options {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr);
-  gap: 22px;
+  gap: var(--space-6);
   align-items: stretch;
   width: 100%;
   margin-top: 42px;
@@ -50,12 +50,12 @@
   display: grid;
   align-content: start;
   justify-items: start;
-  gap: 14px;
+  gap: var(--space-4);
   min-width: 0;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-control);
   text-align: left;
 }
 
@@ -65,8 +65,9 @@
 }
 
 .option h3 {
-  color: #fff7ec;
-  font-size: 22px;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-title-lg);
+  font-weight: var(--font-weight-black);
 }
 
 .option p {
@@ -83,19 +84,14 @@
 .createButton {
   min-width: 180px;
   min-height: 48px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--color-danger);
-  color: white;
-  font-weight: 900;
 }
 
 .divider {
   display: grid;
   place-items: center;
-  color: #d3b27b;
-  font-size: 12px;
-  font-weight: 900;
+  color: var(--color-accent-text);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-black);
   text-transform: uppercase;
 }
 
@@ -103,7 +99,7 @@
 .divider::after {
   width: 1px;
   min-height: 72px;
-  background: rgba(201, 166, 109, 0.28);
+  background: var(--color-accent-border);
   content: "";
 }
 
@@ -112,31 +108,19 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  border: 1px solid rgba(201, 166, 109, 0.3);
-  border-radius: 999px;
-  background: rgba(201, 166, 109, 0.1);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
 }
 
 .join {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .join input {
   min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1e7dc;
-  padding: 0 14px;
-  font: inherit;
-  font-weight: 700;
-  outline: none;
-}
-
-.join input:focus {
-  border-color: rgba(201, 166, 109, 0.58);
 }
 
 .join input:nth-of-type(2) {
@@ -144,23 +128,9 @@
   min-height: 44px;
 }
 
-.join button {
-  border: 0;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.09);
-  color: #f1e7dc;
-  padding: 13px 16px;
-  font-weight: 800;
-}
-
-.join button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
 .publicRooms {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
   margin-top: 20px;
   text-align: left;
@@ -168,33 +138,34 @@
 
 .publicRooms h3 {
   margin: 0;
-  color: #fff7ec;
-  font-size: 16px;
+  color: var(--color-text-strong);
+  font-size: var(--font-size-title-sm);
+  font-weight: var(--font-weight-black);
 }
 
 .publicRoomList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .publicRoomList button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 60px;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #f1e7dc;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-control);
+  color: var(--color-text-primary);
   text-align: left;
 }
 
 .publicRoomList span {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -207,12 +178,12 @@
 
 .publicRoomList small {
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
 }
 
 .publicRoomList b {
-  color: #f2c063;
-  font-size: 12px;
+  color: var(--color-accent);
+  font-size: var(--font-size-label);
 }
 
 @media (max-width: 1100px) {

@@ -7,7 +7,7 @@ import SettingsIcon from '@assets/settings.svg?react';
 import { CatalogFiltersPanel } from '@features/catalog/CatalogFiltersPanel';
 import type { CatalogBrowseFilters, CatalogBrowseOrder } from '@hooks/useCatalogBrowse';
 import { useI18n } from '@shared/i18n/I18nProvider';
-import { Tooltip } from '@shared/ui/Tooltip';
+import { Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import type { WatchPartyParticipant, WatchPartyRoomSettings as RoomSettings } from './types';
 import { WatchPartyParticipants } from './WatchPartyParticipants';
