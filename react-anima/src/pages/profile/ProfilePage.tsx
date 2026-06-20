@@ -24,7 +24,7 @@ import { useNavigation } from '@features/navigation/NavigationProvider';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import { animeRouteSlug } from '@shared/navigation';
-import { Button, IconButton, Tooltip } from '@shared/ui';
+import { Button, IconButton, Input, Skeleton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import styles from './ProfilePage.module.css';
 
@@ -279,7 +279,7 @@ export function ProfilePage() {
           <h3>{selectedFilter.label}</h3>
           <div className={styles.diaryToolbar}>
             <label className={styles.diarySearch} aria-label={t('profile.search')}>
-              <input
+              <Input
                 type="search"
                 value={diarySearchQuery}
                 onChange={(event) => setDiarySearchQuery(event.target.value)}
@@ -288,39 +288,42 @@ export function ProfilePage() {
             </label>
             <div className={styles.diarySorts} aria-label={t('profile.sort.label')}>
               <Tooltip key={`reviewed-${reviewedOnly}`} label={t('profile.sort.reviewed')} placement="bottom">
-                <button
-                  className={clsx(styles.iconSortButton, reviewedOnly && styles.activeSort)}
-                  type="button"
+                <IconButton
+                  className={styles.iconSortButton}
+                  size="sm"
+                  active={reviewedOnly}
                   onClick={() => setReviewedOnly((current) => !current)}
                   aria-label={t('profile.sort.reviewed')}
                   aria-pressed={reviewedOnly}
                 >
                   <img src={reviewIcon} alt="" aria-hidden="true" />
-                </button>
+                </IconButton>
               </Tooltip>
               <Tooltip key={`score-${scoreSortDirection}`} label={scoreSortDirection === 'asc' ? t('profile.sort.scoreAsc') : t('profile.sort.scoreDesc')} placement="bottom">
-                <button
-                  className={clsx(styles.iconSortButton, styles.activeSort)}
-                  type="button"
+                <IconButton
+                  className={styles.iconSortButton}
+                  size="sm"
+                  active
                   onClick={() => setScoreSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
                   aria-label={scoreSortDirection === 'asc' ? t('profile.sort.scoreAsc') : t('profile.sort.scoreDesc')}
                   aria-pressed="true"
                 >
                   <img src={scoreIcon} alt="" aria-hidden="true" />
                   <img className={clsx(styles.sortDirection, scoreSortDirection === 'asc' && styles.sortDirectionUp)} src={directionIcon} alt="" aria-hidden="true" />
-                </button>
+                </IconButton>
               </Tooltip>
               <Tooltip key={`recent-${recentSortDirection ?? 'off'}`} label={recentSortDirection === 'asc' ? t('profile.sort.recentAsc') : t('profile.sort.recentDesc')} placement="bottom" align="end">
-                <button
-                  className={clsx(styles.iconSortButton, recentSortDirection && styles.activeSort)}
-                  type="button"
+                <IconButton
+                  className={styles.iconSortButton}
+                  size="sm"
+                  active={Boolean(recentSortDirection)}
                   onClick={() => setRecentSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))}
                   aria-label={recentSortDirection === 'asc' ? t('profile.sort.recentAsc') : t('profile.sort.recentDesc')}
                   aria-pressed={Boolean(recentSortDirection)}
                 >
                   <img src={clockIcon} alt="" aria-hidden="true" />
                   <img className={clsx(styles.sortDirection, recentSortDirection === 'asc' && styles.sortDirectionUp)} src={directionIcon} alt="" aria-hidden="true" />
-                </button>
+                </IconButton>
               </Tooltip>
             </div>
           </div>
@@ -605,18 +608,18 @@ function ProfilePageSkeleton() {
   return (
     <section className={styles.page} aria-hidden="true">
       <section className={styles.diaryList}>
-        <span className={styles.diaryTitlePlaceholder} />
+        <Skeleton className={styles.diaryTitlePlaceholder} />
         {Array.from({ length: 6 }, (_, index) => (
           <article key={index} className={clsx(styles.diaryRow, styles.diarySkeleton)}>
-            <div className={styles.diaryPosterPlaceholder} />
+            <Skeleton className={styles.diaryPosterPlaceholder} />
             <span className={styles.diarySkeletonContent}>
-              <span className={styles.diaryLineLarge} />
-              <span className={styles.diaryLineSmall} />
-              <span className={styles.diaryChipPlaceholder} />
+              <Skeleton className={styles.diaryLineLarge} />
+              <Skeleton className={styles.diaryLineSmall} />
+              <Skeleton className={styles.diaryChipPlaceholder} />
             </span>
             <div className={styles.diaryActions}>
-              <span className={clsx(styles.diaryReviewAction, styles.diaryActionPlaceholder)} />
-              <span className={clsx(styles.diaryScore, styles.diaryActionPlaceholder)} />
+              <Skeleton className={clsx(styles.diaryReviewAction, styles.diaryActionPlaceholder)} />
+              <Skeleton className={clsx(styles.diaryScore, styles.diaryActionPlaceholder)} />
             </div>
           </article>
         ))}
@@ -625,23 +628,23 @@ function ProfilePageSkeleton() {
       <aside className={styles.sidebar}>
         <header className={styles.header}>
           <div className={styles.avatarFrame}>
-            <span className={styles.avatarSkeleton} />
-            <span className={styles.nameSkeleton} />
+            <Skeleton className={styles.avatarSkeleton} />
+            <Skeleton className={styles.nameSkeleton} />
           </div>
         </header>
         <div className={styles.sidebarContent}>
           <section className={styles.section}>
-            <span className={styles.sidebarTitlePlaceholder} />
+            <Skeleton className={styles.sidebarTitlePlaceholder} />
             <div className={styles.stats}>
               {Array.from({ length: 4 }, (_, index) => (
-                <span key={index} className={styles.statPlaceholder} />
+                <Skeleton key={index} className={styles.statPlaceholder} />
               ))}
             </div>
           </section>
         </div>
         <div className={styles.actions}>
           {Array.from({ length: 4 }, (_, index) => (
-            <span key={index} className={styles.sidebarActionPlaceholder} />
+            <Skeleton key={index} className={styles.sidebarActionPlaceholder} />
           ))}
         </div>
       </aside>
