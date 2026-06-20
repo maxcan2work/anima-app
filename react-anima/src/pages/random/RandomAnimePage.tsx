@@ -25,7 +25,7 @@ import { useRandomAnime } from '@hooks/useRandomAnime';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { GenreMarquee } from '@shared/ui/GenreMarquee';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
-import { Checkbox, CollapsibleSection, RangeSlider, Select, Skeleton, Tooltip } from '@shared/ui';
+import { Button, Checkbox, CollapsibleSection, IconButton, RangeSlider, Select, Skeleton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import styles from './RandomAnimePage.module.css';
@@ -261,9 +261,9 @@ export function RandomAnimePage() {
               <div className={styles.filtersPanel}>
                 <div className={styles.historyHeader}>
                   <h3>{t('random.filtersShort')}</h3>
-                  <button type="button" onClick={() => setFilters(defaultRandomFilters)} disabled={activeFilterCount === 0}>
+                  <Button className={styles.clearButton} variant="neutral" size="sm" onClick={() => setFilters(defaultRandomFilters)} disabled={activeFilterCount === 0}>
                     {t('common.clear')}
-                  </button>
+                  </Button>
                 </div>
                 <div className={styles.filtersList}>
                   <CollapsibleSection
@@ -380,9 +380,9 @@ export function RandomAnimePage() {
                 <div className={styles.historyHeader}>
                   <h3>{t('random.history')}</h3>
                   {randomHistory.length > 0 ? (
-                    <button type="button" onClick={handleClearHistory} disabled={historyBusy}>
+                    <Button className={styles.clearButton} variant="neutral" size="sm" onClick={handleClearHistory} disabled={historyBusy}>
                       {historyBusy ? t('common.clearing') : t('common.clear')}
-                    </button>
+                    </Button>
                   ) : (
                     <span className={styles.historyHeaderActionPlaceholder} aria-hidden="true" />
                   )}
@@ -417,15 +417,15 @@ export function RandomAnimePage() {
                               <small>{item.score ?? t('common.noScore')}</small>
                             </span>
                           </button>
-                          <button
+                          <IconButton
                             className={styles.historyDelete}
-                            type="button"
+                            size="sm"
                             aria-label={t('random.removeFromHistory', { title })}
                             disabled={removing || historyBusy || deletingRandomKey === key}
                             onClick={() => handleDeleteHistoryEntry(item)}
                           >
                             <img src={trashIcon} alt="" aria-hidden="true" />
-                          </button>
+                          </IconButton>
                         </div>
                       );
                     })
@@ -437,15 +437,15 @@ export function RandomAnimePage() {
 
           <div className={styles.sidebarTabs}>
             <Tooltip className={styles.sidebarTabTooltip} label={t('random.history')} placement="top">
-              <button className={sidebarTab === 'history' ? styles.sidebarTabActive : undefined} type="button" onClick={() => setSidebarTab('history')} aria-label={t('random.history')}>
+              <IconButton className={styles.sidebarTabButton} active={sidebarTab === 'history'} onClick={() => setSidebarTab('history')} aria-label={t('random.history')}>
                 <HistoryIcon aria-hidden="true" />
-              </button>
+              </IconButton>
             </Tooltip>
             <Tooltip className={styles.sidebarTabTooltip} label={t('random.filtersShort')} placement="top">
-              <button className={sidebarTab === 'filters' ? styles.sidebarTabActive : undefined} type="button" onClick={() => setSidebarTab('filters')} aria-label={t('random.filtersShort')}>
+              <IconButton className={styles.sidebarTabButton} active={sidebarTab === 'filters'} onClick={() => setSidebarTab('filters')} aria-label={t('random.filtersShort')}>
                 <FiltersIcon aria-hidden="true" />
                 {activeFilterCount > 0 ? <span className={styles.sidebarTabBadge}>{activeFilterCount}</span> : null}
-              </button>
+              </IconButton>
             </Tooltip>
           </div>
         </div>
@@ -530,17 +530,17 @@ export function RandomAnimePage() {
                     </a>
                   </Tooltip>
                 ) : null}
-                <button
-                  className={clsx(randomAnimePlanned && styles.alreadyPlannedButton)}
-                  type="button"
+                <Button
+                  className={clsx(styles.resultButton, randomAnimePlanned && styles.alreadyPlannedButton)}
+                  variant="neutral"
                   onClick={() => handleAddToPlans(randomAnime)}
                   disabled={addingToPlans || randomAnimePlanned}
                 >
                   {randomAnimePlanned ? t('random.alreadyPlanned') : addingToPlans ? t('common.loading') : t('random.addToPlans')}
-                </button>
-                <button type="button" onClick={() => openCatalogAnime(randomAnime)}>
+                </Button>
+                <Button className={styles.resultButton} variant="tonal" onClick={() => openCatalogAnime(randomAnime)}>
                   {t('random.openWatch')}
-                </button>
+                </Button>
               </span>
             </span>
           </article>

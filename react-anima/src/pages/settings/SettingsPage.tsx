@@ -1,10 +1,9 @@
-import clsx from 'clsx';
 import flagEnIcon from '@assets/flag-en.svg';
 import flagJaIcon from '@assets/flag-ja.svg';
 import flagRuIcon from '@assets/flag-ru.svg';
 import settingsIcon from '@assets/settings.svg';
 import { APP_LANGUAGES, useI18n, type AppLanguage } from '@shared/i18n/I18nProvider';
-import { Button, SectionHeader } from '@shared/ui';
+import { Button, IconButton, SectionHeader } from '@shared/ui';
 import styles from './SettingsPage.module.css';
 
 const LANGUAGE_FLAG_ICONS: Record<AppLanguage, string> = {
@@ -44,17 +43,17 @@ export function SettingsPage() {
           action={(
             <div className={styles.languageList} aria-label={t('settings.language')}>
               {APP_LANGUAGES.map((item) => (
-                <button
+                <IconButton
                   key={item.value}
-                  className={clsx(styles.languageButton, language === item.value && styles.languageButtonActive)}
-                  type="button"
+                  className={styles.languageButton}
+                  active={language === item.value}
                   aria-label={item.nativeLabel}
                   aria-pressed={language === item.value}
                   title={item.nativeLabel}
                   onClick={() => setLanguage(item.value)}
                 >
                   <img src={LANGUAGE_FLAG_ICONS[item.value]} alt="" aria-hidden="true" />
-                </button>
+                </IconButton>
               ))}
             </div>
           )}

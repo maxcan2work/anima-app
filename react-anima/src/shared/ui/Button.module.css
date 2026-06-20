@@ -49,6 +49,17 @@
   background: var(--color-danger-hover);
 }
 
+.discord {
+  border-color: transparent;
+  background: var(--color-discord);
+}
+
+.discord:hover:not(:disabled),
+.discord:focus-visible:not(:disabled) {
+  border-color: var(--color-border);
+  background: var(--color-discord);
+}
+
 .accent {
   border-color: var(--color-accent-border);
   background: var(--color-accent);

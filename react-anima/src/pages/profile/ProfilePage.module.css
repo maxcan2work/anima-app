@@ -17,18 +17,11 @@
 }
 
 .discordButton {
-  display: grid;
-  place-items: center;
   width: 100%;
   max-width: none;
   height: var(--ui-row-height);
   min-height: var(--ui-row-height);
-  padding: var(--ui-row-padding);
   overflow: hidden;
-  background: var(--color-discord);
-  color: var(--color-text-on-solid);
-  font-weight: var(--font-weight-black);
-  text-align: center;
 }
 
 .header {
@@ -479,19 +472,11 @@
 }
 
 .sidebarAction {
-  position: relative;
-  display: grid;
-  place-items: center;
   align-self: stretch;
   width: 100%;
   height: var(--ui-row-height);
   min-width: 0;
   min-height: var(--ui-row-height);
-  padding: 0;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
 }
 
 .sidebarAction img,
@@ -499,12 +484,6 @@
   width: 18px;
   height: 18px;
   object-fit: contain;
-}
-
-.sidebarAction:hover,
-.activeToggle {
-  border-color: var(--color-accent-border-strong) !important;
-  background: var(--color-accent-soft) !important;
 }
 
 .logout {
@@ -777,11 +756,10 @@
   overflow: visible;
 }
 
-.diaryDates input {
+.diaryDateInput {
   width: 78px;
   height: 34px;
   padding: 0 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 7px;
   background: rgba(15, 13, 10, 0.56);
   color: #f4ddae;
@@ -792,19 +770,18 @@
   white-space: nowrap;
 }
 
-.diaryDates input:hover,
-.diaryDates input:focus {
-  outline: none;
+.diaryDateInput:hover,
+.diaryDateInput:focus {
   border-color: rgba(242, 192, 99, 0.34);
   background: rgba(242, 192, 99, 0.12);
 }
 
-.diaryDates input:disabled {
+.diaryDateInput:disabled {
   cursor: wait;
   opacity: 0.72;
 }
 
-.diaryDates input::placeholder {
+.diaryDateInput::placeholder {
   color: #8f867b;
 }
 
@@ -882,12 +859,8 @@
 
 .diaryScore,
 .diaryReviewAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 5px;
   height: 34px;
-  padding: 7px 9px;
   border: 1px solid rgba(242, 192, 99, 0.3);
   border-radius: 7px;
   background: rgba(15, 13, 10, 0.72);

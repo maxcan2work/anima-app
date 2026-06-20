@@ -278,7 +278,7 @@
   margin-top: auto;
 }
 
-.resultActions :where(a, button) {
+.resultActions a {
   display: inline-grid;
   place-items: center;
   min-width: 150px;
@@ -292,23 +292,22 @@
   text-decoration: none;
 }
 
-.resultActions :where(a, button):last-child {
-  border-color: rgba(242, 192, 99, 0.34);
-  background: rgba(242, 192, 99, 0.12);
-  color: #fff7ec;
-}
-
-.resultActions :where(a, button):hover {
+.resultActions a:hover {
   border-color: rgba(242, 192, 99, 0.52);
   background: rgba(242, 192, 99, 0.14);
 }
 
-.resultActions button:disabled {
+.resultButton {
+  min-width: 150px;
+  min-height: 44px;
+}
+
+.resultButton:disabled {
   cursor: wait;
   opacity: 0.62;
 }
 
-.resultActions .alreadyPlannedButton:disabled {
+.alreadyPlannedButton:disabled {
   cursor: not-allowed;
 }
 
@@ -648,20 +647,11 @@
   min-width: 0;
 }
 
-.sidebarTabs button {
+.sidebarTabButton {
   position: relative;
-  display: grid;
-  place-items: center;
   width: 100%;
   height: var(--ui-row-height);
   min-height: var(--ui-row-height);
-  padding: var(--ui-row-padding);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--ui-radius);
-  background: rgba(255, 255, 255, 0.05);
-  color: #d9d0c5;
-  font-size: 12px;
-  font-weight: 900;
 }
 
 .sidebarTabs svg {
@@ -669,13 +659,6 @@
   height: 22px;
   color: currentColor;
   opacity: 0.82;
-}
-
-.sidebarTabs button:hover,
-.sidebarTabActive {
-  border-color: rgba(242, 192, 99, 0.52) !important;
-  background: rgba(242, 192, 99, 0.12) !important;
-  color: #fff7ec !important;
 }
 
 .sidebarTabBadge {
@@ -707,21 +690,10 @@
   margin: 0;
 }
 
-.historyHeader button {
+.clearButton {
   justify-self: end;
   width: 82px;
   min-height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: var(--color-accent);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.historyHeader button:disabled {
-  opacity: 0.55;
 }
 
 .historyHeaderActionPlaceholder {
@@ -851,19 +823,8 @@
   position: absolute;
   top: calc(50% - 16px);
   right: 10px;
-  display: grid;
-  place-items: center;
   width: 32px;
   height: 32px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.historyDelete:hover {
-  border-color: rgba(242, 192, 99, 0.55);
-  background: rgba(242, 192, 99, 0.1);
 }
 
 .historyDelete:disabled {

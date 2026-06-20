@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import styles from './Button.module.css';
 
-type ButtonVariant = 'accent' | 'danger' | 'tonal' | 'neutral';
+type ButtonVariant = 'accent' | 'danger' | 'discord' | 'tonal' | 'neutral';
 type ButtonSize = 'md' | 'sm';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

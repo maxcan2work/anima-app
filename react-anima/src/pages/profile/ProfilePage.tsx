@@ -267,7 +267,7 @@ export function ProfilePage() {
       <section className={clsx(styles.page, styles.emptyState)}>
         <h2>{t('profile.title')}</h2>
         <p>{t('profile.authDescription')}</p>
-        <button className={styles.discordButton} onClick={login}>{t('sidebar.loginDiscord')}</button>
+        <Button className={styles.discordButton} variant="discord" onClick={login}>{t('sidebar.loginDiscord')}</Button>
       </section>
     );
   }
@@ -363,7 +363,8 @@ export function ProfilePage() {
                 </small>
               </span>
               <div className={styles.diaryDates}>
-                <input
+                <Input
+                  className={styles.diaryDateInput}
                   inputMode="numeric"
                   placeholder={t('profile.startedAtPlaceholder')}
                   value={activeDateEntryId === entry.id ? dateDraft.startedAt : formatDateInput(startedDate)}
@@ -375,7 +376,8 @@ export function ProfilePage() {
                   disabled={savingDateId === entry.id}
                 />
                 <i aria-hidden="true">{'\u2014'}</i>
-                <input
+                <Input
+                  className={styles.diaryDateInput}
                   inputMode="numeric"
                   placeholder={t('profile.completedAtPlaceholder')}
                   value={activeDateEntryId === entry.id ? dateDraft.completedAt : formatDateInput(completedDate)}
@@ -388,25 +390,26 @@ export function ProfilePage() {
                 />
               </div>
               <div className={styles.diaryActions}>
-                <button
+                <IconButton
                   className={clsx(styles.diaryActionButton, styles.diaryReviewAction)}
-                  type="button"
+                  size="xs"
                   onClick={stopDiaryAction}
                   onKeyDown={stopDiaryAction}
                   aria-label="Review"
                 >
                   <img src={reviewIcon} alt="" />
-                </button>
-                <button
+                </IconButton>
+                <Button
                   className={clsx(styles.diaryActionButton, styles.diaryScore)}
-                  type="button"
+                  variant="tonal"
+                  size="sm"
                   onClick={(event) => toggleRatingMenu(event, entry.id)}
                   onKeyDown={stopDiaryAction}
                   aria-expanded={activeRatingEntryId === entry.id}
                 >
                   <img src={scoreIcon} alt="" aria-hidden="true" />
                   {savingRatingId === entry.id ? '...' : entry.score ? `${entry.score}/10` : t('common.none')}
-                </button>
+                </Button>
                 {activeRatingEntryId === entry.id ? (
                   <div className={styles.ratingMenu} onClick={(event) => event.stopPropagation()}>
                     {Array.from({ length: 10 }, (_, index) => index + 1).map((score) => (
@@ -515,39 +518,39 @@ export function ProfilePage() {
 
         <div className={styles.actions}>
           <Tooltip className={styles.sidebarActionTooltip} label={t('profile.stats')} placement="top" align="start">
-            <button
-              className={clsx(styles.sidebarAction, sidebarMode === 'stats' && styles.activeToggle)}
-              type="button"
+            <IconButton
+              className={styles.sidebarAction}
+              active={sidebarMode === 'stats'}
               onClick={() => setSidebarMode('stats')}
               aria-label={t('profile.stats')}
             >
               <img src={profileStatsIcon} alt="" aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
           <Tooltip className={styles.sidebarActionTooltip} label={t('profile.friends')} placement="top">
-            <button
-              className={clsx(styles.sidebarAction, sidebarMode === 'friends' && styles.activeToggle)}
-              type="button"
+            <IconButton
+              className={styles.sidebarAction}
+              active={sidebarMode === 'friends'}
               onClick={() => setSidebarMode('friends')}
               aria-label={t('profile.friends')}
             >
               <img src={profileFriendsIcon} alt="" aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
           <Tooltip className={styles.sidebarActionTooltip} label={t('profile.profileSettings')} placement="top">
-            <button
-              className={clsx(styles.sidebarAction, sidebarMode === 'settings' && styles.activeToggle)}
-              type="button"
+            <IconButton
+              className={styles.sidebarAction}
+              active={sidebarMode === 'settings'}
               onClick={() => setSidebarMode('settings')}
               aria-label={t('profile.profileSettings')}
             >
               <SettingsIcon aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
           <Tooltip className={styles.sidebarActionTooltip} label={t('profile.logout')} placement="top" align="end">
-            <button className={clsx(styles.sidebarAction, styles.logout)} type="button" onClick={logout} aria-label={t('profile.logout')}>
+            <IconButton className={clsx(styles.sidebarAction, styles.logout)} onClick={logout} aria-label={t('profile.logout')}>
               <img src={leaveRoomIcon} alt="" aria-hidden="true" />
-            </button>
+            </IconButton>
           </Tooltip>
         </div>
       </aside>
