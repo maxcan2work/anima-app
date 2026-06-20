@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAnimeOriginalDisplayTitle, getLocalizedAnimeTitle } from '@anima/core';
 import RandomDiceIcon from '@assets/random-dice.svg?react';
 import clockIcon from '@assets/clock-three.svg';
@@ -25,7 +25,7 @@ import { useRandomAnime } from '@hooks/useRandomAnime';
 import { useI18n } from '@shared/i18n/I18nProvider';
 import { GenreMarquee } from '@shared/ui/GenreMarquee';
 import { SplitScreenLayout } from '@shared/ui/SplitScreenLayout';
-import { Tooltip } from '@shared/ui/Tooltip';
+import { Checkbox, CollapsibleSection, RangeSlider, Select, Skeleton, Tooltip } from '@shared/ui';
 import { useToast } from '@shared/ui/ToastProvider';
 import { upsertDiaryEntry } from '@shared/animeMappers';
 import styles from './RandomAnimePage.module.css';
@@ -266,7 +266,7 @@ export function RandomAnimePage() {
                   </button>
                 </div>
                 <div className={styles.filtersList}>
-                  <FilterSection
+                  <CollapsibleSection
                     activeCount={filters.status === 'all' ? 0 : 1}
                     collapsed={Boolean(collapsedSections.status)}
                     id="random-status"
@@ -286,8 +286,8 @@ export function RandomAnimePage() {
                         onChange={(value) => setFilter('status', value)}
                       />
                     </div>
-                  </FilterSection>
-                  <FilterSection
+                  </CollapsibleSection>
+                  <CollapsibleSection
                     activeCount={filters.score === 'all' ? 0 : 1}
                     collapsed={Boolean(collapsedSections.score)}
                     id="random-score"
@@ -299,8 +299,8 @@ export function RandomAnimePage() {
                       value={filters.score}
                       onChange={(value) => setFilter('score', value)}
                     />
-                  </FilterSection>
-                  <FilterSection
+                  </CollapsibleSection>
+                  <CollapsibleSection
                     activeCount={filters.kinds.length}
                     collapsed={Boolean(collapsedSections.kind)}
                     id="random-kind"
@@ -323,8 +323,8 @@ export function RandomAnimePage() {
                         />
                       ))}
                     </div>
-                  </FilterSection>
-                  <FilterSection
+                  </CollapsibleSection>
+                  <CollapsibleSection
                     activeCount={filters.genres.length}
                     collapsed={Boolean(collapsedSections.genre)}
                     id="random-genre"
@@ -334,7 +334,7 @@ export function RandomAnimePage() {
                     <div className={styles.genreGrid}>
                       {genresLoading
                         ? Array.from({ length: 8 }, (_, index) => (
-                          <span className={styles.filterCheckPlaceholder} key={index} />
+                          <Skeleton className={styles.filterCheckPlaceholder} key={index} />
                         ))
                         : genreOptions.map((genre) => {
                           const genreId = String(genre.id);
@@ -348,8 +348,8 @@ export function RandomAnimePage() {
                           );
                         })}
                     </div>
-                  </FilterSection>
-                  <FilterSection
+                  </CollapsibleSection>
+                  <CollapsibleSection
                     activeCount={filters.ratings.length}
                     collapsed={Boolean(collapsedSections.rating)}
                     id="random-rating"
@@ -372,7 +372,7 @@ export function RandomAnimePage() {
                         />
                       ))}
                     </div>
-                  </FilterSection>
+                  </CollapsibleSection>
                 </div>
               </div>
             ) : (
@@ -552,53 +552,6 @@ export function RandomAnimePage() {
   );
 }
 
-function FilterSection({
-  activeCount = 0,
-  children,
-  collapsed,
-  id,
-  title,
-  onToggle,
-}: {
-  activeCount?: number;
-  children: ReactNode;
-  collapsed: boolean;
-  id: string;
-  title: string;
-  onToggle: () => void;
-}) {
-  const contentId = `random-filter-${id}`;
-  const showActiveBadge = collapsed && activeCount > 0;
-
-  return (
-    <section className={styles.filterSection}>
-      <button
-        className={styles.filterSectionHeader}
-        type="button"
-        aria-expanded={!collapsed}
-        aria-controls={contentId}
-        onClick={onToggle}
-      >
-        <span className={styles.filterSectionTitle}>
-          <span>{title}</span>
-          {showActiveBadge ? <span className={styles.filterSectionBadge}>{activeCount}</span> : null}
-        </span>
-        <span className={styles.filterSectionChevron} aria-hidden="true" />
-      </button>
-      <div
-        className={styles.filterSectionBody}
-        id={contentId}
-        aria-hidden={collapsed}
-        data-collapsed={collapsed ? 'true' : 'false'}
-      >
-        <div className={styles.filterSectionBodyInner}>
-          {children}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function FilterCheck({
   checked,
   label,
@@ -608,12 +561,7 @@ function FilterCheck({
   label: string;
   onChange: () => void;
 }) {
-  return (
-    <label className={styles.filterCheck}>
-      <input type="checkbox" checked={checked} onChange={onChange} />
-      <span>{label}</span>
-    </label>
-  );
+  return <Checkbox checked={checked} label={label} onChange={onChange} />;
 }
 
 function ScoreRange({
@@ -630,8 +578,6 @@ function ScoreRange({
   const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
   const [draftValue, setDraftValue] = useState(safeValue);
   const draftFilterValue = draftValue === 0 ? 'all' : String(draftValue);
-  const draftProgress = (draftValue / 9) * 100;
-  const draftLabel = draftValue === 0 ? allLabel : `${draftValue}+`;
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -652,35 +598,16 @@ function ScoreRange({
   }, [draftFilterValue, value]);
 
   return (
-    <label
-      className={styles.scoreRange}
-      style={{
-        '--score-progress': `${draftProgress}%`,
-        '--score-thumb-position': `calc(${draftProgress}% + ${(0.5 - draftValue / 9) * 20}px)`,
-      } as CSSProperties}
-    >
-      <span className={styles.scoreRangeTrack}>
-        <span className={styles.scoreRangeTooltip}>{draftLabel}</span>
-        <input
-          type="range"
-          min="0"
-          max="9"
-          step="1"
-          value={draftValue}
-          aria-label={allLabel}
-          onChange={(event) => {
-            const nextValue = Number(event.target.value);
-            setDraftValue(Number.isFinite(nextValue) ? nextValue : 0);
-          }}
-        />
-      </span>
-      <span className={styles.scoreRangeScale} aria-hidden="true">
-        <span>{allLabel}</span>
-        <span>3</span>
-        <span>6</span>
-        <span>9</span>
-      </span>
-    </label>
+    <RangeSlider
+      min={0}
+      max={9}
+      step={1}
+      value={draftValue}
+      aria-label={allLabel}
+      marks={[allLabel, '3', '6', '9']}
+      formatValue={(current) => current === 0 ? allLabel : `${current}+`}
+      onChange={(current) => setDraftValue(Number.isFinite(current) ? current : 0)}
+    />
   );
 }
 
@@ -695,66 +622,7 @@ function FilterSelect({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const selected = options.find((option) => option.value === value) ?? options[0];
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <div className={styles.filterSelect} ref={rootRef}>
-      <button
-        className={styles.filterSelectTrigger}
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span>{selected.label}</span>
-        <span className={styles.filterSelectChevron} aria-hidden="true" />
-      </button>
-      {open ? (
-        <div className={styles.filterSelectMenu} role="listbox" aria-label={label}>
-          {options.map((option) => (
-            <button
-              key={option.value}
-              className={option.value === value ? styles.selectedOption : undefined}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+  return <Select label={label} options={options} value={value} onChange={onChange} />;
 }
 
 function getCatalogStatusLabel(status: string, t: (key: string) => string) {
